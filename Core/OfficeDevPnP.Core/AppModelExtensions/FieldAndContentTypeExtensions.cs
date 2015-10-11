@@ -739,7 +739,8 @@ namespace Microsoft.SharePoint.Client
         public static void AddFieldToContentType(this Web web, ContentType contentType, Field field, bool required = false, bool hidden = false)
         {
             contentType.EnsureProperties(c => c.Id, c => c.FieldLinks, c => c.SchemaXml);
-            field.EnsureProperties(f => f.Id, f => f.SchemaXml);
+            contentType.Context.Load(contentType.FieldLinks, w => w.Include(fl => fl.Id, fl => fl.Required, fl => fl.Hidden));
+            contentType.Context.ExecuteQueryRetry();
 
             Log.Info(Constants.LOGGING_SOURCE, CoreResources.FieldAndContentTypeExtensions_AddField0ToContentType1, field.Id, contentType.Id);
 
