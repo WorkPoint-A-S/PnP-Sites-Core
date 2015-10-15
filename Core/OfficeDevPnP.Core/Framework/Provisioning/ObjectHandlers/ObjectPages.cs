@@ -22,7 +22,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 var context = web.Context as ClientContext;
 
-                web.EnsureProperties(w => w.ServerRelativeUrl, w => w.RootFolder.WelcomePage);
+                web.EnsureProperties(w => w.ServerRelativeUrl, w => w.RootFolder);
+                web.Context.Load(web.RootFolder, r => r.ServerRelativeUrl, r => r.WelcomePage);
+                web.Context.ExecuteQueryRetry();
                 
                 foreach (var page in template.Pages)
                 {
