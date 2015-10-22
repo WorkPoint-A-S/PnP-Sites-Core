@@ -474,7 +474,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         {
             fieldElement = PrepareField(fieldElement);
 
-            var fieldXml = parser.ParseString(fieldElement.ToString());
+            var fieldXml = parser.ParseString(fieldElement.ToString(), "~sitecollection", "~site");
             listInfo.SiteList.Fields.AddFieldAsXml(fieldXml, false, AddFieldOptions.AddFieldInternalNameHint);
             listInfo.SiteList.Context.ExecuteQueryRetry();
         }
@@ -520,7 +520,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     {
                         existingFieldElement.Attributes("Version").Remove();
                     }
-                    existingField.SchemaXml = parser.ParseString(existingFieldElement.ToString());
+                    existingField.SchemaXml = parser.ParseString(existingFieldElement.ToString(), "~sitecollection", "~site");
                     existingField.UpdateAndPushChanges(true);
                     web.Context.ExecuteQueryRetry();
                 }
@@ -556,6 +556,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     }
 
                     fieldElement.Attribute("RelationshipDeleteBehavior").Remove();
+                }
+
+                if (fieldElement.Attribute("WebId") != null)
+                {
+                    fieldElement.Attribute("WebId").Remove();
                 }
             }
 
