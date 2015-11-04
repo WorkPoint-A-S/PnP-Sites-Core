@@ -759,6 +759,15 @@ namespace OfficeDevPnP.Core {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The Provisioning Template URI {0} is not valid..
+        /// </summary>
+        internal static string Provisioning_Formatter_Invalid_Template_URI {
+            get {
+                return ResourceManager.GetString("Provisioning_Formatter_Invalid_Template_URI", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Downloading asset: {0}.
         /// </summary>
         internal static string Provisioning_ObjectHandlers_ComposedLooks_DownLoadFile_Downloading_asset___0_ {
@@ -1353,6 +1362,24 @@ namespace OfficeDevPnP.Core {
         internal static string Provisioning_ObjectHandlers_RetrieveTemplateInfo {
             get {
                 return ResourceManager.GetString("Provisioning_ObjectHandlers_RetrieveTemplateInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Site policy &apos;{0}&apos; applied to site.
+        /// </summary>
+        internal static string Provisioning_ObjectHandlers_SitePolicy_PolicyAdded {
+            get {
+                return ResourceManager.GetString("Provisioning_ObjectHandlers_SitePolicy_PolicyAdded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Site policy &apos;{0}&apos; not found.
+        /// </summary>
+        internal static string Provisioning_ObjectHandlers_SitePolicy_PolicyNotFound {
+            get {
+                return ResourceManager.GetString("Provisioning_ObjectHandlers_SitePolicy_PolicyNotFound", resourceCulture);
             }
         }
         

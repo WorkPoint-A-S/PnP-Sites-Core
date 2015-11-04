@@ -556,13 +556,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     }
 
                     fieldElement.Attribute("RelationshipDeleteBehavior").Remove();
-                }
-
-                if (fieldElement.Attribute("WebId") != null)
-                {
-                    fieldElement.Attribute("WebId").Remove();
-                }
             }
+        }
 
             return fieldElement;
         }
@@ -648,11 +643,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         existingList.EnableVersioning = templateList.EnableVersioning;
                         isDirty = true;
                     }
+#if !CLIENTSDKV15
                     if (existingList.IsObjectPropertyInstantiated("MajorVersionLimit") && existingList.MajorVersionLimit != templateList.MaxVersionLimit)
                     {
                         existingList.MajorVersionLimit = templateList.MaxVersionLimit;
                         isDirty = true;
                     }
+#endif
                     if (existingList.BaseTemplate == (int)ListTemplateType.DocumentLibrary)
                     {
                         // Only supported on Document Libraries
@@ -781,7 +778,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 createdList.EnableVersioning = list.EnableVersioning;
                 if (list.EnableVersioning)
                 {
+#if !CLIENTSDKV15
                     createdList.MajorVersionLimit = list.MaxVersionLimit;
+#endif
 
                     if (createdList.BaseTemplate == (int)ListTemplateType.DocumentLibrary)
                     {
