@@ -64,6 +64,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         private List<Field> _fields = new List<Field>();
         private List<FieldRef> _fieldRefs = new List<FieldRef>();
         private List<DataRow> _dataRows = new List<DataRow>();
+        private List<Localization> _listLocalizations = new List<Localization>();
+        private List<Localization> _fieldsLocalizations = new List<Localization>();
         private Dictionary<String, String> _fieldDefaults = new Dictionary<String, String>();
         private ObjectSecurity _security = null;
         private bool _enableFolderCreation = true;
@@ -205,6 +207,18 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         {
             get { return this._dataRows; }
             private set { this._dataRows = value; }
+        }
+
+        public List<Localization> ListLocalizations
+        {
+            get { return this._listLocalizations; }
+            private set { this._listLocalizations = value; }
+        }
+
+        public List<Localization> FieldsLocalizations
+        {
+            get { return this._fieldsLocalizations; }
+            private set { this._fieldsLocalizations = value; }
         }
 
         /// <summary>

@@ -507,6 +507,23 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
                                  Security = dr.Security.FromTemplateToSchemaObjectSecurityV201508()
                              }).ToArray() : null,
                          Security = list.Security.FromTemplateToSchemaObjectSecurityV201508(),
+                         Localizations = list.ListLocalizations.Count > 0 ?
+                            (from listLocalization in list.ListLocalizations
+                             select new V201508.LocalizationBase
+                             {
+                                 CultureName = listLocalization.CultureName,
+                                 TitleResource = listLocalization.TitleResource,
+                                 DescriptionResource = listLocalization.DescriptionResource,
+                             }).ToArray() : null,
+                         FieldLocalizations = list.FieldsLocalizations.Count > 0 ?
+                            (from fieldLocalization in list.FieldsLocalizations
+                             select new V201508.LocalizationField
+                             {
+                                 ID = fieldLocalization.Id.ToString(),
+                                 CultureName = fieldLocalization.CultureName,
+                                 TitleResource = fieldLocalization.TitleResource,
+                                 DescriptionResource = fieldLocalization.DescriptionResource,
+                             }).ToArray() : null,
                      }).ToArray();
             }
             else
