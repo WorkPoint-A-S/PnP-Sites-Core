@@ -1108,6 +1108,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml.V201508 {
         
         private ProvisioningTemplateSiteFields siteFieldsField;
         
+        private LocalizationField[] siteFieldsLocalizationsField;
+        
         private ContentType[] contentTypesField;
         
         private ListInstance[] listsField;
@@ -1226,6 +1228,17 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml.V201508 {
             }
             set {
                 this.siteFieldsField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlArrayItemAttribute("Localization", IsNullable=false)]
+        public LocalizationField[] SiteFieldsLocalizations {
+            get {
+                return this.siteFieldsLocalizationsField;
+            }
+            set {
+                this.siteFieldsLocalizationsField = value;
             }
         }
         
@@ -2683,6 +2696,77 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml.V201508 {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.dev.office.com/PnP/2015/08/ProvisioningSchema")]
+    public partial class LocalizationField : LocalizationBase {
+        
+        private string idField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string ID {
+            get {
+                return this.idField;
+            }
+            set {
+                this.idField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(LocalizationField))]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.dev.office.com/PnP/2015/08/ProvisioningSchema")]
+    public partial class LocalizationBase {
+        
+        private string cultureNameField;
+        
+        private string titleResourceField;
+        
+        private string descriptionResourceField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string CultureName {
+            get {
+                return this.cultureNameField;
+            }
+            set {
+                this.cultureNameField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string TitleResource {
+            get {
+                return this.titleResourceField;
+            }
+            set {
+                this.titleResourceField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string DescriptionResource {
+            get {
+                return this.descriptionResourceField;
+            }
+            set {
+                this.descriptionResourceField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.dev.office.com/PnP/2015/08/ProvisioningSchema")]
     public partial class ContentType {
         
         private ContentTypeFieldRef[] fieldRefsField;
@@ -3188,77 +3272,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml.V201508 {
             }
             set {
                 this.fileSourcePathField = value;
-            }
-        }
-    }
-    
-    /// <remarks/>
-    [System.Xml.Serialization.XmlIncludeAttribute(typeof(LocalizationField))]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
-    [System.SerializableAttribute()]
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.dev.office.com/PnP/2015/08/ProvisioningSchema")]
-    public partial class LocalizationBase {
-        
-        private string cultureNameField;
-        
-        private string titleResourceField;
-        
-        private string descriptionResourceField;
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string CultureName {
-            get {
-                return this.cultureNameField;
-            }
-            set {
-                this.cultureNameField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string TitleResource {
-            get {
-                return this.titleResourceField;
-            }
-            set {
-                this.titleResourceField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string DescriptionResource {
-            get {
-                return this.descriptionResourceField;
-            }
-            set {
-                this.descriptionResourceField = value;
-            }
-        }
-    }
-    
-    /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
-    [System.SerializableAttribute()]
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.dev.office.com/PnP/2015/08/ProvisioningSchema")]
-    public partial class LocalizationField : LocalizationBase {
-        
-        private string idField;
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string ID {
-            get {
-                return this.idField;
-            }
-            set {
-                this.idField = value;
             }
         }
     }

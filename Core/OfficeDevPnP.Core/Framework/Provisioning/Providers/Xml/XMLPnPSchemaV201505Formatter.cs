@@ -799,7 +799,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
                                  Id = Guid.Parse(fieldRef.ID),
                                  Hidden = fieldRef.Hidden,
                                  Required = fieldRef.Required
-                             }) : null)
+                             }) : null),
+                        null
                         )
                     );
             }

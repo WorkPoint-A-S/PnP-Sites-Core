@@ -41,6 +41,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     var serverRelativeUrl = web.ServerRelativeUrl;
 
                     var processedLists = new List<ListInfo>();
+                    var cultureNames = new List<string>();
+
+                    foreach (var supportedUILanguage in template.SupportedUILanguages)
+                    {
+                        var ci = new CultureInfo(supportedUILanguage.LCID);
+                        cultureNames.Add(ci.Name);
+                    }
 
                     #region Lists
 
@@ -105,6 +112,17 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                 scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_ListInstances_Updating_list__0__failed___1_____2_, templateList.Title, ex.Message, ex.StackTrace);
                                 throw;
                             }
+                        }
+                    }
+
+                    #endregion
+
+                    #region List Localization
+                    foreach (var listInfo in processedLists)
+                    {
+                        foreach (var localization in listInfo.TemplateList.ListLocalizations.Where(l => cultureNames.Contains(l.CultureName, StringComparer.InvariantCultureIgnoreCase)))
+                        {
+                            listInfo.SiteList.SetLocalizationLabelsForList(localization.CultureName, localization.TitleResource, localization.DescriptionResource);
                         }
                     }
 
@@ -200,6 +218,20 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         web.Context.ExecuteQueryRetry();
                     }
 
+                    #endregion
+
+                    #region Field Localizations
+                    foreach (var listInfo in processedLists)
+                    {
+                        if (listInfo.TemplateList.FieldsLocalizations.Any())
+                        {
+                            foreach (var fieldLocalization in listInfo.TemplateList.FieldsLocalizations.Where(l => cultureNames.Contains(l.CultureName, StringComparer.InvariantCultureIgnoreCase)))
+                            {
+                                var field = listInfo.SiteList.Fields.GetById(fieldLocalization.Id);
+                                field.SetLocalizationForField(fieldLocalization.CultureName, fieldLocalization.TitleResource, fieldLocalization.DescriptionResource);
+                            }
+                        }
+                    }
                     #endregion
 
                     #region Default Field Values
@@ -1089,7 +1121,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             web.Context.Load(siteColumns, scs => scs.Include(sc => sc.Id));
             web.Context.ExecuteQueryRetry();
 
-            List<string> cultureNames = new List<string>();
+            var cultureNames = new List<string>();
 
             if (web.IsMultilingual)
             {
@@ -1217,16 +1249,17 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     // Localization
                     foreach (var cultureName in cultureNames)
                     {
-                        var titleResource = field.TitleResource.GetValueForUICulture(cultureName).Value;
-                        var descriptionResource = field.DescriptionResource.GetValueForUICulture(cultureName).Value;
+                        var titleResource = field.TitleResource.GetValueForUICulture(cultureName);
+                        var descriptionResource = field.DescriptionResource.GetValueForUICulture(cultureName);
+                        field.Context.ExecuteQueryRetry();
 
-                        if (!string.IsNullOrEmpty(titleResource) || !string.IsNullOrEmpty(descriptionResource))
+                        if (!string.IsNullOrEmpty(titleResource.Value) || !string.IsNullOrEmpty(descriptionResource.Value))
                         {
                             list.FieldsLocalizations.Add(new Localization(cultureName)
                             {
                                 Id = field.Id,
-                                TitleResource = titleResource,
-                                DescriptionResource = descriptionResource
+                                TitleResource = titleResource.Value,
+                                DescriptionResource = descriptionResource.Value
                             });
                         }
                     }
@@ -1244,15 +1277,16 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 {
                     var ci = new CultureInfo(supportedlanguageId);
 
-                    var titleResource = siteList.TitleResource.GetValueForUICulture(ci.Name).Value;
-                    var descriptionResource = siteList.DescriptionResource.GetValueForUICulture(ci.Name).Value;
+                    var titleResource = siteList.TitleResource.GetValueForUICulture(ci.Name);
+                    var descriptionResource = siteList.DescriptionResource.GetValueForUICulture(ci.Name);
+                    siteList.Context.ExecuteQueryRetry();
 
-                    if (!string.IsNullOrEmpty(titleResource) || !string.IsNullOrEmpty(descriptionResource))
+                    if (!string.IsNullOrEmpty(titleResource.Value) || !string.IsNullOrEmpty(descriptionResource.Value))
                     {
                         list.ListLocalizations.Add(new Localization(ci.Name)
                         {
-                            TitleResource = titleResource,
-                            DescriptionResource = descriptionResource
+                            TitleResource = titleResource.Value,
+                            DescriptionResource = descriptionResource.Value
                         });
                     }
                 }
