@@ -80,7 +80,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     // Localizations
                     if (provisionedField != null)
                     {
-                        foreach (var localization in template.SiteFieldsLocalizations.Where(l => l.Id.Equals(provisionedField.Id) && cultureNames.Contains(l.CultureName, StringComparer.InvariantCultureIgnoreCase)))
+                        foreach (var localization in template.SiteFieldsLocalizations.Where(l => l.Id.Equals(Guid.Parse(fieldId)) && cultureNames.Contains(l.CultureName, StringComparer.InvariantCultureIgnoreCase)))
                         {
                             provisionedField.SetLocalizationForField(localization.CultureName, localization.TitleResource, localization.DescriptionResource);
                         }
