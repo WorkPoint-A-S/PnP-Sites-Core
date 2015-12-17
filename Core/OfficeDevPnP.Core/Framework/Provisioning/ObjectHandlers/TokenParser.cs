@@ -5,6 +5,7 @@ using Microsoft.SharePoint.Client;
 using Microsoft.SharePoint.Client.Taxonomy;
 using OfficeDevPnP.Core.Framework.Provisioning.Model;
 using OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.TokenDefinitions;
+using System.Globalization;
 
 namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 {
@@ -37,7 +38,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
         public TokenParser(Web web, ProvisioningTemplate template)
         {
-            web.EnsureProperties(w => w.ServerRelativeUrl);
+            web.EnsureProperties(w => w.ServerRelativeUrl, w => w.SupportedUILanguageIds);
             
             _web = web;
 
@@ -66,6 +67,16 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 _tokens.Add(new ListIdToken(web, list.Title, list.Id));
                 _tokens.Add(new ListUrlToken(web, list.Title, list.RootFolder.ServerRelativeUrl.Substring(web.ServerRelativeUrl.Length + 1)));
+
+                foreach (var supportedlanguageId in web.SupportedUILanguageIds)
+                {
+                    var ci = new CultureInfo(supportedlanguageId);
+                    var titleResource = list.TitleResource.GetValueForUICulture(ci.Name);
+                    list.Context.ExecuteQueryRetry();
+
+                    if (titleResource != null && titleResource.Value != null)
+                        _tokens.Add(new ListIdToken(web, titleResource.Value, list.Id));
+                }
             }
 
             // Add parameters
