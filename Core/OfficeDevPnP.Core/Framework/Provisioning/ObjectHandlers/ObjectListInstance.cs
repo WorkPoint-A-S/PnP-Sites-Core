@@ -33,8 +33,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 {
                     var rootWeb = (web.Context as ClientContext).Site.RootWeb;
 
-                    web.EnsureProperties(w => w.ServerRelativeUrl);
-
+                    web.Context.Load(web, w => w.ServerRelativeUrl, w => w.RegionalSettings.LocaleId);
                     web.Context.Load(web.Lists, lc => lc.IncludeWithDefaultProperties(l => l.RootFolder.ServerRelativeUrl));
                     web.Context.ExecuteQueryRetry();
                     var existingLists = web.Lists.AsEnumerable().Select(existingList => existingList.RootFolder.ServerRelativeUrl).ToList();
@@ -42,6 +41,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                     var processedLists = new List<ListInfo>();
                     var cultureNames = new List<string>();
+                    var webCultureInfo = new CultureInfo((int)web.RegionalSettings.LocaleId);
 
                     foreach (var supportedUILanguage in template.SupportedUILanguages)
                     {
@@ -143,14 +143,28 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                 {
                                     if (!listInfo.SiteList.FieldExistsById(fieldRef.Id))
                                     {
-                                        CreateFieldRef(listInfo, field, fieldRef);
+                                        field = CreateFieldRef(listInfo, field, fieldRef);
                                     }
                                     else
                                     {
-                                        UpdateFieldRef(listInfo.SiteList, field.Id, fieldRef);
+                                        field = UpdateFieldRef(listInfo.SiteList, field.Id, fieldRef);
                                     }
                                 }
 
+                                field.EnsureProperties(f => f.Title, f => f.Description);
+
+                                // IMPORTANT! Title or Description corresponding to the culture of the web, must be set first, otherwise localizations doesn't work.
+                                var primaryLocalization = template.SiteFieldsLocalizations.FirstOrDefault(l => l.Id.Equals(fieldRef.Id) && webCultureInfo.Name.Equals(l.CultureName, StringComparison.InvariantCultureIgnoreCase));
+                                if (primaryLocalization != null && (field.Title != primaryLocalization.TitleResource || field.Description != primaryLocalization.DescriptionResource))
+                                {
+                                    field.Title = primaryLocalization.TitleResource;
+                                    field.Description = primaryLocalization.DescriptionResource;
+                                }
+
+                                foreach (var localization in template.SiteFieldsLocalizations.Where(l => l.Id.Equals(fieldRef.Id) && cultureNames.Contains(l.CultureName, StringComparer.InvariantCultureIgnoreCase)))
+                                {
+                                    field.SetLocalizationForField(localization.CultureName, localization.TitleResource, localization.DescriptionResource);
+                                }
                             }
                             listInfo.SiteList.Update();
                             web.Context.ExecuteQueryRetry();
@@ -189,7 +203,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                         try
                                         {
                                             scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_ListInstances_Creating_field__0_, fieldGuid);
-                                            CreateField(fieldElement, listInfo, parser);
+                                            fieldFromList = CreateField(fieldElement, listInfo, parser);
                                         }
                                         catch (Exception ex)
                                         {
@@ -209,7 +223,21 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                             scope.LogError(CoreResources.Provisioning_ObjectHandlers_ListInstances_Updating_field__0__failed___1_____2_, fieldGuid, ex.Message, ex.StackTrace);
                                             throw;
                                         }
+                                    }
 
+                                    // Localization
+                                    fieldFromList.EnsureProperties(f => f.Title, f => f.Description);
+                                    // IMPORTANT! Title or Description corresponding to the culture of the web, must be set first, otherwise localizations doesn't work.
+                                    var primaryLocalization = listInfo.TemplateList.FieldsLocalizations.FirstOrDefault(l => l.Id.Equals(fieldGuid) && webCultureInfo.Name.Equals(l.CultureName, StringComparison.InvariantCultureIgnoreCase));
+                                    if (primaryLocalization != null && (fieldFromList.Title != primaryLocalization.TitleResource || fieldFromList.Description != primaryLocalization.DescriptionResource))
+                                    {
+                                        fieldFromList.Title = primaryLocalization.TitleResource;
+                                        fieldFromList.Description = primaryLocalization.DescriptionResource;
+                                    }
+
+                                    foreach (var fieldLocalization in listInfo.TemplateList.FieldsLocalizations.Where(l => l.Id.Equals(fieldGuid) && cultureNames.Contains(l.CultureName, StringComparer.InvariantCultureIgnoreCase)))
+                                    {
+                                        fieldFromList.SetLocalizationForField(fieldLocalization.CultureName, fieldLocalization.TitleResource, fieldLocalization.DescriptionResource);
                                     }
                                 }
                             }
@@ -218,20 +246,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         web.Context.ExecuteQueryRetry();
                     }
 
-                    #endregion
-
-                    #region Field Localizations
-                    foreach (var listInfo in processedLists)
-                    {
-                        if (listInfo.TemplateList.FieldsLocalizations.Any())
-                        {
-                            foreach (var fieldLocalization in listInfo.TemplateList.FieldsLocalizations.Where(l => cultureNames.Contains(l.CultureName, StringComparer.InvariantCultureIgnoreCase)))
-                            {
-                                var field = listInfo.SiteList.Fields.GetById(fieldLocalization.Id);
-                                field.SetLocalizationForField(fieldLocalization.CultureName, fieldLocalization.TitleResource, fieldLocalization.DescriptionResource);
-                            }
-                        }
-                    }
                     #endregion
 
                     #region Default Field Values
@@ -267,14 +281,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             web.Context.ExecuteQueryRetry();
                         }
 
-                        var existingViews = createdList.Views;
-                        web.Context.Load(existingViews, vs => vs.Include(v => v.Title, v => v.Id));
-                        web.Context.ExecuteQueryRetry();
                         foreach (var view in list.Views)
                         {
-
-                            CreateView(web, view, existingViews, createdList, scope);
-
+                            CreateView(web, view, createdList, scope, parser);
                         }
 
                         //// Removing existing views set the OnQuickLaunch option to false and need to be re-set.
@@ -304,10 +313,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return parser;
         }
 
-        private void CreateView(Web web, View view, ViewCollection existingViews, List createdList, PnPMonitoredScope monitoredScope)
+        private void CreateView(Web web, View view, List createdList, PnPMonitoredScope monitoredScope, TokenParser parser)
         {
             try
             {
+                var existingViews = createdList.Views;
+                web.Context.Load(existingViews, vs => vs.Include(v => v.Title, v => v.Id, v => v.ServerRelativeUrl, v => v.DefaultView, v => v.PersonalView));
+                web.Context.ExecuteQueryRetry();
 
                 var viewElement = XElement.Parse(view.SchemaXml);
                 var displayNameElement = viewElement.Attribute("DisplayName");
@@ -317,10 +329,38 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 }
 
                 monitoredScope.LogDebug(CoreResources.Provisioning_ObjectHandlers_ListInstances_Creating_view__0_, displayNameElement.Value);
-                var existingView = existingViews.FirstOrDefault(v => v.Title == displayNameElement.Value);
+
+                var urlAttribute = viewElement.Attribute("Url");
+                var urlHasValue = urlAttribute != null && !string.IsNullOrEmpty(urlAttribute.Value);
+
+                Microsoft.SharePoint.Client.View existingView = null;
+                Microsoft.SharePoint.Client.View tempView = null;
+
+                if (urlHasValue)
+                {
+                    urlAttribute.Value = parser.ParseString(urlAttribute.Value);
+                    existingView = existingViews.FirstOrDefault(v => v.ServerRelativeUrl == urlAttribute.Value);
+                }
+                else
+                    existingView = existingViews.FirstOrDefault(v => v.Title == displayNameElement.Value);
 
                 if (existingView != null)
                 {
+                    if (existingView.DefaultView == true && existingViews.Count(v => v.PersonalView == false) == 1)
+                    {
+                        // If the view is Default and it is the only Public view, it cannot be deleted.
+                        // In this case create a temporary default view (will be deleteed later)
+                        var tempViewCI = new ViewCreationInformation
+                        {
+                            Title = string.Concat(existingView.Title, Guid.NewGuid().ToString()),
+                            PersonalView = false,
+                            SetAsDefaultView = true,
+                        };
+
+                        tempView = createdList.Views.Add(tempViewCI);
+                        web.Context.ExecuteQueryRetry();
+                    }
+
                     existingView.DeleteObject();
                     web.Context.ExecuteQueryRetry();
                 }
@@ -377,8 +417,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                 // Allow to specify a custom view url. View url is taken from title, so we first set title to the view url value we need, 
                 // create the view and then set title back to the original value
-                var urlAttribute = viewElement.Attribute("Url");
-                var urlHasValue = urlAttribute != null && !string.IsNullOrEmpty(urlAttribute.Value);
                 if (urlHasValue)
                 {
                     //set Title to be equal to url (in order to generate desired url)
@@ -417,6 +455,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     }
                 }
 
+                if (tempView != null)
+                    tempView.DeleteObject();
+
                 createdList.Update();
                 web.Context.ExecuteQueryRetry();
             }
@@ -427,7 +468,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
         }
 
-        private static void UpdateFieldRef(List siteList, Guid fieldId, FieldRef fieldRef)
+        private static Field UpdateFieldRef(List siteList, Guid fieldId, FieldRef fieldRef)
         {
             // find the field in the list
             var listField = siteList.Fields.GetById(fieldId);
@@ -436,11 +477,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             siteList.Context.ExecuteQueryRetry();
 
             var isDirty = false;
-            if (!string.IsNullOrEmpty(fieldRef.DisplayName) && fieldRef.DisplayName != listField.Title)
-            {
-                listField.Title = fieldRef.DisplayName;
-                isDirty = true;
-            }
+            //if (!string.IsNullOrEmpty(fieldRef.DisplayName) && fieldRef.DisplayName != listField.Title)
+            //{
+            //    listField.Title = fieldRef.DisplayName;
+            //    isDirty = true;
+            //}
             // We cannot configure Hidden property for Phonetic fields 
             if (!(siteList.BaseTemplate == (int)ListTemplateType.Contacts &&
                 (fieldRef.Name.Equals("LastNamePhonetic", StringComparison.InvariantCultureIgnoreCase) ||
@@ -462,17 +503,24 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
             if (isDirty)
             {
-                listField.UpdateAndPushChanges(true);
-                siteList.Context.ExecuteQueryRetry();
+                try
+                {
+                    listField.UpdateAndPushChanges(true);
+                    siteList.Context.ExecuteQueryRetry();
+                    //TODO: Midlertidig fix. Michael tjek årsag til at Hidden feldt ikke kan sættes.
+                }
+                catch { }
             }
+
+            return listField;
         }
 
-        private static void CreateFieldRef(ListInfo listInfo, Field field, FieldRef fieldRef)
+        private static Field CreateFieldRef(ListInfo listInfo, Field field, FieldRef fieldRef)
         {
             XElement element = XElement.Parse(field.SchemaXml);
 
             element.SetAttributeValue("AllowDeletion", "TRUE");
-
+            
             field.SchemaXml = element.ToString();
 
             var createdField = listInfo.SiteList.Fields.Add(field);
@@ -498,18 +546,27 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
             if (isDirty)
             {
-                createdField.Update();
-                createdField.Context.ExecuteQueryRetry();
+                try
+                {
+                    createdField.Update();
+                    createdField.Context.ExecuteQueryRetry();
+                    //TODO: Midlertidig fix. Michael tjek årsag til at Hidden feldt ikke kan sættes.
+                }
+                catch { }
             }
+
+            return createdField;
         }
 
-        private static void CreateField(XElement fieldElement, ListInfo listInfo, TokenParser parser)
+        private static Field CreateField(XElement fieldElement, ListInfo listInfo, TokenParser parser)
         {
             fieldElement = PrepareField(fieldElement);
 
             var fieldXml = parser.ParseString(fieldElement.ToString(), "~sitecollection", "~site");
-            listInfo.SiteList.Fields.AddFieldAsXml(fieldXml, false, AddFieldOptions.AddFieldInternalNameHint);
+            var field = listInfo.SiteList.Fields.AddFieldAsXml(fieldXml, false, AddFieldOptions.AddFieldInternalNameHint);
             listInfo.SiteList.Context.ExecuteQueryRetry();
+
+            return field;
         }
 
         private void UpdateField(ClientObject web, ListInfo listInfo, Guid fieldId, XElement templateFieldElement, Field existingField, PnPMonitoredScope scope, TokenParser parser)
@@ -1008,7 +1065,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                     list = ExtractContentTypes(web, siteList, contentTypeFields, list);
 
-                    list = ExtractViews(siteList, list);
+                    list = ExtractViews(web, siteList, list);
 
                     list = ExtractFields(web, siteList, contentTypeFields, list, lists);
 
@@ -1050,7 +1107,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return template;
         }
 
-        private static ListInstance ExtractViews(List siteList, ListInstance list)
+        private ListInstance ExtractViews(Web web, List siteList, ListInstance list)
         {
             foreach (var view in siteList.Views.AsEnumerable().Where(view => !view.Hidden))
             {
@@ -1071,9 +1128,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     xslLinkElement.Remove();
                 }
 
-                list.Views.Add(new View { SchemaXml = schemaElement.ToString() });
+                list.Views.Add(new View { SchemaXml = Tokenize(schemaElement.ToString(), web.ServerRelativeUrl) });
             }
-
+            
             return list;
         }
 
