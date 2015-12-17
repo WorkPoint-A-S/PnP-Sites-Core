@@ -918,18 +918,24 @@ namespace Microsoft.SharePoint.Client
             {
                 // Get a reference to the target list, if any
                 // and load file item properties
+                var checkOutRequired = false;
                 var parentList = file.ListItemAllFields.ParentList;
                 context.Load(parentList, l => l.ForceCheckout);
                 context.Load(file.ListItemAllFields);
                 context.Load(file.ListItemAllFields.FieldValuesAsText);
+                
                 try
                 {
                     context.ExecuteQueryRetry();
+                    if (parentList != null)
+                    {
+                        checkOutRequired = parentList.ForceCheckout;
+                    }
                 }
                 catch (ServerException ex)
                 {
                     // If this throws ServerException (does not belong to list), then shouldn't be trying to set properties)
-                    if (ex.Message != "The object specified does not belong to a list.")
+                    if (ex.ServerErrorCode != -2146232832)
                     {
                         throw;
                     }
@@ -1020,12 +1026,6 @@ namespace Microsoft.SharePoint.Client
                 if (changedProperties.Count > 0)
                 {
                     Log.Info(Constants.LOGGING_SOURCE, CoreResources.FileFolderExtensions_UpdateFile0Properties1, file.Name, changedPropertiesString);
-                    var checkOutRequired = false;
-
-                    if(parentList != null)
-                    {
-                        checkOutRequired = parentList.ForceCheckout;
-                    }
 
                     if (checkoutIfRequired && checkOutRequired && file.CheckOutType == CheckOutType.None)
                     {
