@@ -753,7 +753,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
                     }
                     schemaPage.Layout = pageLayout;
                     schemaPage.Overwrite = page.Overwrite;
-                    schemaPage.Security = page.Security.FromTemplateToSchemaObjectSecurityV201508();
+                    schemaPage.Security = (page.Security != null) ? page.Security.FromTemplateToSchemaObjectSecurityV201508() : null;
 
                     schemaPage.WebParts = page.WebParts.Count > 0 ?
                         (from wp in page.WebParts
@@ -853,7 +853,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
                              Description = wd.Description,
                              DisplayName = wd.DisplayName,
                              DraftVersion = wd.DraftVersion,
-                             FormField = wd.FormField.ToXmlElement(),
+                             FormField = (wd.FormField != null) ? wd.FormField.ToXmlElement() : null,
                              Id = wd.Id.ToString(),
                              InitiationUrl = wd.InitiationUrl,
                              Properties = (wd.Properties != null && wd.Properties.Count > 0) ?
