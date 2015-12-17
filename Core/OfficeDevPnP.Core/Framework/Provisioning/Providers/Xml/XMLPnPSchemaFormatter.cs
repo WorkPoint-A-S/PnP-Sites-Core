@@ -29,7 +29,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
         {
             get
             {
-                return (new XMLPnPSchemaV201508Formatter());
+                return (new XMLPnPSchemaV201512Formatter());
             }
         }
 
@@ -52,8 +52,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
 #pragma warning restore CS0618 // Type or member is obsolete
                 case XMLPnPSchemaVersion.V201508:
                     return (new XMLPnPSchemaV201508Formatter());
+                case XMLPnPSchemaVersion.V201512:
+                    return (new XMLPnPSchemaV201512Formatter());
                 default:
-                    return (new XMLPnPSchemaV201508Formatter());
+                    return (new XMLPnPSchemaV201512Formatter());
             }
         }
 
@@ -74,8 +76,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
 #pragma warning restore CS0618 // Type or member is obsolete
                 case XMLConstants.PROVISIONING_SCHEMA_NAMESPACE_2015_08:
                     return (new XMLPnPSchemaV201508Formatter());
+                case XMLConstants.PROVISIONING_SCHEMA_NAMESPACE_2015_12:
+                    return (new XMLPnPSchemaV201512Formatter());
                 default:
-                    return (new XMLPnPSchemaV201508Formatter());
+                    return (new XMLPnPSchemaV201512Formatter());
             }
         }
 

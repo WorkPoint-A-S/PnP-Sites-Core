@@ -16,18 +16,18 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
 
         public ListInstance(IEnumerable<ContentTypeBinding> contentTypeBindings,
             IEnumerable<View> views, IEnumerable<Field> fields, IEnumerable<FieldRef> fieldRefs, List<DataRow> dataRows) :
-                this(contentTypeBindings, views, fields, fieldRefs, dataRows, null, null, null, null)
+                this(contentTypeBindings, views, fields, fieldRefs, dataRows, null, null, null)
         {
         }
 
         public ListInstance(IEnumerable<ContentTypeBinding> contentTypeBindings,
             IEnumerable<View> views, IEnumerable<Field> fields, IEnumerable<FieldRef> fieldRefs, List<DataRow> dataRows, Dictionary<String, String> fieldDefaults, ObjectSecurity security) :
-                this(contentTypeBindings, views, fields, fieldRefs, dataRows, fieldDefaults, security, null, null)
+                this(contentTypeBindings, views, fields, fieldRefs, dataRows, fieldDefaults, security, null)
         {
         }
 
         public ListInstance(IEnumerable<ContentTypeBinding> contentTypeBindings,
-            IEnumerable<View> views, IEnumerable<Field> fields, IEnumerable<FieldRef> fieldRefs, List<DataRow> dataRows, Dictionary<String, String> fieldDefaults, ObjectSecurity security, List<Localization> listLocalizations, List<Localization> fieldsLocalizations)
+            IEnumerable<View> views, IEnumerable<Field> fields, IEnumerable<FieldRef> fieldRefs, List<DataRow> dataRows, Dictionary<String, String> fieldDefaults, ObjectSecurity security, List<Folder> folders)
         {
             if (contentTypeBindings != null)
             {
@@ -68,6 +68,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
             {
                 this._fieldsLocalizations.AddRange(fieldsLocalizations);
             }
+            if (folders != null)
+            {
+                this._folders = folders;
+        }
         }
 
         #endregion
@@ -82,6 +86,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         private List<Localization> _fieldsLocalizations = new List<Localization>();
         private Dictionary<String, String> _fieldDefaults = new Dictionary<String, String>();
         private ObjectSecurity _security = null;
+        private List<Folder> _folders = new List<Folder>();
         private bool _enableFolderCreation = true;
         private bool _enableAttachments = true;
         #endregion
@@ -253,6 +258,16 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
             set { this._security = value; }
         }
 
+        /// <summary>
+        /// Defines a collection of folders (eventually nested) that 
+        /// will be provisioned into the target list/library
+        /// </summary>
+        public List<Folder> Folders
+        {
+            get { return this._folders; }
+            set { this._folders = value; }
+        }
+
         #endregion
 
         #region Comparison code
@@ -321,9 +336,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
                 this.Fields.DeepEquals(other.Fields) &&
                 this.FieldRefs.DeepEquals(other.FieldRefs) &&
                 this.ListLocalizations.DeepEquals(other.ListLocalizations) &&
-                this.FieldsLocalizations.DeepEquals(other.FieldsLocalizations) &&
+                this.FieldsLocalizations.DeepEquals(other.FieldsLocalizations));
+                this.FieldRefs.DeepEquals(other.FieldRefs) &&
                 this.FieldDefaults.DeepEquals(other.FieldDefaults) &&
-                this.Security != null && other.Security == null ? this.Security.Equals(other.Security) : true
+                this.Security != null && other.Security == null ? this.Security.Equals(other.Security) : true &&
+                this.Folders.DeepEquals(other.Folders)
                 );
         }
 

@@ -115,6 +115,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                 web.AddWebPartToWikiPage(url, wpEntity, (int)webpart.Row, (int)webpart.Column, false);
                             }
                         }
+                        var allWebParts = web.GetWebParts(url);
+                        foreach (var webpart in allWebParts)
+                        {
+                            parser.AddToken(new WebPartIdToken(web, webpart.WebPart.Title, webpart.Id));
+                        }
                     }
 
                     file = web.GetFileByServerRelativeUrl(url);

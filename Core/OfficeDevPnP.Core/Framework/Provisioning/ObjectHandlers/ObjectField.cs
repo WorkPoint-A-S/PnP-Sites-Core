@@ -196,13 +196,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             web.Context.Load(field, f => f.TypeAsString, f => f.DefaultValue);
             web.Context.ExecuteQueryRetry();
 
-            if ((field.TypeAsString == "TaxonomyFieldType" || field.TypeAsString == "TaxonomyFieldTypeMulti") && !string.IsNullOrEmpty(field.DefaultValue))
+            if((field.TypeAsString == "TaxonomyFieldType" || field.TypeAsString == "TaxonomyFieldTypeMulti")  && !string.IsNullOrEmpty(field.DefaultValue))
             {
                 var taxField = web.Context.CastTo<TaxonomyField>(field);
                 ValidateTaxonomyFieldDefaultValue(taxField);
-            }
-
-            return field;
+        }
         }
 
         private static void ValidateTaxonomyFieldDefaultValue(TaxonomyField field)
