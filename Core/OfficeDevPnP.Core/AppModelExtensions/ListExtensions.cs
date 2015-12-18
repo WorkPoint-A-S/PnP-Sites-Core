@@ -931,8 +931,9 @@ namespace Microsoft.SharePoint.Client
         /// <param name="viewFields"></param>
         /// <param name="rowLimit"></param>
         /// <param name="setAsDefault"></param>
-        /// <param name="query"></param>
+        /// <param name="query"></param>        
         /// <param name="personal"></param>
+        /// <param name="paged"></param>        
         public static View CreateView(this List list,
                                       string viewName,
                                       ViewType viewType,
@@ -940,7 +941,8 @@ namespace Microsoft.SharePoint.Client
                                       uint rowLimit,
                                       bool setAsDefault,
                                       string query = null,
-                                      bool personal = false)
+                                      bool personal = false,
+                                      bool paged = false)
         {
             if (string.IsNullOrEmpty(viewName))
                 throw new ArgumentNullException("viewName");
@@ -952,6 +954,7 @@ namespace Microsoft.SharePoint.Client
             viewCreationInformation.ViewFields = viewFields;
             viewCreationInformation.PersonalView = personal;
             viewCreationInformation.SetAsDefaultView = setAsDefault;
+            viewCreationInformation.Paged = paged;
             if (!string.IsNullOrEmpty(query))
             {
                 viewCreationInformation.Query = query;
