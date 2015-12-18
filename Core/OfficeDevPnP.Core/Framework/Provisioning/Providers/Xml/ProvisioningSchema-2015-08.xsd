@@ -235,20 +235,6 @@
         </xsd:complexType>
       </xsd:element>
 
-      <xsd:element name="SiteFieldsLocalizations" minOccurs="0" maxOccurs="1">
-        <xsd:annotation>
-          <xsd:documentation xml:lang="en">
-            Site Column localizations, optional element.
-          </xsd:documentation>
-        </xsd:annotation>
-        <xsd:complexType>
-          <xsd:sequence>
-            <xsd:element name="Localization" type="pnp:LocalizationField"
-                                      minOccurs="0" maxOccurs="unbounded" />
-          </xsd:sequence>
-        </xsd:complexType>
-      </xsd:element>
-
       <xsd:element name="ContentTypes" minOccurs="0" maxOccurs="1">
         <xsd:annotation>
           <xsd:documentation xml:lang="en">

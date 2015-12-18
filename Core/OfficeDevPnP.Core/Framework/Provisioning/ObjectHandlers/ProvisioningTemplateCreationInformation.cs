@@ -17,11 +17,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         private bool includeAllTermGroups = false;
         private bool includeSiteCollectionTermGroup = false;
         private bool includeSiteGroups = false;
-        private bool persistHomePageFile = false;
         private bool includeSearchConfiguration = false;
         private List<String> propertyBagPropertiesToPreserve;
-
-        private Handlers handlersToProcess = Handlers.All;
 
         public ProvisioningProgressDelegate ProgressDelegate { get; set; }
         public ProvisioningMessagesDelegate MessagesDelegate { get; set; }
@@ -78,18 +75,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
         }
 
-        public bool PersistHomePageFile
-        {
-            get
-            {
-                return this.persistHomePageFile;
-            }
-            set
-            {
-                this.persistHomePageFile = value;
-            }
-        }
-
         public bool IncludeAllTermGroups
         {
             get
@@ -129,18 +114,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             set
             {
                 this.includeSearchConfiguration = value;
-            }
-        }
-
-        public Handlers HandlersToProcess
-        {
-            get
-            {
-                return handlersToProcess;
-            }
-            set
-            {
-                handlersToProcess = value;
             }
         }
     }

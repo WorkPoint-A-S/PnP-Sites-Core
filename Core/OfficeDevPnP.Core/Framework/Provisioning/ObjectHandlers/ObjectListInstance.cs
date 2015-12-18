@@ -159,7 +159,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                 {
                                     field.Title = primaryLocalization.TitleResource;
                                     field.Description = primaryLocalization.DescriptionResource;
-                                }
+                            }
 
                                 foreach (var localization in template.SiteFieldsLocalizations.Where(l => l.Id.Equals(fieldRef.Id) && cultureNames.Contains(l.CultureName, StringComparer.InvariantCultureIgnoreCase)))
                                 {
@@ -238,9 +238,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                     foreach (var fieldLocalization in listInfo.TemplateList.FieldsLocalizations.Where(l => l.Id.Equals(fieldGuid) && cultureNames.Contains(l.CultureName, StringComparer.InvariantCultureIgnoreCase)))
                                     {
                                         fieldFromList.SetLocalizationForField(fieldLocalization.CultureName, fieldLocalization.TitleResource, fieldLocalization.DescriptionResource);
-                                    }
                                 }
                             }
+                        }
                         }
                         listInfo.SiteList.Update();
                         web.Context.ExecuteQueryRetry();
@@ -505,8 +505,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 try
                 {
-                    listField.UpdateAndPushChanges(true);
-                    siteList.Context.ExecuteQueryRetry();
+                listField.UpdateAndPushChanges(true);
+                siteList.Context.ExecuteQueryRetry();
                     //TODO: Midlertidig fix. Michael tjek årsag til at Hidden feldt ikke kan sættes.
                 }
                 catch { }
@@ -520,7 +520,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             XElement element = XElement.Parse(field.SchemaXml);
 
             element.SetAttributeValue("AllowDeletion", "TRUE");
-            
+
             field.SchemaXml = element.ToString();
 
             var createdField = listInfo.SiteList.Fields.Add(field);
@@ -548,8 +548,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 try
                 {
-                    createdField.Update();
-                    createdField.Context.ExecuteQueryRetry();
+                createdField.Update();
+                createdField.Context.ExecuteQueryRetry();
                     //TODO: Midlertidig fix. Michael tjek årsag til at Hidden feldt ikke kan sættes.
                 }
                 catch { }
@@ -980,9 +980,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                 if (shouldDelete)
                 {
-                    ct.DeleteObject();
-                    web.Context.ExecuteQueryRetry();
-                }
+                ct.DeleteObject();
+                web.Context.ExecuteQueryRetry();
+            }
             }
 
             if (list.Security != null)
@@ -1151,7 +1151,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                 list.Views.Add(new View { SchemaXml = Tokenize(schemaElement.ToString(), web.ServerRelativeUrl) });
             }
-            
+
             return list;
         }
 
