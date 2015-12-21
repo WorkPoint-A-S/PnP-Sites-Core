@@ -52,7 +52,7 @@ namespace Microsoft.SharePoint.Client
             }
             web.Context.ExecuteQueryRetry();
 
-            if(scope.TestResult.Value)
+            if (scope.TestResult.Value)
             {
                 file.CheckIn(comment, checkinType);
                 web.Context.ExecuteQueryRetry();
@@ -796,7 +796,7 @@ namespace Microsoft.SharePoint.Client
             try
             {
                 folder.EnsureProperties(f => f.ServerRelativeUrl);
-                
+
                 var fileServerRelativeUrl = UrlUtility.Combine(folder.ServerRelativeUrl, fileName);
                 var context = folder.Context as ClientContext;
 
@@ -929,7 +929,7 @@ namespace Microsoft.SharePoint.Client
                 catch (ServerException ex)
                 {
                     // If this throws ServerException (does not belong to list), then shouldn't be trying to set properties)
-                    if (ex.Message != "The object specified does not belong to a list.")
+                    if (ex.ServerErrorCode != -2146232832)
                     {
                         throw;
                     }
@@ -972,7 +972,7 @@ namespace Microsoft.SharePoint.Client
                             }
                         case "CONTENTTYPEID":
                             {
-                                if(!currentValue.Equals(propertyValue, StringComparison.InvariantCultureIgnoreCase))
+                                if (!currentValue.Equals(propertyValue, StringComparison.InvariantCultureIgnoreCase))
                                 {
                                     changedProperties[propertyName] = propertyValue;
                                     changedPropertiesString.AppendFormat("{0}='{1}'; ", propertyName, propertyValue);
@@ -1022,7 +1022,7 @@ namespace Microsoft.SharePoint.Client
                     Log.Info(Constants.LOGGING_SOURCE, CoreResources.FileFolderExtensions_UpdateFile0Properties1, file.Name, changedPropertiesString);
                     var checkOutRequired = false;
 
-                    if(parentList != null)
+                    if (parentList != null)
                     {
                         checkOutRequired = parentList.ForceCheckout;
                     }
@@ -1085,7 +1085,7 @@ namespace Microsoft.SharePoint.Client
                 }
                 catch (ServerException ex)
                 {
-                    if (ex.Message != "The object specified does not belong to a list.")
+                    if (ex.ServerErrorCode != -2146232832)
                     {
                         throw;
                     }
