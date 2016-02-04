@@ -2099,6 +2099,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
         public static V201508.AuditSettingsAudit[] FromTemplateToSchemaAuditsV201508(this Microsoft.SharePoint.Client.AuditMaskType audits)
         {
             List<V201508.AuditSettingsAudit> result = new List<AuditSettingsAudit>();
+
             if (audits.HasFlag(Microsoft.SharePoint.Client.AuditMaskType.All))
             {
                 result.Add(new AuditSettingsAudit { AuditFlag = AuditSettingsAuditAuditFlag.All });
