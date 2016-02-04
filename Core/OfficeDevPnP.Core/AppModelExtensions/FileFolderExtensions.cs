@@ -177,17 +177,63 @@ namespace Microsoft.SharePoint.Client
             }
 
             var folderCollection = parentFolder.Folders;
-            var folder = CreateFolderImplementation(folderCollection, folderName);
+            var folder = CreateFolderImplementation(folderCollection, folderName, parentFolder);
             return folder;
         }
 
-        private static Folder CreateFolderImplementation(FolderCollection folderCollection, string folderName)
+        private static Folder CreateFolderImplementation(FolderCollection folderCollection, string folderName, Folder parentFolder = null)
         {
-            var newFolder = folderCollection.Add(folderName);
-            folderCollection.Context.Load(newFolder);
-            folderCollection.Context.ExecuteQueryRetry();
+            ClientContext context = null;
+            if (parentFolder != null)
+            {
+                context = parentFolder.Context as ClientContext;
+            }
 
-            return newFolder;
+            List parentList = null;
+
+            if (parentFolder != null)
+            {
+                parentFolder.EnsureProperty(p => p.Properties);
+                if (parentFolder.Properties.FieldValues.ContainsKey("vti_listname"))
+                {
+                    if (context != null)
+                    {
+                        Guid parentListId = Guid.Parse((String)parentFolder.Properties.FieldValues["vti_listname"]);
+                        parentList = context.Web.Lists.GetById(parentListId);
+                        context.Load(parentList, l => l.BaseType, l => l.Title);
+                        context.ExecuteQueryRetry();
+                    }
+                }
+            }
+
+            if (parentList == null)
+            {
+                // Create folder for library or common URL path
+                var newFolder = folderCollection.Add(folderName);
+                folderCollection.Context.Load(newFolder);
+                folderCollection.Context.ExecuteQueryRetry();
+                return newFolder;
+            }
+            else
+            {
+                // Create folder for generic list
+                ListItemCreationInformation newFolderInfo = new ListItemCreationInformation();
+                newFolderInfo.UnderlyingObjectType = FileSystemObjectType.Folder;
+                newFolderInfo.LeafName = folderName;
+                parentFolder.EnsureProperty(f => f.ServerRelativeUrl);
+                newFolderInfo.FolderUrl = parentFolder.ServerRelativeUrl;
+                ListItem newFolderItem = parentList.AddItem(newFolderInfo);
+                newFolderItem["Title"] = folderName;
+                newFolderItem.Update();
+                context.ExecuteQueryRetry();
+
+                // Get the newly created folder
+                var newFolder = parentFolder.Folders.GetByUrl(folderName);
+                // Ensure all properties are loaded (to be compatible with the previous implementation)
+                context.Load(newFolder);
+                context.ExecuteQuery();
+                return (newFolder);
+            }
         }
 
         /// <summary>
@@ -276,11 +322,11 @@ namespace Microsoft.SharePoint.Client
             }
 
             var folderCollection = parentFolder.Folders;
-            var folder = EnsureFolderImplementation(folderCollection, folderName);
+            var folder = EnsureFolderImplementation(folderCollection, folderName, parentFolder);
             return folder;
         }
 
-        private static Folder EnsureFolderImplementation(FolderCollection folderCollection, string folderName)
+        private static Folder EnsureFolderImplementation(FolderCollection folderCollection, string folderName, Folder parentFolder = null)
         {
             Folder folder = null;
 
@@ -297,7 +343,7 @@ namespace Microsoft.SharePoint.Client
 
             if (folder == null)
             {
-                folder = CreateFolderImplementation(folderCollection, folderName);
+                folder = CreateFolderImplementation(folderCollection, folderName, parentFolder);
             }
 
             return folder;

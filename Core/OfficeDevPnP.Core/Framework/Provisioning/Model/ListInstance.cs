@@ -8,52 +8,51 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
     /// <summary>
     /// Domain Object that specifies the properties of the new list.
     /// </summary>
-    public partial class ListInstance : IEquatable<ListInstance>
+    public partial class ListInstance : BaseModel, IEquatable<ListInstance>
     {
         #region Constructors
 
-        public ListInstance() { }
+        public ListInstance()
+        {
+            this._ctBindings = new ContentTypeBindingCollection(this.ParentTemplate);
+            this._views = new ViewCollection(this.ParentTemplate);
+            this._fields = new FieldCollection(this.ParentTemplate);
+            this._fieldRefs = new FieldRefCollection(this.ParentTemplate);
+            this._dataRows = new DataRowCollection(this.ParentTemplate);
+            this._folders = new FolderCollection(this.ParentTemplate);
+        }
 
         public ListInstance(IEnumerable<ContentTypeBinding> contentTypeBindings,
-            IEnumerable<View> views, IEnumerable<Field> fields, IEnumerable<FieldRef> fieldRefs, List<DataRow> dataRows) :
-                this(contentTypeBindings, views, fields, fieldRefs, dataRows, null, null, null, null)
+                   IEnumerable<View> views, IEnumerable<Field> fields, IEnumerable<FieldRef> fieldRefs, List<DataRow> dataRows) :
+                       this(contentTypeBindings, views, fields, fieldRefs, dataRows, null, null, null, null, null)
         {
         }
 
         public ListInstance(IEnumerable<ContentTypeBinding> contentTypeBindings,
-            IEnumerable<View> views, IEnumerable<Field> fields, IEnumerable<FieldRef> fieldRefs, List<DataRow> dataRows, Dictionary<String, String> fieldDefaults, ObjectSecurity security, List<Localization> listLocalizations, List<Localization> fieldsLocalizations)
+          IEnumerable<View> views, IEnumerable<Field> fields, IEnumerable<FieldRef> fieldRefs, List<DataRow> dataRows, Dictionary<String, String> fieldDefaults, ObjectSecurity security) :
+              this(contentTypeBindings, views, fields, fieldRefs, dataRows, fieldDefaults, security, null, null, null)
         {
-            if (contentTypeBindings != null)
-            {
-                this.ContentTypeBindings.AddRange(contentTypeBindings);
-            }
+        }
 
-            if (views != null)
-            {
-                this.Views.AddRange(views);
-            }
-
-            if (fields != null)
-            {
-                this.Fields.AddRange(fields);
-            }
-
-            if (fieldRefs != null)
-            {
-                this._fieldRefs.AddRange(fieldRefs);
-            }
-            if (dataRows != null)
-            {
-                this._dataRows.AddRange(dataRows);
-            }
+        public ListInstance(IEnumerable<ContentTypeBinding> contentTypeBindings,
+            IEnumerable<View> views, IEnumerable<Field> fields, IEnumerable<FieldRef> fieldRefs, List<DataRow> dataRows, Dictionary<String, String> fieldDefaults, ObjectSecurity security, List<Folder> folders, List<Localization> listLocalizations, List<Localization> fieldsLocalizations) :
+            this()
+        {
+            this.ContentTypeBindings.AddRange(contentTypeBindings);
+            this.Views.AddRange(views);
+            this.Fields.AddRange(fields);
+            this.FieldRefs.AddRange(fieldRefs);
+            this.DataRows.AddRange(dataRows);
             if (fieldDefaults != null)
             {
                 this._fieldDefaults = fieldDefaults;
             }
             if (security != null)
             {
-                this._security = security;
+                this.Security = security;
             }
+            this.Folders.AddRange(folders);
+
             if (listLocalizations != null)
             {
                 this._listLocalizations.AddRange(listLocalizations);
@@ -62,23 +61,23 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
             {
                 this._fieldsLocalizations.AddRange(fieldsLocalizations);
             }
-            
         }
 
         #endregion
 
         #region Private Members
-        private List<ContentTypeBinding> _ctBindings = new List<ContentTypeBinding>();
-        private List<View> _views = new List<View>();
-        private List<Field> _fields = new List<Field>();
-        private List<FieldRef> _fieldRefs = new List<FieldRef>();
-        private List<DataRow> _dataRows = new List<DataRow>();
-        private List<Localization> _listLocalizations = new List<Localization>();
-        private List<Localization> _fieldsLocalizations = new List<Localization>();
+        private ContentTypeBindingCollection _ctBindings;
+        private ViewCollection _views;
+        private FieldCollection _fields;
+        private FieldRefCollection _fieldRefs;
+        private DataRowCollection _dataRows;
         private Dictionary<String, String> _fieldDefaults = new Dictionary<String, String>();
         private ObjectSecurity _security = null;
+        private FolderCollection _folders;
         private bool _enableFolderCreation = true;
         private bool _enableAttachments = true;
+        private List<Localization> _listLocalizations = new List<Localization>();
+        private List<Localization> _fieldsLocalizations = new List<Localization>();
         #endregion
 
         #region Properties
@@ -183,7 +182,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         /// <summary>
         /// Gets or sets the content types to associate to the list
         /// </summary>
-        public List<ContentTypeBinding> ContentTypeBindings
+        public ContentTypeBindingCollection ContentTypeBindings
         {
             get { return this._ctBindings; }
             private set { this._ctBindings = value; }
@@ -192,19 +191,19 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         /// <summary>
         /// Gets or sets the content types to associate to the list
         /// </summary>
-        public List<View> Views
+        public ViewCollection Views
         {
             get { return this._views; }
             private set { this._views = value; }
         }
 
-        public List<Field> Fields
+        public FieldCollection Fields
         {
             get { return this._fields; }
             private set { this._fields = value; }
         }
 
-        public List<FieldRef> FieldRefs
+        public FieldRefCollection FieldRefs
         {
             get { return this._fieldRefs; }
             private set { this._fieldRefs = value; }
@@ -212,22 +211,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
 
         public Guid TemplateFeatureID { get; set; }
 
-        public List<DataRow> DataRows
+        public DataRowCollection DataRows
         {
             get { return this._dataRows; }
             private set { this._dataRows = value; }
-        }
-
-        public List<Localization> ListLocalizations
-        {
-            get { return this._listLocalizations; }
-            private set { this._listLocalizations = value; }
-        }
-
-        public List<Localization> FieldsLocalizations
-        {
-            get { return this._fieldsLocalizations; }
-            private set { this._fieldsLocalizations = value; }
         }
 
         /// <summary>
@@ -245,17 +232,49 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         public ObjectSecurity Security
         {
             get { return this._security; }
-            set { this._security = value; }
+            set
+            {
+                if (this._security != null)
+                {
+                    this._security.ParentTemplate = null;
+                }
+                this._security = value;
+                if (this._security != null)
+                {
+                    this._security.ParentTemplate = this.ParentTemplate;
+                }
+            }
         }
 
+        /// <summary>
+        /// Defines a collection of folders (eventually nested) that 
+        /// will be provisioned into the target list/library
+        /// </summary>
+        public FolderCollection Folders
+        {
+            get { return this._folders; }
+            private set { this._folders = value; }
+        }
+
+        public List<Localization> ListLocalizations
+        {
+            get { return this._listLocalizations; }
+            private set { this._listLocalizations = value; }
+        }
+
+        public List<Localization> FieldsLocalizations
+        {
+            get { return this._fieldsLocalizations; }
+            private set { this._fieldsLocalizations = value; }
+        }
         #endregion
 
         #region Comparison code
 
         public override int GetHashCode()
         {
-            return (String.Format("{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|{12}|{13}|{14}|{15}|{16}|{17}|{18}|{19}|{20}|{21}|{22}|{23}|",
-                this.ContentTypesEnabled.GetHashCode(),
+            return (String.Format("{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|{12}|{13}|{14}|{15}|{16}|{17}|{18}|{19}|{20}|{21}|{22}|{23}|{24}|{25}|{26}",
+              this.ContentTypesEnabled.GetHashCode(),
                 (this.Description != null ? this.Description.GetHashCode() : 0),
                 (this.DocumentTemplate != null ? this.DocumentTemplate.GetHashCode() : 0),
                 this.EnableVersioning.GetHashCode(),
@@ -277,6 +296,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
                 this.Views.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0)),
                 this.Fields.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0)),
                 this.FieldRefs.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0)),
+                this.FieldDefaults.Aggregate(0, (acc, next) => acc += next.GetHashCode()),
+                (this.Security != null ? this.Security.GetHashCode() : 0),
+                this.Folders.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0)),
                 this.ListLocalizations.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0)),
                 this.FieldsLocalizations.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0))
             ).GetHashCode());
@@ -293,6 +315,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
 
         public bool Equals(ListInstance other)
         {
+            if (other == null)
+            {
+                return (false);
+            }
+
             return (this.ContentTypesEnabled == other.ContentTypesEnabled &&
                 this.Description == other.Description &&
                 this.DocumentTemplate == other.DocumentTemplate &&
@@ -315,8 +342,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
                 this.Views.DeepEquals(other.Views) &&
                 this.Fields.DeepEquals(other.Fields) &&
                 this.FieldRefs.DeepEquals(other.FieldRefs) &&
+                this.FieldDefaults.DeepEquals(other.FieldDefaults) &&
+                (this.Security != null ? this.Security.Equals(other.Security) : true) &&
+                this.Folders.DeepEquals(other.Folders) &&
                 this.ListLocalizations.DeepEquals(other.ListLocalizations) &&
-                this.FieldsLocalizations.DeepEquals(other.FieldsLocalizations));
+                this.FieldsLocalizations.DeepEquals(other.FieldsLocalizations)
+                );
         }
 
         #endregion

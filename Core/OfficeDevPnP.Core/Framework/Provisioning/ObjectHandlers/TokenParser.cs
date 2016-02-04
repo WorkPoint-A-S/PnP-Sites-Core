@@ -79,6 +79,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 }
             }
 
+            // Add ContentTypes
+            web.Context.Load(web.ContentTypes, cs => cs.Include(ct => ct.StringId, ct => ct.Name));
+            web.Context.ExecuteQueryRetry();
+            foreach (var ct in web.ContentTypes)
+            {
+                _tokens.Add(new ContentTypeIdToken(web, ct.Name, ct.StringId));
+            }
             // Add parameters
             foreach (var parameter in template.Parameters)
             {

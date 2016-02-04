@@ -12,13 +12,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
     ///     <cref>https://msdn.microsoft.com/en-us/library/office/ms463449.aspx</cref>
     /// </seealso>
     /// </summary>
-    public partial class ContentType : IEquatable<ContentType>
+    public partial class ContentType : BaseModel, IEquatable<ContentType>
     {
 
         #region Private Members
         private string _id;
-        private List<FieldRef> _fieldRefs = new List<FieldRef>();
+        private FieldRefCollection _fieldRefs;
         private List<Localization> _localizations = new List<Localization>();
+        
         #endregion
 
         #region Properties
@@ -46,7 +47,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         /// <summary>
         /// The FieldRefs entries of the List Instance
         /// </summary>
-        public List<FieldRef> FieldRefs
+        public FieldRefCollection FieldRefs
         {
             get { return this._fieldRefs; }
             private set { this._fieldRefs = value; }
@@ -106,9 +107,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         #endregion
 
         #region Constructors
-        public ContentType() { }
+        public ContentType()
+        {
+            _fieldRefs = new FieldRefCollection(this.ParentTemplate);
+        }
 
-        public ContentType(string id, string name, string description, string group, bool contenttypeSealed, bool hidden, bool readyonly, string documentTemplate, bool overwrite, IEnumerable<FieldRef> fieldRefs, IEnumerable<Localization> localizations)
+        public ContentType(string id, string name, string description, string group, bool contenttypeSealed, bool hidden, bool readyonly, string documentTemplate, bool overwrite, IEnumerable<FieldRef> fieldRefs, IEnumerable<Localization> localizations) :
+            this()
         {
             this.Id = id;
             this.Name = name;
@@ -119,14 +124,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
             this.Overwrite = overwrite;
             this.ReadOnly = ReadOnly;
             this.DocumentTemplate = documentTemplate;
-            if (fieldRefs != null)
-            {
-                this.FieldRefs.AddRange(fieldRefs);
-            }
+            this.FieldRefs.AddRange(fieldRefs);
+
             if (localizations != null)
                 this.Localizations.AddRange(localizations);
         }
-
         #endregion
 
         #region Comparison code
@@ -160,6 +162,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
 
         public bool Equals(ContentType other)
         {
+            if (other == null)
+            {
+                return (false);
+            }
+
             return (this.Id == other.Id &&
                     this.Name == other.Name &&
                     this.Description == other.Description &&

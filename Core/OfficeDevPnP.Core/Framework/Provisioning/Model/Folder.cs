@@ -10,12 +10,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
     /// <summary>
     /// Defines a folder that will be provisioned into the target list/library
     /// </summary>
-    public partial class Folder : IEquatable<Folder>
+    public partial class Folder : BaseModel, IEquatable<Folder>
     {
         #region Private members
 
-        private ObjectSecurity _objectSecurity = new ObjectSecurity();
-        private List<Folder> _folders = new List<Folder>();
+        private ObjectSecurity _objectSecurity;
+        private FolderCollection _folders;
 
         #endregion
 
@@ -32,13 +32,24 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         public ObjectSecurity Security
         {
             get { return _objectSecurity; }
-            private set { _objectSecurity = value; }
+            private set
+            {
+                if (this._objectSecurity != null)
+                {
+                    this._objectSecurity.ParentTemplate = null;
+                }
+                this._objectSecurity = value;
+                if (this._objectSecurity != null)
+                {
+                    this._objectSecurity.ParentTemplate = this.ParentTemplate;
+                }
+            }
         }
 
         /// <summary>
         /// Defines the child folders of the current Folder, if any
         /// </summary>
-        public List<Folder> Folders
+        public FolderCollection Folders
         {
             get { return _folders; }
             private set { _folders = value; }
@@ -48,17 +59,17 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
 
         #region Constructors
 
-        public Folder() { }
+        public Folder()
+        {
+            this.Security = new ObjectSecurity();
+            this._folders = new FolderCollection(this.ParentTemplate);
+        }
 
-        public Folder(String name, List<Folder> folders = null, ObjectSecurity security = null)
+        public Folder(String name, List<Folder> folders = null, ObjectSecurity security = null) :
+            this()
         {
             this.Name = name;
-
-            if (folders != null)
-            {
-                this.Folders = folders;
-            }
-
+            this.Folders.AddRange(folders);
             if (security != null)
             {
                 this.Security = security;
@@ -74,7 +85,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
             return (String.Format("{0}|{1}|{2}|",
                 (this.Name.GetHashCode()),
                 (this.Folders.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0))),
-                this.Security.GetHashCode()
+                (this.Security != null ? this.Security.GetHashCode() : 0)
             ).GetHashCode());
         }
 
@@ -89,9 +100,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
 
         public bool Equals(Folder other)
         {
+            if (other == null)
+            {
+                return (false);
+            }
+
             return (this.Name == other.Name &&
                     this.Folders.DeepEquals(other.Folders) &&
-                    this.Security.Equals(other.Security)
+                    (this.Security != null ? this.Security.Equals(other.Security) : true)
                 );
         }
 

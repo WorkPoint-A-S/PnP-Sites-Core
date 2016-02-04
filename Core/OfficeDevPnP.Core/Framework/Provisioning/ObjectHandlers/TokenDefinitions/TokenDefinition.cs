@@ -9,7 +9,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.TokenDefinitio
         protected string CacheValue;
         private readonly string[] _tokens;
 
-        protected TokenDefinition(Web web, params string[] token)
+        public TokenDefinition(Web web, params string[] token)
         {
             this._tokens = token;
             this.Web = web;

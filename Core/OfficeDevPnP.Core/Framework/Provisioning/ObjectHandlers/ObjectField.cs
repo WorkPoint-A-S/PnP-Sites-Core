@@ -90,12 +90,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         {
                             provisionedField.Title = primaryLocalization.TitleResource;
                             provisionedField.Description = primaryLocalization.DescriptionResource;
-                        }
+                }
 
                         foreach (var localization in template.SiteFieldsLocalizations.Where(l => l.Id.Equals(Guid.Parse(fieldId)) && cultureNames.Contains(l.CultureName, StringComparer.InvariantCultureIgnoreCase)))
                         {
                             provisionedField.SetLocalizationForField(localization.CultureName, localization.TitleResource, localization.DescriptionResource);
-                        }
+            }
                     }
                 }
             }
@@ -237,16 +237,16 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             //if (Guid.TryParse(listIdentifier, out listGuid))
                             //{
                             //    fieldXml = ParseListSchema(fieldXml, web.Lists);
-                            //if (newfieldXml == fieldXml)
-                            //{
-                            //    var list = web.Lists.GetById(listGuid);
-                            //    web.Context.Load(list, l => l.RootFolder.ServerRelativeUrl);
-                            //    web.Context.ExecuteQueryRetry();
+                                //if (newfieldXml == fieldXml)
+                                //{
+                                //    var list = web.Lists.GetById(listGuid);
+                                //    web.Context.Load(list, l => l.RootFolder.ServerRelativeUrl);
+                                //    web.Context.ExecuteQueryRetry();
 
-                            //    var listUrl = list.RootFolder.ServerRelativeUrl.Substring(web.ServerRelativeUrl.Length).TrimStart('/');
-                            //    element.Attribute("List").SetValue(listUrl);
-                            //    fieldXml = element.ToString();
-                            //}
+                                //    var listUrl = list.RootFolder.ServerRelativeUrl.Substring(web.ServerRelativeUrl.Length).TrimStart('/');
+                                //    element.Attribute("List").SetValue(listUrl);
+                                //    fieldXml = element.ToString();
+                                //}
                             //}
                         }
                         // Check if the field is of type TaxonomyField

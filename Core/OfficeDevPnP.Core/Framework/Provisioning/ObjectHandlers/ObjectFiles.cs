@@ -126,12 +126,16 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 web.Context.Load(targetFile, f => f.CheckOutType, f => f.ListItemAllFields.ParentList.ForceCheckout);
                 web.Context.ExecuteQueryRetry();
-
-                if (targetFile.CheckOutType == CheckOutType.None)
+                if (targetFile.ListItemAllFields.ServerObjectIsNull.HasValue 
+                    && !targetFile.ListItemAllFields.ServerObjectIsNull.Value 
+                    && targetFile.ListItemAllFields.ParentList.ForceCheckout)
                 {
-                    targetFile.CheckOut();
+                    if (targetFile.CheckOutType == CheckOutType.None)
+                    {
+                        targetFile.CheckOut();
+                    }
+                    checkedOut = true;
                 }
-                checkedOut = true;
             }
             catch (ServerException ex)
             {
@@ -148,12 +152,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         public override ProvisioningTemplate ExtractObjects(Web web, ProvisioningTemplate template, ProvisioningTemplateCreationInformation creationInfo)
         {
             using (var scope = new PnPMonitoredScope(this.Name))
-            {
+        {
                 // Impossible to return all files in the site currently
 
                 // If a base template is specified then use that one to "cleanup" the generated template model
                 if (creationInfo.BaseTemplate != null)
-                {
+            {
                     template = CleanupEntities(template, creationInfo.BaseTemplate);
                 }
             }

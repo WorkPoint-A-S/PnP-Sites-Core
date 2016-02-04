@@ -264,7 +264,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     }
                     #endregion
 
-
                     #region Views
 
                     foreach (var listInfo in processedLists)
@@ -299,6 +298,29 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                     #endregion
 
+                    #region Folders
+
+                    // Folders are supported for document libraries and generic lists only
+                    foreach (var list in processedLists)
+                    {
+                        list.SiteList.EnsureProperties(l => l.BaseType);
+                        if ((list.SiteList.BaseType == BaseType.DocumentLibrary |
+                            list.SiteList.BaseType == BaseType.GenericList) &&
+                            list.TemplateList.Folders != null && list.TemplateList.Folders.Count > 0)
+                        {
+                            list.SiteList.EnableFolderCreation = true;
+                            list.SiteList.Update();
+                            web.Context.ExecuteQueryRetry();
+
+                            var rootFolder = list.SiteList.RootFolder;
+                            foreach (var folder in list.TemplateList.Folders)
+                            {
+                                CreateFolderInList(rootFolder, folder, parser, scope);
+                            }
+                        }
+                    }
+
+                    #endregion
 
                     // If an existing view is updated, and the list is to be listed on the QuickLaunch, it is removed because the existing view will be deleted and recreated from scratch. 
                     foreach (var listInfo in processedLists)
@@ -646,8 +668,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     }
 
                     fieldElement.Attribute("RelationshipDeleteBehavior").Remove();
+                }
             }
-        }
 
             return fieldElement;
         }
@@ -679,7 +701,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 {
                     var oldTitle = existingList.Title;
                     existingList.Title = parser.ParseString(templateList.Title);
-                    if (! oldTitle.Equals(existingList.Title, StringComparison.OrdinalIgnoreCase))
+                    if (!oldTitle.Equals(existingList.Title, StringComparison.OrdinalIgnoreCase))
                     { 
                         parser.AddToken(new ListIdToken(web, existingList.Title, existingList.Id));
                         parser.AddToken(new ListUrlToken(web, existingList.Title, existingList.RootFolder.ServerRelativeUrl.Substring(web.ServerRelativeUrl.Length + 1)));
@@ -709,7 +731,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     existingList.OnQuickLaunch = templateList.OnQuickLaunch;
                     isDirty = true;
                 }
-                if (templateList.ContentTypesEnabled != existingList.ContentTypesEnabled)
+                if (existingList.BaseTemplate != (int)ListTemplateType.Survey && 
+                    templateList.ContentTypesEnabled != existingList.ContentTypesEnabled)
                 {
                     existingList.ContentTypesEnabled = templateList.ContentTypesEnabled;
                     isDirty = true;
@@ -927,7 +950,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 createdList.EnableFolderCreation = list.EnableFolderCreation;
             }
             createdList.Hidden = list.Hidden;
+
+            if (createdList.BaseTemplate != (int)ListTemplateType.Survey)
+            {
             createdList.ContentTypesEnabled = list.ContentTypesEnabled;
+            }
 
             createdList.Update();
 
@@ -937,6 +964,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             web.Context.Load(createdList.ContentTypes);
             web.Context.ExecuteQueryRetry();
 
+
+            if (createdList.BaseTemplate != (int)ListTemplateType.Survey)
+            {
             // Remove existing content types only if there are custom content type bindings
             var contentTypesToRemove = new List<ContentType>();
             if (list.RemoveExistingContentTypes && list.ContentTypeBindings.Count > 0)
@@ -980,8 +1010,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                 if (shouldDelete)
                 {
-                ct.DeleteObject();
-                web.Context.ExecuteQueryRetry();
+                    ct.DeleteObject();
+                    web.Context.ExecuteQueryRetry();
+                }
             }
             }
 
@@ -992,14 +1023,50 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return Tuple.Create(createdList, parser);
         }
 
+        private void CreateFolderInList(Microsoft.SharePoint.Client.Folder parentFolder, Model.Folder folder, TokenParser parser, PnPMonitoredScope scope)
+        {
+            // Determine the folder name, parsing any token
+            String targetFolderName = parser.ParseString(folder.Name);
+
+            // Check if the folder already exists
+            if (parentFolder.FolderExists(targetFolderName))
+            {
+                // Log a warning if the folder already exists
+                String warningFolderAlreadyExists = String.Format(CoreResources.Provisioning_ObjectHandlers_ListInstances_FolderAlreadyExists, targetFolderName, parentFolder.ServerRelativeUrl);
+                scope.LogWarning(warningFolderAlreadyExists);
+                WriteWarning(warningFolderAlreadyExists, ProvisioningMessageType.Warning);
+            }
+
+            // Create it or get a reference to it
+            var currentFolder = parentFolder.EnsureFolder(targetFolderName);
+
+            if (currentFolder != null)
+            {
+                // Handle any child-folder
+                if (folder.Folders != null && folder.Folders.Count > 0)
+                {
+                    foreach (var childFolder in folder.Folders)
+                    {
+                        CreateFolderInList(currentFolder, childFolder, parser, scope);
+                    }
+                }
+
+                // Handle current folder security
+                if (folder.Security != null && folder.Security.RoleAssignments.Count != 0)
+                {
+                    var currentFolderItem = currentFolder.ListItemAllFields;
+                    parentFolder.Context.Load(currentFolderItem);
+                    parentFolder.Context.ExecuteQueryRetry();
+                    currentFolderItem.SetSecurity(parser, folder.Security);
+                }
+            }
+        }
 
         private class ListInfo
         {
             public List SiteList { get; set; }
             public ListInstance TemplateList { get; set; }
         }
-
-
 
         public override ProvisioningTemplate ExtractObjects(Web web, ProvisioningTemplate template, ProvisioningTemplateCreationInformation creationInfo)
         {
