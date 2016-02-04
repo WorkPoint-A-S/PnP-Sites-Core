@@ -15,7 +15,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml.V201508
 {
     using System.Xml.Serialization;
 
-
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
     [System.SerializableAttribute()]
