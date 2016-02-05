@@ -444,6 +444,7 @@
     <Compile Include="Framework\Provisioning\Extensibility\IProvisioningExtensibilityTokenProvider.cs" />
     <Compile Include="Framework\Provisioning\Extensibility\IProvisioningExtensibilityProvider.cs" />
     <Compile Include="Framework\Provisioning\Model\DefaultDocumentCollection.cs" />
+    <Compile Include="Framework\Provisioning\Model\Deprecated\CustomAction.deprecated.cs" />
     <Compile Include="Framework\Provisioning\Model\FeatureCollection.cs" />
     <Compile Include="Framework\Provisioning\Model\AddIn.cs" />
     <Compile Include="Framework\Provisioning\Model\AddInCollection.cs" />
@@ -527,6 +528,8 @@
     <Compile Include="Framework\Provisioning\Model\WorkflowSubscriptionCollection.cs" />
     <Compile Include="Framework\Provisioning\ObjectHandlers\Extensions\PnPMonitoredScopeExtensions.cs" />
     <Compile Include="Framework\Provisioning\ObjectHandlers\Extensions\SecurableObjectExtensions.cs" />
+    <Compile Include="Framework\Provisioning\ObjectHandlers\ObjectContentHandlerBase.cs" />
+    <Compile Include="Framework\Provisioning\ObjectHandlers\Extensions\UserResourceExtensions.cs" />
     <Compile Include="Framework\Provisioning\ObjectHandlers\ObjectWebSettings.cs" />
     <Compile Include="Framework\Provisioning\ObjectHandlers\ObjectPageContents.cs" />
     <Compile Include="Framework\Provisioning\ObjectHandlers\ObjectSupportedUILanguages.cs" />
@@ -565,6 +568,8 @@
     <Compile Include="Framework\Provisioning\ObjectHandlers\TokenDefinitions\CurrentUserLoginNameToken.cs" />
     <Compile Include="Framework\Provisioning\ObjectHandlers\TokenDefinitions\KeywordsTermStoreIdToken.cs" />
     <Compile Include="Framework\Provisioning\ObjectHandlers\TokenDefinitions\ContentTypeIdToken.cs" />
+    <Compile Include="Framework\Provisioning\ObjectHandlers\TokenDefinitions\LocalizationToken.cs" />
+    <Compile Include="Framework\Provisioning\ObjectHandlers\TokenDefinitions\ResourceEntry.cs" />
     <Compile Include="Framework\Provisioning\ObjectHandlers\TokenDefinitions\WebPartIdToken.cs" />
     <Compile Include="Framework\Provisioning\ObjectHandlers\TokenDefinitions\SiteCollectionTermGroupNameToken.cs" />
     <Compile Include="Framework\Provisioning\ObjectHandlers\TokenDefinitions\SiteCollectionTermGroupId.cs" />
@@ -802,7 +807,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Framework\Provisioning\BaseTemplates\v15_0\CMSPUBLISHING0Template.xml" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Framework\Provisioning\BaseTemplates\Common\Publishing-Feature-Native-Files.xml" />
+  </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Framework\Provisioning\BaseTemplates\v16_0\BLANKINTERNET0Template.xml" />
     <EmbeddedResource Include="Framework\Provisioning\BaseTemplates\v16_0\COMMUNITY0Template.xml" />
