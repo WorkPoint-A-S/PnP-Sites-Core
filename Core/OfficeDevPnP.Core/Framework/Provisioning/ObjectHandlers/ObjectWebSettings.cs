@@ -222,8 +222,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     var welcomePage = parser.ParseString(webSettings.WelcomePage);
                     if (!string.IsNullOrEmpty(welcomePage))
                     {
-                        web.RootFolder.WelcomePage = welcomePage;
-                        web.RootFolder.Update();
+                        // web.RootFolder.WelcomePage = welcomePage;
+                        // web.RootFolder.Update();
                     }
                     web.AlternateCssUrl = parser.ParseString(webSettings.AlternateCSS);
 

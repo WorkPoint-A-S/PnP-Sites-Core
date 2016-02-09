@@ -1587,6 +1587,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
             // Translate Pages, if any
             if (source.Pages != null)
             {
+                if (source.Pages.WelcomePage != null)
+                {
+                    var webSettings = new WebSettings();
+                    webSettings.WelcomePage = source.Pages.WelcomePage;
+                    result.WebSettings = webSettings;
+                }
+
                 foreach (var page in source.Pages.Page)
                 {
 
@@ -1619,7 +1626,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
                             break;
                     }
 
-                    result.Pages.Add(new Model.Page(page.Url, page.Overwrite, pageLayout,
+                    Model.Page schemaPage = new Model.Page(page.Url, page.Overwrite, pageLayout,
                         (page.WebParts != null ?
                             (from wp in page.WebParts
                              select new Model.WebPart
@@ -1630,8 +1637,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
                                  Contents = wp.Contents
 
                              }).ToList() : null),
-                        source.Pages.WelcomePage == page.Url,
-                        page.Security.FromSchemaToTemplateObjectSecurityV201508()));
+                        page.Security.FromSchemaToTemplateObjectSecurityV201508());
+
+                    schemaPage.ParentTemplate = result;
+                    schemaPage.WelcomePage = source.Pages.WelcomePage == page.Url;
+
+                    result.Pages.Add(schemaPage);
                 }
             }
 

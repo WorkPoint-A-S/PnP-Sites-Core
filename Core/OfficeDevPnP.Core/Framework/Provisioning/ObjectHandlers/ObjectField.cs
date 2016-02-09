@@ -11,6 +11,7 @@ using SPField = Microsoft.SharePoint.Client.Field;
 using OfficeDevPnP.Core.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions;
 
 namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 {
@@ -59,7 +60,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         try
                         {
                             scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_Fields_Adding_field__0__to_site, fieldId);
-                            provisionedField = CreateField(web, templateFieldElement, scope, parser);
+                            provisionedField = CreateField(web, templateFieldElement, scope, parser, field.SchemaXml);
                         }
                         catch (Exception ex)
                         {
@@ -71,7 +72,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         try
                         {
                             scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_Fields_Updating_field__0__in_site, fieldId);
-                            provisionedField = UpdateField(web, fieldId, templateFieldElement, scope, parser);
+                            provisionedField = UpdateField(web, fieldId, templateFieldElement, scope, parser, field.SchemaXml);
                         }
                         catch (Exception ex)
                         {
@@ -90,19 +91,19 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         {
                             provisionedField.Title = primaryLocalization.TitleResource;
                             provisionedField.Description = primaryLocalization.DescriptionResource;
-                }
+                        }
 
                         foreach (var localization in template.SiteFieldsLocalizations.Where(l => l.Id.Equals(Guid.Parse(fieldId)) && cultureNames.Contains(l.CultureName, StringComparer.InvariantCultureIgnoreCase)))
                         {
                             provisionedField.SetLocalizationForField(localization.CultureName, localization.TitleResource, localization.DescriptionResource);
-            }
+                        }
                     }
                 }
             }
             return parser;
         }
 
-        private SPField UpdateField(Web web, string fieldId, XElement templateFieldElement, PnPMonitoredScope scope, TokenParser parser)
+        private SPField UpdateField(Web web, string fieldId, XElement templateFieldElement, PnPMonitoredScope scope, TokenParser parser, string originalFieldXml)
         {
             var existingField = web.Fields.GetById(Guid.Parse(fieldId));
             web.Context.Load(existingField, f => f.SchemaXml);
@@ -151,6 +152,36 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     existingField.SchemaXml = parser.ParseString(existingFieldElement.ToString(), "~sitecollection", "~site");
                     existingField.UpdateAndPushChanges(true);
                     web.Context.ExecuteQueryRetry();
+
+                    bool isDirty = false;
+#if !CLIENTSDKV15
+                    if (originalFieldXml.ContainsResourceToken())
+                    {
+                        var originalFieldElement = XElement.Parse(originalFieldXml);
+                        var nameAttributeValue = originalFieldElement.Attribute("Title") != null ? originalFieldElement.Attribute("Title").Value : "";
+                        if (nameAttributeValue.ContainsResourceToken())
+                        {
+                            existingField.TitleResource.SetUserResourceValue(nameAttributeValue, parser);
+                            isDirty = true;
+                        }
+                        var descriptionAttributeValue = originalFieldElement.Attribute("Description") != null ? originalFieldElement.Attribute("Description").Value : "";
+                        if (descriptionAttributeValue.ContainsResourceToken())
+                        {
+                            existingField.DescriptionResource.SetUserResourceValue(descriptionAttributeValue, parser);
+                            isDirty = true;
+                        }
+                    }
+#endif
+                    if (isDirty)
+                    {
+                        existingField.Update();
+                        web.Context.ExecuteQuery();
+                    }
+                    if ((existingField.TypeAsString == "TaxonomyFieldType" || existingField.TypeAsString == "TaxonomyFieldTypeMulti") && !string.IsNullOrEmpty(existingField.DefaultValue))
+                    {
+                        var taxField = web.Context.CastTo<TaxonomyField>(existingField);
+                        ValidateTaxonomyFieldDefaultValue(taxField);
+                    }
                 }
                 else
                 {
@@ -173,7 +204,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return schemaXml;
         }
 
-        private static SPField CreateField(Web web, XElement templateFieldElement, PnPMonitoredScope scope, TokenParser parser)
+        private static SPField CreateField(Web web, XElement templateFieldElement, PnPMonitoredScope scope, TokenParser parser, string originalFieldXml)
         {
             var listIdentifier = templateFieldElement.Attribute("List") != null ? templateFieldElement.Attribute("List").Value : null;
 
@@ -188,8 +219,125 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             var field = web.Fields.AddFieldAsXml(fieldXml, false, AddFieldOptions.AddFieldInternalNameHint);
             web.Context.ExecuteQueryRetry();
 
+            bool isDirty = false;
+#if !CLIENTSDKV15
+            if (originalFieldXml.ContainsResourceToken())
+            {
+                var originalFieldElement = XElement.Parse(originalFieldXml);
+                var nameAttributeValue = originalFieldElement.Attribute("Name") != null ? originalFieldElement.Attribute("Name").Value : "";
+                if (nameAttributeValue.ContainsResourceToken())
+                {
+                    field.TitleResource.SetUserResourceValue(nameAttributeValue, parser);
+                    isDirty = true;
+                }
+                var descriptionAttributeValue = originalFieldElement.Attribute("Description") != null ? originalFieldElement.Attribute("Description").Value : "";
+                if (descriptionAttributeValue.ContainsResourceToken())
+                {
+                    field.DescriptionResource.SetUserResourceValue(descriptionAttributeValue, parser);
+                    isDirty = true;
+                }
+            }
+#endif
+            if (isDirty)
+            {
+                field.Update();
+                web.Context.ExecuteQuery();
+            }
+
+            if ((field.TypeAsString == "TaxonomyFieldType" || field.TypeAsString == "TaxonomyFieldTypeMulti") && !string.IsNullOrEmpty(field.DefaultValue))
+            {
+                var taxField = web.Context.CastTo<TaxonomyField>(field);
+                ValidateTaxonomyFieldDefaultValue(taxField);
+            }
+
             return field;
         }
+
+        private static void ValidateTaxonomyFieldDefaultValue(TaxonomyField field)
+        {
+            //get validated value with correct WssIds 
+            var validatedValue = GetTaxonomyFieldValidatedValue(field, field.DefaultValue);
+            if (!string.IsNullOrEmpty(validatedValue) && field.DefaultValue != validatedValue)
+            {
+                field.DefaultValue = validatedValue;
+                field.UpdateAndPushChanges(true);
+                field.Context.ExecuteQueryRetry();
+            }
+        }
+
+        private static string GetTaxonomyFieldValidatedValue(TaxonomyField field, string defaultValue)
+        {
+            string res = null;
+            object parsedValue = null;
+            field.EnsureProperty(f => f.AllowMultipleValues);
+            if (field.AllowMultipleValues)
+            {
+                parsedValue = new TaxonomyFieldValueCollection(field.Context, defaultValue, field);
+            }
+            else
+            {
+                TaxonomyFieldValue taxValue = null;
+                if (TryParseTaxonomyFieldValue(defaultValue, out taxValue))
+                {
+                    parsedValue = taxValue;
+                }
+            }
+            if (parsedValue != null)
+            {
+                var validateValue = field.GetValidatedString(parsedValue);
+                field.Context.ExecuteQueryRetry();
+                res = validateValue.Value;
+            }
+            return res;
+        }
+
+
+        private static bool TryParseTaxonomyFieldValue(string value, out TaxonomyFieldValue taxValue)
+        {
+            bool res = false;
+            taxValue = new TaxonomyFieldValue();
+            if (!string.IsNullOrEmpty(value))
+            {
+                string[] split = value.Split(new string[] { ";#" }, StringSplitOptions.None);
+                int wssId = 0;
+
+
+                if (split.Length > 0 && int.TryParse(split[0], out wssId))
+                {
+                    taxValue.WssId = wssId;
+                    res = true;
+                }
+
+
+                if (res && split.Length == 2)
+                {
+                    var term = split[1];
+                    string[] splitTerm = term.Split(new string[] { "|" }, StringSplitOptions.None);
+                    Guid termId = Guid.Empty;
+                    if (splitTerm.Length > 0)
+                    {
+                        res = Guid.TryParse(splitTerm[splitTerm.Length - 1], out termId);
+                        taxValue.TermGuid = termId.ToString();
+                        if (res && splitTerm.Length > 1)
+                        {
+                            taxValue.Label = splitTerm[0];
+                        }
+                    }
+                    else
+                    {
+                        res = false;
+                    }
+                    res = true;
+                }
+                else if (split.Length == 1 && int.TryParse(value, out wssId))
+                {
+                    taxValue.WssId = wssId;
+                    res = true;
+                }
+            }
+            return res;
+        }
+
 
         public override ProvisioningTemplate ExtractObjects(Web web, ProvisioningTemplate template, ProvisioningTemplateCreationInformation creationInfo)
         {
@@ -237,16 +385,16 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             //if (Guid.TryParse(listIdentifier, out listGuid))
                             //{
                             //    fieldXml = ParseListSchema(fieldXml, web.Lists);
-                                //if (newfieldXml == fieldXml)
-                                //{
-                                //    var list = web.Lists.GetById(listGuid);
-                                //    web.Context.Load(list, l => l.RootFolder.ServerRelativeUrl);
-                                //    web.Context.ExecuteQueryRetry();
+                            //if (newfieldXml == fieldXml)
+                            //{
+                            //    var list = web.Lists.GetById(listGuid);
+                            //    web.Context.Load(list, l => l.RootFolder.ServerRelativeUrl);
+                            //    web.Context.ExecuteQueryRetry();
 
-                                //    var listUrl = list.RootFolder.ServerRelativeUrl.Substring(web.ServerRelativeUrl.Length).TrimStart('/');
-                                //    element.Attribute("List").SetValue(listUrl);
-                                //    fieldXml = element.ToString();
-                                //}
+                            //    var listUrl = list.RootFolder.ServerRelativeUrl.Substring(web.ServerRelativeUrl.Length).TrimStart('/');
+                            //    element.Attribute("List").SetValue(listUrl);
+                            //    fieldXml = element.ToString();
+                            //}
                             //}
                         }
                         // Check if the field is of type TaxonomyField

@@ -203,7 +203,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                         try
                                         {
                                             scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_ListInstances_Creating_field__0_, fieldGuid);
-                                            fieldFromList = CreateField(fieldElement, listInfo, parser);
+                                            fieldFromList = CreateField(fieldElement, listInfo, parser, field.SchemaXml);
                                         }
                                         catch (Exception ex)
                                         {
@@ -216,7 +216,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                         try
                                         {
                                             scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_ListInstances_Updating_field__0_, fieldGuid);
-                                            UpdateField(web, listInfo, fieldGuid, fieldElement, fieldFromList, scope, parser);
+                                            UpdateField(web, listInfo, fieldGuid, fieldElement, fieldFromList, scope, parser, field.SchemaXml);
                                         }
                                         catch (Exception ex)
                                         {
@@ -499,11 +499,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             siteList.Context.ExecuteQueryRetry();
 
             var isDirty = false;
-            //if (!string.IsNullOrEmpty(fieldRef.DisplayName) && fieldRef.DisplayName != listField.Title)
-            //{
-            //    listField.Title = fieldRef.DisplayName;
-            //    isDirty = true;
-            //}
+            if (!string.IsNullOrEmpty(fieldRef.DisplayName) && fieldRef.DisplayName != listField.Title)
+            {
+                listField.Title = fieldRef.DisplayName;
+                isDirty = true;
+            }
             // We cannot configure Hidden property for Phonetic fields 
             if (!(siteList.BaseTemplate == (int)ListTemplateType.Contacts &&
                 (fieldRef.Name.Equals("LastNamePhonetic", StringComparison.InvariantCultureIgnoreCase) ||
@@ -580,18 +580,48 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return createdField;
         }
 
-        private static Field CreateField(XElement fieldElement, ListInfo listInfo, TokenParser parser)
+        private static Field CreateField(XElement fieldElement, ListInfo listInfo, TokenParser parser, string originalFieldXml)
         {
             fieldElement = PrepareField(fieldElement);
 
             var fieldXml = parser.ParseString(fieldElement.ToString(), "~sitecollection", "~site");
             var field = listInfo.SiteList.Fields.AddFieldAsXml(fieldXml, false, AddFieldOptions.AddFieldInternalNameHint);
+            listInfo.SiteList.Context.Load(field);
             listInfo.SiteList.Context.ExecuteQueryRetry();
+
+            bool isDirty = false;
+#if !CLIENTSDKV15
+            if (originalFieldXml.ContainsResourceToken())
+            {
+                var originalFieldElement = XElement.Parse(originalFieldXml);
+                var nameAttributeValue = originalFieldElement.Attribute("Name") != null ? originalFieldElement.Attribute("Name").Value : "";
+                if (nameAttributeValue.ContainsResourceToken())
+                {
+                    if (field.TitleResource.SetUserResourceValue(nameAttributeValue, parser))
+                    {
+                        isDirty = true;
+        }
+                }
+                var descriptionAttributeValue = originalFieldElement.Attribute("Description") != null ? originalFieldElement.Attribute("Description").Value : "";
+                if (descriptionAttributeValue.ContainsResourceToken())
+                {
+                    if (field.DescriptionResource.SetUserResourceValue(descriptionAttributeValue, parser))
+                    {
+                        isDirty = true;
+                    }
+                }
+            }
+#endif
+            if (isDirty)
+            {
+                field.Update();
+                listInfo.SiteList.Context.ExecuteQuery();
+            }
 
             return field;
         }
 
-        private void UpdateField(ClientObject web, ListInfo listInfo, Guid fieldId, XElement templateFieldElement, Field existingField, PnPMonitoredScope scope, TokenParser parser)
+        private void UpdateField(ClientObject web, ListInfo listInfo, Guid fieldId, XElement templateFieldElement, Field existingField, PnPMonitoredScope scope, TokenParser parser, string originalFieldXml)
         {
             web.Context.Load(existingField, f => f.SchemaXml);
             web.Context.ExecuteQueryRetry();
@@ -635,6 +665,35 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     existingField.SchemaXml = parser.ParseString(existingFieldElement.ToString(), "~sitecollection", "~site");
                     existingField.UpdateAndPushChanges(true);
                     web.Context.ExecuteQueryRetry();
+                    bool isDirty = false;
+#if !CLIENTSDKV15
+                    if (originalFieldXml.ContainsResourceToken())
+                    {
+                        var originalFieldElement = XElement.Parse(originalFieldXml);
+                        var nameAttributeValue = originalFieldElement.Attribute("Name") != null ? originalFieldElement.Attribute("Name").Value : "";
+                        if (nameAttributeValue.ContainsResourceToken())
+                        {
+                            if (existingField.TitleResource.SetUserResourceValue(nameAttributeValue, parser))
+                            {
+                                isDirty = true;
+                            }
+                        }
+                        var descriptionAttributeValue = originalFieldElement.Attribute("Description") != null ? originalFieldElement.Attribute("Description").Value : "";
+                        if (descriptionAttributeValue.ContainsResourceToken())
+                        {
+                            if (existingField.DescriptionResource.SetUserResourceValue(descriptionAttributeValue, parser))
+                            {
+                                isDirty = true;
+                            }
+                        }
+                    }
+#endif
+                    if (isDirty)
+                    {
+                        existingField.Update();
+                        web.Context.ExecuteQuery();
+                    }
+
                 }
                 else
                 {
@@ -702,7 +761,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     var oldTitle = existingList.Title;
                     existingList.Title = parser.ParseString(templateList.Title);
                     if (!oldTitle.Equals(existingList.Title, StringComparison.OrdinalIgnoreCase))
-                    { 
+                    {
                         parser.AddToken(new ListIdToken(web, existingList.Title, existingList.Id));
                         parser.AddToken(new ListUrlToken(web, existingList.Title, existingList.RootFolder.ServerRelativeUrl.Substring(web.ServerRelativeUrl.Length + 1)));
                     }
@@ -756,6 +815,15 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         isDirty = true;
                     }
                 }
+#if !CLIENTSDFKV15
+                if(templateList.Title.ContainsResourceToken())
+                {
+                    if(existingList.TitleResource.SetUserResourceValue(templateList.Title, parser))
+                    {
+                        isDirty = true;
+                    }
+                }
+#endif
                 if (templateList.EnableVersioning)
                 {
                     if (existingList.EnableVersioning != templateList.EnableVersioning)
@@ -886,6 +954,16 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             web.Context.Load(createdList, l => l.BaseTemplate);
             web.Context.ExecuteQueryRetry();
 
+#if !CLIENTSDKV15
+            if (list.Title.ContainsResourceToken())
+            {
+                createdList.TitleResource.SetUserResourceValue(list.Title, parser);
+            }
+            if(list.Description.ContainsResourceToken())
+            {
+                createdList.DescriptionResource.SetUserResourceValue(list.Description, parser);
+            }
+#endif
             if (!String.IsNullOrEmpty(list.DocumentTemplate))
             {
                 createdList.DocumentTemplateUrl = parser.ParseString(list.DocumentTemplate);
@@ -953,7 +1031,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
             if (createdList.BaseTemplate != (int)ListTemplateType.Survey)
             {
-            createdList.ContentTypesEnabled = list.ContentTypesEnabled;
+                createdList.ContentTypesEnabled = list.ContentTypesEnabled;
             }
 
             createdList.Update();
@@ -967,53 +1045,53 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
             if (createdList.BaseTemplate != (int)ListTemplateType.Survey)
             {
-            // Remove existing content types only if there are custom content type bindings
-            var contentTypesToRemove = new List<ContentType>();
-            if (list.RemoveExistingContentTypes && list.ContentTypeBindings.Count > 0)
-            {
-                contentTypesToRemove.AddRange(createdList.ContentTypes);
-            }
-
-            ContentTypeBinding defaultCtBinding = null;
-            foreach (var ctBinding in list.ContentTypeBindings)
-            {
-                var tempCT = web.GetContentTypeById(ctBinding.ContentTypeId, searchInSiteHierarchy: true);
-                if (tempCT != null)
+                // Remove existing content types only if there are custom content type bindings
+                var contentTypesToRemove = new List<ContentType>();
+                if (list.RemoveExistingContentTypes && list.ContentTypeBindings.Count > 0)
                 {
-                    // Check if CT is already available
-                    var name = tempCT.EnsureProperty(ct => ct.Name);
-                    if (!createdList.ContentTypeExistsByName(name))
+                    contentTypesToRemove.AddRange(createdList.ContentTypes);
+                }
+
+                ContentTypeBinding defaultCtBinding = null;
+                foreach (var ctBinding in list.ContentTypeBindings)
+                {
+                    var tempCT = web.GetContentTypeById(ctBinding.ContentTypeId, searchInSiteHierarchy: true);
+                    if (tempCT != null)
                     {
-                        createdList.AddContentTypeToListById(ctBinding.ContentTypeId, searchContentTypeInSiteHierarchy: true);
-                    }
-                    if (ctBinding.Default)
-                    {
-                        defaultCtBinding = ctBinding;
+                        // Check if CT is already available
+                        var name = tempCT.EnsureProperty(ct => ct.Name);
+                        if (!createdList.ContentTypeExistsByName(name))
+                        {
+                            createdList.AddContentTypeToListById(ctBinding.ContentTypeId, searchContentTypeInSiteHierarchy: true);
+                        }
+                        if (ctBinding.Default)
+                        {
+                            defaultCtBinding = ctBinding;
+                        }
                     }
                 }
-            }
 
-            // default ContentTypeBinding should be set last because 
-            // list extension .SetDefaultContentTypeToList() re-sets 
-            // the list.RootFolder UniqueContentTypeOrder property
-            // which may cause missing CTs from the "New Button"
-            if (defaultCtBinding != null)
-            {
-                createdList.SetDefaultContentTypeToList(defaultCtBinding.ContentTypeId);
-            }
-
-            // Effectively remove existing content types, if any
-            foreach (var ct in contentTypesToRemove)
-            {
-                var shouldDelete = true;
-                shouldDelete &= (createdList.BaseTemplate != (int)ListTemplateType.DocumentLibrary || !ct.StringId.StartsWith(BuiltInContentTypeId.Folder + "00")); 
-
-                if (shouldDelete)
+                // default ContentTypeBinding should be set last because 
+                // list extension .SetDefaultContentTypeToList() re-sets 
+                // the list.RootFolder UniqueContentTypeOrder property
+                // which may cause missing CTs from the "New Button"
+                if (defaultCtBinding != null)
                 {
-                    ct.DeleteObject();
-                    web.Context.ExecuteQueryRetry();
+                    createdList.SetDefaultContentTypeToList(defaultCtBinding.ContentTypeId);
                 }
-            }
+
+                // Effectively remove existing content types, if any
+                foreach (var ct in contentTypesToRemove)
+                {
+                    var shouldDelete = true;
+                    shouldDelete &= (createdList.BaseTemplate != (int)ListTemplateType.DocumentLibrary || !ct.StringId.StartsWith(BuiltInContentTypeId.Folder + "00"));
+
+                    if (shouldDelete)
+                    {
+                        ct.DeleteObject();
+                        web.Context.ExecuteQueryRetry();
+                    }
+                }
             }
 
             if (list.Security != null)
@@ -1237,7 +1315,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     // We are taking parent - VesaJ.
                     //if (!BuiltInContentTypeId.Contains(ct.Parent.StringId)) 
                     //{
-                        list.ContentTypeBindings.Add(new ContentTypeBinding { ContentTypeId = ct.Parent.StringId, Default = count == 0 });
+                    list.ContentTypeBindings.Add(new ContentTypeBinding { ContentTypeId = ct.Parent.StringId, Default = count == 0 });
                     //}
                 }
                 else

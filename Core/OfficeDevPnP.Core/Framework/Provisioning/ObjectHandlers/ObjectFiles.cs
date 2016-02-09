@@ -6,6 +6,17 @@ using OfficeDevPnP.Core.Framework.Provisioning.Model;
 using File = Microsoft.SharePoint.Client.File;
 using OfficeDevPnP.Core.Diagnostics;
 using OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions;
+using System;
+using System.Text.RegularExpressions;
+using Microsoft.SharePoint.Client.WebParts;
+using System.Xml.Linq;
+using System.Net;
+using System.Text;
+using System.Web;
+using System.IO;
+using Newtonsoft.Json;
+using OfficeDevPnP.Core.Utilities;
+using Microsoft.SharePoint.Client.Taxonomy;
 
 namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 {
@@ -21,18 +32,16 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 var context = web.Context as ClientContext;
 
-                web.EnsureProperties(w => w.ServerRelativeUrl);
+                web.EnsureProperties(w => w.ServerRelativeUrl, w => w.Url);
 
                 foreach (var file in template.Files)
                 {
-
                     var folderName = parser.ParseString(file.Folder);
 
                     if (folderName.ToLower().StartsWith((web.ServerRelativeUrl.ToLower())))
                     {
                         folderName = folderName.Substring(web.ServerRelativeUrl.Length);
                     }
-
 
                     var folder = web.EnsureFolderPath(folderName);
 
@@ -75,7 +84,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         if (file.Properties != null && file.Properties.Any())
                         {
                             Dictionary<string, string> transformedProperties = file.Properties.ToDictionary(property => property.Key, property => parser.ParseString(property.Value));
-                            targetFile.SetFileProperties(transformedProperties, false); // if needed, the file is already checked out
+                            SetFileProperties(targetFile, transformedProperties, false);
                         }
 
                         if (file.WebParts != null && file.WebParts.Any())
@@ -94,7 +103,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                     wpEntity.WebPartXml = parser.ParseString(webpart.Contents).Trim(new[] { '\n', ' ' });
                                     wpEntity.WebPartZone = webpart.Zone;
                                     wpEntity.WebPartIndex = (int)webpart.Order;
-
                                     web.AddWebPartToWebPartPage(targetFile.ServerRelativeUrl, wpEntity);
                                 }
                             }
@@ -151,17 +159,137 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
         public override ProvisioningTemplate ExtractObjects(Web web, ProvisioningTemplate template, ProvisioningTemplateCreationInformation creationInfo)
         {
-            using (var scope = new PnPMonitoredScope(this.Name))
-        {
-                // Impossible to return all files in the site currently
 
-                // If a base template is specified then use that one to "cleanup" the generated template model
-                if (creationInfo.BaseTemplate != null)
+            return template;
+        }
+
+
+        public void SetFileProperties(File file, IDictionary<string, string> properties, bool checkoutIfRequired = true)
+        {
+            var context = file.Context;
+            if (properties != null && properties.Count > 0)
             {
-                    template = CleanupEntities(template, creationInfo.BaseTemplate);
+                // Get a reference to the target list, if any
+                // and load file item properties
+                var parentList = file.ListItemAllFields.ParentList;
+                context.Load(parentList);
+                context.Load(file.ListItemAllFields);
+                try
+                {
+                    context.ExecuteQueryRetry();
+                }
+                catch (ServerException ex)
+                {
+                    // If this throws ServerException (does not belong to list), then shouldn't be trying to set properties)
+                    if (ex.Message != "The object specified does not belong to a list.")
+                    {
+                        throw;
+                    }
+                }
+
+                // Loop through and detect changes first, then, check out if required and apply
+                foreach (var kvp in properties)
+                {
+                    var propertyName = kvp.Key;
+                    var propertyValue = kvp.Value;
+
+                    var fieldValues = file.ListItemAllFields.FieldValues;
+                    var targetField = parentList.Fields.GetByInternalNameOrTitle(propertyName);
+                    targetField.EnsureProperties(f => f.TypeAsString, f => f.ReadOnlyField);
+
+                    if (true)  // !targetField.ReadOnlyField)
+                    {
+                        switch (propertyName.ToUpperInvariant())
+                        {
+                            case "CONTENTTYPE":
+                                {
+                                    Microsoft.SharePoint.Client.ContentType targetCT = parentList.GetContentTypeByName(propertyValue);
+                                    context.ExecuteQueryRetry();
+
+                                    if (targetCT != null)
+                                    {
+                                        file.ListItemAllFields["ContentTypeId"] = targetCT.StringId;
+                                    }
+                                    else
+                                    {
+                                        Log.Error(Constants.LOGGING_SOURCE, "Content Type {0} does not exist in target list!", propertyValue);
+                                    }
+                                    break;
+                                }
+                            default:
+                                {
+                                    switch (targetField.TypeAsString)
+                                    {
+                                        case "User":
+                                            var user = parentList.ParentWeb.EnsureUser(propertyValue);
+                                            context.Load(user);
+                                            context.ExecuteQueryRetry();
+
+                                            if (user != null)
+                                            {
+                                                var userValue = new FieldUserValue
+                                                {
+                                                    LookupId = user.Id,
+                                                };
+                                                file.ListItemAllFields[propertyName] = userValue;
+                                            }
+                                            break;
+                                        case "URL":
+                                            var urlArray = propertyValue.Split(',');
+                                            var linkValue = new FieldUrlValue();
+                                            if (urlArray.Length == 2)
+                                            {
+                                                linkValue.Url = urlArray[0];
+                                                linkValue.Description = urlArray[1];
+                                            }
+                                            else
+                                            {
+                                                linkValue.Url = urlArray[0];
+                                                linkValue.Description = urlArray[0];
+                                            }
+                                            file.ListItemAllFields[propertyName] = linkValue;
+                                            break;
+                                        case "LookupMulti":
+                                            var lookupMultiValue = JsonUtility.Deserialize<FieldLookupValue[]>(propertyValue);
+                                            file.ListItemAllFields[propertyName] = lookupMultiValue;
+                                            break;
+                                        case "TaxonomyFieldType":
+                                            var taxonomyValue = JsonUtility.Deserialize<TaxonomyFieldValue>(propertyValue);
+                                            file.ListItemAllFields[propertyName] = taxonomyValue;
+                                            break;
+                                        case "TaxonomyFieldTypeMulti":
+                                            var taxonomyValueArray = JsonUtility.Deserialize<TaxonomyFieldValue[]>(propertyValue);
+                                            file.ListItemAllFields[propertyName] = taxonomyValueArray;
+                                            break;
+                                        default:
+                                            file.ListItemAllFields[propertyName] = propertyValue;
+                                            break;
+                                    }
+                                    break;
+                                }
+                        }
+                    }
+                    file.ListItemAllFields.Update();
+                    context.ExecuteQueryRetry();
                 }
             }
-            return template;
+        }
+
+        private string Tokenize(Web web, string xml)
+        {
+            var lists = web.Lists;
+            web.Context.Load(web, w => w.ServerRelativeUrl, w => w.Id);
+            web.Context.Load(lists, ls => ls.Include(l => l.Id, l => l.Title));
+            web.Context.ExecuteQueryRetry();
+
+            foreach (var list in lists)
+            {
+                xml = Regex.Replace(xml, list.Id.ToString(), string.Format("{{listid:{0}}}", list.Title), RegexOptions.IgnoreCase);
+            }
+            xml = Regex.Replace(xml, web.Id.ToString(), "{siteid}", RegexOptions.IgnoreCase);
+            xml = Regex.Replace(xml, web.ServerRelativeUrl, "{site}", RegexOptions.IgnoreCase);
+
+            return xml;
         }
 
         private ProvisioningTemplate CleanupEntities(ProvisioningTemplate template, ProvisioningTemplate baseTemplate)
@@ -187,5 +315,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
             return _willExtract.Value;
         }
+
     }
 }

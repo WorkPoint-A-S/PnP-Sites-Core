@@ -5,6 +5,8 @@ using Microsoft.SharePoint.Client;
 using Microsoft.SharePoint.Client.Taxonomy;
 using OfficeDevPnP.Core.Framework.Provisioning.Model;
 using OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.TokenDefinitions;
+using System.Resources;
+using System.Collections;
 using System.Globalization;
 
 namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
@@ -14,6 +16,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         public Web _web;
 
         private List<TokenDefinition> _tokens = new List<TokenDefinition>();
+        private List<Localization> _localizations = new List<Localization>();
 
         public List<TokenDefinition> Tokens
         {
@@ -38,8 +41,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
         public TokenParser(Web web, ProvisioningTemplate template)
         {
-            web.EnsureProperties(w => w.ServerRelativeUrl, w => w.SupportedUILanguageIds);
-            
+            web.EnsureProperties(w => w.ServerRelativeUrl, w => w.SupportedUILanguageIds, w => w.Language);
+
             _web = web;
 
             _tokens = new List<TokenDefinition>();
@@ -120,6 +123,43 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             _tokens.Add(new SiteCollectionTermGroupIdToken(web));
             _tokens.Add(new SiteCollectionTermGroupNameToken(web));
 
+            // Handle resources
+            if (template.Localizations.Any())
+            {
+                // Read all resource keys in a list
+                List<Tuple<string, uint, string>> resourceEntries = new List<Tuple<string, uint, string>>();
+                foreach (var localizationEntry in template.Localizations)
+                {
+                    // MSC: Change WorkPoint implementation to this later
+
+                    //var filePath = localizationEntry.ResourceFile;
+                    //using (var stream = template.Connector.GetFileStream(filePath))
+                    //{
+                    //    if (stream != null)
+                    //    {
+                    //        using (ResXResourceReader resxReader = new ResXResourceReader(stream))
+                    //        {
+                    //            foreach (DictionaryEntry entry in resxReader)
+                    //            {
+                    //                resourceEntries.Add(new Tuple<string, uint, string>(entry.Key.ToString(), (uint)localizationEntry.LCID, entry.Value.ToString()));
+                    //            }
+                    //        }
+                    //    }
+                    //}
+                }
+
+                var uniqueKeys = resourceEntries.Select(k => k.Item1).Distinct();
+                foreach (var key in uniqueKeys)
+                {
+                    var matches = resourceEntries.Where(k => k.Item1 == key);
+                    var entries = matches.Select(k => new ResourceEntry() { LCID = k.Item2, Value = k.Item3 }).ToList();
+                    LocalizationToken token = new LocalizationToken(web, key, entries);
+
+                    _tokens.Add(token);
+                }
+                
+
+            }
             var sortedTokens = from t in _tokens
                                orderby t.GetTokenLength() descending
                                select t;
@@ -127,8 +167,28 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             _tokens = sortedTokens.ToList();
         }
 
+     
+
+        public List<Tuple<string,string>> GetResourceTokenResourceValues(string tokenValue)
+        {
+            List<Tuple<string, string>> resourceValues = new List<Tuple<string, string>>();
+            var resourceTokens = _tokens.Where(t => t is LocalizationToken && t.GetTokens().Contains(tokenValue));
+            foreach(LocalizationToken resourceToken in resourceTokens)
+            {
+                var entries = resourceToken.ResourceEntries;
+                foreach(var entry in entries)
+                {
+                    CultureInfo ci = new CultureInfo((int)entry.LCID);
+                    resourceValues.Add(new Tuple<string, string>(ci.Name, entry.Value));
+                }
+            }
+            return resourceValues;
+        }
+
         public void Rebase(Web web)
         {
+            web.EnsureProperties(w => w.ServerRelativeUrl, w => w.Language);
+
             _web = web;
 
             foreach (var token in _tokens)
@@ -206,6 +266,5 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
             return input;
         }
-
     }
 }

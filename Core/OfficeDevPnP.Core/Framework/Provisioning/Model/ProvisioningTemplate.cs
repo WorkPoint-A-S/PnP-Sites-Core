@@ -95,10 +95,17 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
             get { return _parameters; }
             private set { _parameters = value; }
         }
-        /// <summary>
-        /// Gets or sets the ID of the Provisioning Template
-        /// </summary>
-        public string Id { get { return _id; } set { _id = value; } }
+
+        public LocalizationCollection Localizations
+        {
+            get { return this._localizations; }
+            private set { this._localizations = value; }
+        }
+
+/// <summary>
+/// Gets or sets the ID of the Provisioning Template
+/// </summary>
+public string Id { get { return _id; } set { _id = value; } }
 
         /// <summary>
         /// Gets or sets the Version of the Provisioning Template
@@ -127,7 +134,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
                 if (this._siteSecurity != null)
                 {
                     this._siteSecurity.ParentTemplate = null;
-        }
+                }
                 this._siteSecurity = value;
                 if (this._siteSecurity != null)
                 {
@@ -180,7 +187,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
                 if (this._features != null)
                 {
                     this._features.ParentTemplate = null;
-        }
+                }
                 this._features = value;
                 if (this._features != null)
                 {
@@ -253,7 +260,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         public PageCollection Pages
         {
             get { return this._pages; }
-            private set { this._pages = value; }
+            private set
+            {
+                this._pages = value;
+            }
         }
 
         /// <summary>
