@@ -16,8 +16,15 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
     {
         internal Model.File RetrieveFieldValues(Web web, Microsoft.SharePoint.Client.File file, Model.File modelFile)
         {
-            var listItem = file.EnsureProperty(f => f.ListItemAllFields);
+            ListItem listItem = null;
+            try
+            {
+                listItem = file.EnsureProperty(f => f.ListItemAllFields);
+            }
+            catch { }
 
+            if (listItem != null)
+            {
             var list = listItem.ParentList;
 
             var fields = list.Fields;
@@ -95,7 +102,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             var fieldUserValue = fieldValue.Value as Microsoft.SharePoint.Client.FieldUserValue;
                             if (fieldUserValue != null)
                             {
+#if !CLIENTSDKV15
                                 value = fieldUserValue.Email;
+#else
+                                value = fieldUserValue.LookupValue;
+#endif
                             }
                             break;
                         case "LookupMulti":
@@ -124,11 +135,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     }
 
                     // We process real values only
-                    if (value != null && !String.IsNullOrEmpty(value) &&  value != "[]")
+                        if (value != null && !String.IsNullOrEmpty(value) && value != "[]")
                     {
                         modelFile.Properties.Add(fieldValue.Key, value);
                     }
                 }
+            }
             }
 
             return modelFile;

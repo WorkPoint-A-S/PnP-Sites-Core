@@ -89,30 +89,30 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                             serverSideControlId.Replace("-", "_"));
 
                                         WebPartDefinition webPart = limitedWPManager.WebParts.GetByControlId(serverSideControlIdToSearchFor);
-                                    web.Context.Load(webPart,
-                                        wp => wp.Id,
-                                        wp => wp.WebPart.Title,
-                                        wp => wp.WebPart.ZoneIndex
-                                        );
-                                    web.Context.ExecuteQueryRetry();
+                                        web.Context.Load(webPart,
+                                            wp => wp.Id,
+                                            wp => wp.WebPart.Title,
+                                            wp => wp.WebPart.ZoneIndex
+                                            );
+                                        web.Context.ExecuteQueryRetry();
 
-                                    var webPartxml = TokenizeWebPartXml(web, web.GetWebPartXml(webPart.Id, welcomePageUrl));
+                                        var webPartxml = TokenizeWebPartXml(web, web.GetWebPartXml(webPart.Id, welcomePageUrl));
 
-                                    page.WebParts.Add(new Model.WebPart()
-                                    {
-                                        Title = webPart.WebPart.Title,
-                                        Contents = webPartxml,
-                                        Order = (uint)webPart.WebPart.ZoneIndex,
-                                        Row = 1, // By default we will create a onecolumn layout, add the webpart to it, and later replace the wikifield on the page to position the webparts correctly.
-                                        Column = 1 // By default we will create a onecolumn layout, add the webpart to it, and later replace the wikifield on the page to position the webparts correctly.
-                                    });
+                                        page.WebParts.Add(new Model.WebPart()
+                                        {
+                                            Title = webPart.WebPart.Title,
+                                            Contents = webPartxml,
+                                            Order = (uint)webPart.WebPart.ZoneIndex,
+                                            Row = 1, // By default we will create a onecolumn layout, add the webpart to it, and later replace the wikifield on the page to position the webparts correctly.
+                                            Column = 1 // By default we will create a onecolumn layout, add the webpart to it, and later replace the wikifield on the page to position the webparts correctly.
+                                        });
 
-                                    pageContents = Regex.Replace(pageContents, serverSideControlId, string.Format("{{webpartid:{0}}}", webPart.WebPart.Title), RegexOptions.IgnoreCase);
-                                }
+                                        pageContents = Regex.Replace(pageContents, serverSideControlId, string.Format("{{webpartid:{0}}}", webPart.WebPart.Title), RegexOptions.IgnoreCase);
+                                    }
                                     catch (ServerException)
                                     {
                                         scope.LogWarning("Found a WebPart ID which is not available on the server-side. ID: {0}", serverSideControlId);
-                            }
+                                    }
                                 }
                             }
 
@@ -247,9 +247,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 xml = Regex.Replace(xml, list.Id.ToString(), string.Format("{{listid:{0}}}", list.Title), RegexOptions.IgnoreCase);
             }
             xml = Regex.Replace(xml, web.Id.ToString(), "{siteid}", RegexOptions.IgnoreCase);
-            xml = Regex.Replace(xml, web.ServerRelativeUrl, "{site}", RegexOptions.IgnoreCase);
-            xml = xml.Replace("<![CDATA[", "{cdatastart}");
-            xml = xml.Replace("]]>", "{cdataend}");
+            xml = Regex.Replace(xml, "(\"" + web.ServerRelativeUrl + ")(?!&)", "\"{site}", RegexOptions.IgnoreCase);
+            xml = Regex.Replace(xml, "'" + web.ServerRelativeUrl, "'{site}", RegexOptions.IgnoreCase);
             return xml;
         }
 

@@ -600,7 +600,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     if (field.TitleResource.SetUserResourceValue(nameAttributeValue, parser))
                     {
                         isDirty = true;
-        }
+                    }
                 }
                 var descriptionAttributeValue = originalFieldElement.Attribute("Description") != null ? originalFieldElement.Attribute("Description").Value : "";
                 if (descriptionAttributeValue.ContainsResourceToken())
@@ -790,7 +790,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     existingList.OnQuickLaunch = templateList.OnQuickLaunch;
                     isDirty = true;
                 }
-                if (existingList.BaseTemplate != (int)ListTemplateType.Survey && 
+                if (existingList.BaseTemplate != (int)ListTemplateType.Survey &&
                     templateList.ContentTypesEnabled != existingList.ContentTypesEnabled)
                 {
                     existingList.ContentTypesEnabled = templateList.ContentTypesEnabled;
@@ -815,7 +815,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         isDirty = true;
                     }
                 }
-#if !CLIENTSDFKV15
+#if !CLIENTSDKV15
                 if(templateList.Title.ContainsResourceToken())
                 {
                     if(existingList.TitleResource.SetUserResourceValue(templateList.Title, parser))
