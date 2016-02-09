@@ -106,7 +106,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         private SPField UpdateField(Web web, string fieldId, XElement templateFieldElement, PnPMonitoredScope scope, TokenParser parser, string originalFieldXml)
         {
             var existingField = web.Fields.GetById(Guid.Parse(fieldId));
-            web.Context.Load(existingField, f => f.SchemaXml);
+            web.Context.Load(existingField, f => f.SchemaXml, f => f.TypeAsString, f => f.DefaultValue);
             web.Context.ExecuteQueryRetry();
 
             XElement existingFieldElement = XElement.Parse(existingField.SchemaXml);
@@ -244,6 +244,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 web.Context.ExecuteQuery();
             }
 
+            field.EnsureProperties(f => f.TypeAsString, f => f.DefaultValue);
             if ((field.TypeAsString == "TaxonomyFieldType" || field.TypeAsString == "TaxonomyFieldTypeMulti") && !string.IsNullOrEmpty(field.DefaultValue))
             {
                 var taxField = web.Context.CastTo<TaxonomyField>(field);
