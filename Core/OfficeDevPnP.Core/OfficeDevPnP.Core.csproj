@@ -762,6 +762,22 @@
     <EmbeddedResource Include="Framework\Provisioning\BaseTemplates\Common\Publishing-Feature-Native-Files.xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Framework\Provisioning\BaseTemplates\v16_1x\BDR0Template.xml" />
+    <Content Include="Framework\Provisioning\BaseTemplates\v16_1x\BICenterSite0Template.xml" />
+    <Content Include="Framework\Provisioning\BaseTemplates\v16_1x\BLANKINTERNET0Template.xml" />
+    <Content Include="Framework\Provisioning\BaseTemplates\v16_1x\BLOG0Template.xml" />
+    <Content Include="Framework\Provisioning\BaseTemplates\v16_1x\CMSPUBLISHING0Template.xml" />
+    <Content Include="Framework\Provisioning\BaseTemplates\v16_1x\COMMUNITY0Template.xml" />
+    <Content Include="Framework\Provisioning\BaseTemplates\v16_1x\COMMUNITYPORTAL0Template.xml" />
+    <Content Include="Framework\Provisioning\BaseTemplates\v16_1x\DEV0Template.xml" />
+    <Content Include="Framework\Provisioning\BaseTemplates\v16_1x\EHS1Template.xml" />
+    <Content Include="Framework\Provisioning\BaseTemplates\v16_1x\ENTERWIKI0Template.xml" />
+    <Content Include="Framework\Provisioning\BaseTemplates\v16_1x\OFFILE1Template.xml" />
+    <Content Include="Framework\Provisioning\BaseTemplates\v16_1x\PROJECTSITE0Template.xml" />
+    <Content Include="Framework\Provisioning\BaseTemplates\v16_1x\SRCHCEN0Template.xml" />
+    <Content Include="Framework\Provisioning\BaseTemplates\v16_1x\SRCHCENTERLITE0Template.xml" />
+    <Content Include="Framework\Provisioning\BaseTemplates\v16_1x\STS0Template.xml" />
+    <Content Include="Framework\Provisioning\BaseTemplates\v16_1x\VISPRUS0Template.xml" />
     <Content Include="Framework\Provisioning\BaseTemplates\v15\BDR0Template.xml" />
     <Content Include="Framework\Provisioning\BaseTemplates\v15\BICENTERSITE0Template.xml" />
     <Content Include="Framework\Provisioning\BaseTemplates\v15\BLANKINTERNET0Template.xml" />
