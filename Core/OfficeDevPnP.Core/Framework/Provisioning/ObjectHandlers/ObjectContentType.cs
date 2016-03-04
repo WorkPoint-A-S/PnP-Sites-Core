@@ -88,8 +88,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         foreach (var localization in ct.Localizations.Where(l => cultureNames.Contains(l.CultureName, StringComparer.InvariantCultureIgnoreCase)))
                         {
                             newCT.SetLocalizationForContentType(localization.CultureName, localization.TitleResource, localization.DescriptionResource);
-                }
-            }
+                        }
+                    }
                 }
             }
             return parser;

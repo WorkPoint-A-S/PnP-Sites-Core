@@ -73,7 +73,10 @@ namespace Microsoft.SharePoint.Client
         {
             Assembly asm = Assembly.GetAssembly(typeof(Site));
             AssemblyName name = asm.GetName();
-            return String.Format("{0}_{1}", name.Version.Major, name.Version.Minor);
+            //return String.Format("{0}_{1}", name.Version.Major, name.Version.Minor);
+
+            // MSC: Temporarily use version 16 until we're ready to use december schema version
+            return String.Format("{0}", name.Version.Major);
         }
 
     }
