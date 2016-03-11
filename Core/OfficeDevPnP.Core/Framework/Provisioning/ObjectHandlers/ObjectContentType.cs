@@ -32,15 +32,17 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     return parser;
                 }
 
-                web.Context.Load(web.ContentTypes, ct => ct.IncludeWithDefaultProperties(c => c.StringId, c => c.FieldLinks,
+                web.Context.Load(web.ContentTypes, ct => ct.IncludeWithDefaultProperties(c => c.StringId, c => c.Name, c => c.Description, c => c.FieldLinks,
                                                                                          c => c.FieldLinks.Include(fl => fl.Id, fl => fl.Required, fl => fl.Hidden)));
                 web.Context.Load(web.Fields, fld => fld.IncludeWithDefaultProperties(f => f.Id));
+                web.Context.Load(web, w => w.RegionalSettings.LocaleId);
 
                 web.Context.ExecuteQueryRetry();
 
                 var existingCTs = web.ContentTypes.ToList();
                 var existingFields = web.Fields.ToList();
                 var cultureNames = new List<string>();
+                var webCultureInfo = new CultureInfo((int)web.RegionalSettings.LocaleId);
 
                 foreach (var supportedUILanguage in template.SupportedUILanguages)
                 {
@@ -50,16 +52,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                 foreach (var ct in template.ContentTypes.OrderBy(ct => ct.Id)) // ordering to handle references to parent content types that can be in the same template
                 {
-                    SPContentType newCT = null;
-
                     var existingCT = existingCTs.FirstOrDefault(c => c.StringId.Equals(ct.Id, StringComparison.OrdinalIgnoreCase));
                     if (existingCT == null)
                     {
                         scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_ContentTypes_Creating_new_Content_Type___0_____1_, ct.Id, ct.Name);
-                        newCT = CreateContentType(web, ct, parser, template.Connector ?? null, existingCTs, existingFields);
-                        if (newCT != null)
+                        existingCT = CreateContentType(web, ct, parser, template.Connector ?? null, existingCTs, existingFields);
+                        if (existingCT != null)
                         {
-                            existingCTs.Add(newCT);
+                            existingCTs.Add(existingCT);
                         }
                     }
                     else
@@ -70,10 +70,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                             existingCT.DeleteObject();
                             web.Context.ExecuteQueryRetry();
-                            newCT = CreateContentType(web, ct, parser, template.Connector ?? null, existingCTs, existingFields);
-                            if (newCT != null)
+                            existingCT = CreateContentType(web, ct, parser, template.Connector ?? null, existingCTs, existingFields);
+                            if (existingCT != null)
                             {
-                                existingCTs.Add(newCT);
+                                existingCTs.Add(existingCT);
                             }
                         }
                         else
@@ -83,11 +83,19 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         }
                     }
 
-                    if (newCT != null)
+                    if (existingCT != null)
                     {
+                        // IMPORTANT! Title or Description corresponding to the culture of the web, must be set first, otherwise localizations doesn't work.
+                        var primaryLocalization = ct.Localizations.FirstOrDefault(l => webCultureInfo.Name.Equals(l.CultureName, StringComparison.InvariantCultureIgnoreCase));
+                        if (primaryLocalization != null && (ct.Name != primaryLocalization.TitleResource || ct.Description != primaryLocalization.DescriptionResource))
+                        {
+                            existingCT.Name = primaryLocalization.TitleResource;
+                            existingCT.Description = primaryLocalization.DescriptionResource;
+                        }
+
                         foreach (var localization in ct.Localizations.Where(l => cultureNames.Contains(l.CultureName, StringComparer.InvariantCultureIgnoreCase)))
                         {
-                            newCT.SetLocalizationForContentType(localization.CultureName, localization.TitleResource, localization.DescriptionResource);
+                            existingCT.SetLocalizationForContentType(localization.CultureName, localization.TitleResource, localization.DescriptionResource);
                         }
                     }
                 }

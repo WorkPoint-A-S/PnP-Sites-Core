@@ -99,7 +99,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         {
                             var uca = site.GetCustomActions().Where(uc => uc.Name == customAction.Name).FirstOrDefault();
                             SetCustomActionResourceValues(parser, customAction, uca);
-                    }
+                        }
 #endif
                     }
                     else
@@ -152,7 +152,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             if (existingCustomAction.DescriptionResource.SetUserResourceValue(customAction.Description, parser))
                             {
                                 isDirty = true;
-                        }
+                            }
                         }
 #endif
                         if (existingCustomAction.Group != customAction.Group)
@@ -216,7 +216,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             {
                                 isDirty = true;
                             }
-
                         }
 #endif
                         if (existingCustomAction.Url != parser.ParseString(customAction.Url))
