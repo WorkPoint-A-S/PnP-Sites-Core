@@ -134,8 +134,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 web.Context.Load(targetFile, f => f.CheckOutType, f => f.ListItemAllFields.ParentList.ForceCheckout);
                 web.Context.ExecuteQueryRetry();
-                if (targetFile.ListItemAllFields.ServerObjectIsNull.HasValue 
-                    && !targetFile.ListItemAllFields.ServerObjectIsNull.Value 
+                if (targetFile.ListItemAllFields.ServerObjectIsNull.HasValue
+                    && !targetFile.ListItemAllFields.ServerObjectIsNull.Value
                     && targetFile.ListItemAllFields.ParentList.ForceCheckout)
                 {
                     if (targetFile.CheckOutType == CheckOutType.None)
@@ -197,7 +197,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     var targetField = parentList.Fields.GetByInternalNameOrTitle(propertyName);
                     targetField.EnsureProperties(f => f.TypeAsString, f => f.ReadOnlyField);
 
-                    if (true)  // !targetField.ReadOnlyField)
+                    // Changed by PaoloPia because there are fields like PublishingPageLayout
+                    // which are marked as read-only, but have to be overwritten while uploading
+                    // a publishing page file and which in reality can still be written
+                    if (!targetField.ReadOnlyField || propertyName == "PublishingPageLayout") 
                     {
                         switch (propertyName.ToUpperInvariant())
                         {
@@ -287,7 +290,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 xml = Regex.Replace(xml, list.Id.ToString(), string.Format("{{listid:{0}}}", list.Title), RegexOptions.IgnoreCase);
             }
             xml = Regex.Replace(xml, web.Id.ToString(), "{siteid}", RegexOptions.IgnoreCase);
-            xml = Regex.Replace(xml, web.ServerRelativeUrl, "{site}", RegexOptions.IgnoreCase);
+            if (web.ServerRelativeUrl != "/")
+            {
+                xml = Regex.Replace(xml, web.ServerRelativeUrl, "{site}", RegexOptions.IgnoreCase);
+            }
 
             return xml;
         }

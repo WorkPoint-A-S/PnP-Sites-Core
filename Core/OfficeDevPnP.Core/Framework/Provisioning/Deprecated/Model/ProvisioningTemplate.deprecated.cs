@@ -11,5 +11,17 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
     /// </summary>
     public partial class ProvisioningTemplate
     {
+        private ProviderCollection _providers;
+
+        /// <summary>
+        /// Gets a collection of Providers that are used during the extensibility pipeline
+        /// </summary>
+        /// 
+        [Obsolete("Use ExtensibilityHandlers. This property will be removed in the June 2016 release.")]
+        public ProviderCollection Providers
+        {
+            get { return this._providers; }
+            private set { this._providers = value; }
+        }
     }
 }

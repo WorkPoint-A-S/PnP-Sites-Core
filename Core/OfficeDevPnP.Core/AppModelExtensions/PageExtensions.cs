@@ -12,6 +12,9 @@ using System.Linq;
 using System.Net;
 using System.IO;
 using System.Text;
+using OfficeDevPnP.Core.Utilities;
+using Microsoft.SharePoint.Client.Publishing.Navigation;
+using Microsoft.SharePoint.Client.Taxonomy;
 
 namespace Microsoft.SharePoint.Client
 {
@@ -77,7 +80,7 @@ namespace Microsoft.SharePoint.Client
 
             IEnumerable<WebPartDefinition> query = null;
 
-#if CLIENTSDKV15
+#if ONPREMISES
             // As long as we've no CSOM library that has the ZoneID we can't use the version check as things don't compile...
             query = web.Context.LoadQuery(limitedWebPartManager.WebParts.IncludeWithDefaultProperties(wp => wp.Id, wp => wp.WebPart, wp => wp.WebPart.Title, wp => wp.WebPart.Properties, wp => wp.WebPart.Hidden));
 #else
@@ -392,7 +395,7 @@ namespace Microsoft.SharePoint.Client
                 var pageUrl = string.Format("{0}://{1}{2}", uri.Scheme, uri.Host, serverRelativePageUrl);
                 var request = (HttpWebRequest)WebRequest.Create(string.Format("{0}/_vti_bin/exportwp.aspx?pageurl={1}&guidstring={2}", webUrl, pageUrl, id.ToString()));
 
-#if CLIENTSDKV15
+#if ONPREMISES
                 request.Credentials = web.Context.Credentials;
 #else
                 var credentials = web.Context.Credentials as SharePointOnlineCredentials;
@@ -828,6 +831,59 @@ namespace Microsoft.SharePoint.Client
         /// <exception cref="System.ArgumentNullException">Thrown when wikiPageLibraryName or wikiPageName is null</exception>
         public static string AddWikiPage(this Web web, string wikiPageLibraryName, string wikiPageName)
         {
+            string wikiPageUrl, newWikiPageUrl, pathAndQuery;
+            List pageLibrary;
+            File currentPageFile;
+
+            WikiPageImplementation(web, wikiPageLibraryName, wikiPageName, out wikiPageUrl, out pageLibrary, out newWikiPageUrl, out currentPageFile, out pathAndQuery);
+
+            if (!currentPageFile.Exists)
+            {
+                var newpage = pageLibrary.RootFolder.Files.AddTemplateFile(newWikiPageUrl, TemplateFileType.WikiPage);
+                web.Context.Load(newpage);
+                web.Context.ExecuteQueryRetry();
+                wikiPageUrl = newpage.ServerRelativeUrl.Replace(pathAndQuery, "");
+            }
+
+            return wikiPageUrl;
+        }
+
+        /// <summary>
+        /// Returns the Url for the requested wiki page, creates it if the pageis not yet available
+        /// </summary>
+        /// <param name="web">Site to be processed - can be root web or sub site</param>
+        /// <param name="wikiPageLibraryName">Name of the wiki page library</param>
+        /// <param name="wikiPageName">Wiki page to operate on</param>
+        /// <returns>The relative URL of the added wiki page</returns>
+        /// <exception cref="System.ArgumentException">Thrown when wikiPageLibraryName or wikiPageName is a zero-length string or contains only white space</exception>
+        /// <exception cref="System.ArgumentNullException">Thrown when wikiPageLibraryName or wikiPageName is null</exception>
+        public static string EnsureWikiPage(this Web web, string wikiPageLibraryName, string wikiPageName)
+        {
+            string wikiPageUrl, newWikiPageUrl, pathAndQuery;
+            List pageLibrary;
+            File currentPageFile;
+
+            WikiPageImplementation(web, wikiPageLibraryName, wikiPageName, out wikiPageUrl, out pageLibrary, out newWikiPageUrl, out currentPageFile, out pathAndQuery);
+
+            if (!currentPageFile.Exists)
+            {
+                var newpage = pageLibrary.RootFolder.Files.AddTemplateFile(newWikiPageUrl, TemplateFileType.WikiPage);
+                web.Context.Load(newpage);
+                web.Context.ExecuteQueryRetry();
+                wikiPageUrl = newpage.ServerRelativeUrl.Replace(pathAndQuery, "");
+            }
+            else
+            {
+                web.Context.Load(currentPageFile, s => s.ServerRelativeUrl);
+                web.Context.ExecuteQueryRetry();
+                wikiPageUrl = currentPageFile.ServerRelativeUrl.Replace(pathAndQuery, "");
+            }
+
+            return wikiPageUrl;
+        }
+
+        private static void WikiPageImplementation(Web web, string wikiPageLibraryName, string wikiPageName, out string wikiPageUrl, out List pageLibrary, out string newWikiPageUrl, out File currentPageFile, out string pathAndQuery)
+        {
             if (string.IsNullOrEmpty(wikiPageLibraryName))
             {
                 throw (wikiPageLibraryName == null)
@@ -842,32 +898,23 @@ namespace Microsoft.SharePoint.Client
                   : new ArgumentException(CoreResources.Exception_Message_EmptyString_Arg, "wikiPageName");
             }
 
-            string wikiPageUrl = "";
-
-            var pageLibrary = web.Lists.GetByTitle(wikiPageLibraryName);
-
+            wikiPageUrl = "";
+            pageLibrary = web.Lists.GetByTitle(wikiPageLibraryName);
+            web.Context.Load(web, w => w.Url);
             web.Context.Load(pageLibrary.RootFolder, f => f.ServerRelativeUrl);
             web.Context.ExecuteQueryRetry();
 
             var pageLibraryUrl = pageLibrary.RootFolder.ServerRelativeUrl;
-            var newWikiPageUrl = pageLibraryUrl + "/" + wikiPageName;
-
-            var currentPageFile = web.GetFileByServerRelativeUrl(newWikiPageUrl);
-
+            newWikiPageUrl = pageLibraryUrl + "/" + wikiPageName;
+            currentPageFile = web.GetFileByServerRelativeUrl(newWikiPageUrl);
             web.Context.Load(currentPageFile, f => f.Exists);
             web.Context.ExecuteQueryRetry();
 
-            if (!currentPageFile.Exists)
+            pathAndQuery = new Uri(web.Url).PathAndQuery;
+            if (!pathAndQuery.EndsWith("/"))
             {
-                var newpage = pageLibrary.RootFolder.Files.AddTemplateFile(newWikiPageUrl, TemplateFileType.WikiPage);
-
-                web.Context.Load(newpage);
-                web.Context.ExecuteQueryRetry();
-
-                wikiPageUrl = UrlUtility.Combine("sitepages", wikiPageName);
+                pathAndQuery = pathAndQuery + "/";
             }
-
-            return wikiPageUrl;
         }
 
         /// <summary>
@@ -1022,18 +1069,23 @@ namespace Microsoft.SharePoint.Client
             return def.WebPart.Properties;
         }
 
-
         /// <summary>
         /// Adds the publishing page.
         /// </summary>
         /// <param name="web">The web.</param>
         /// <param name="pageName">Name of the page.</param>
-        /// <param name="pageTemplateName">Name of the page template.</param>
-        /// <param name="title">The title.</param>
+        /// <param name="pageTemplateName">Name of the page template/layout excluded the .aspx file extension.</param>
+        /// <param name="title">The title of the target publishing page.</param>
         /// <param name="publish">Should the page be published or not?</param>
+        /// <param name="folder">The target folder for the page, within the Pages library.</param>
+        /// <param name="startDate">Start date for scheduled publishing.</param>
+        /// <param name="endDate">End date for scheduled publishing.</param>
+        /// <param name="schedule">Defines whether to define a schedule or not.</param>
         /// <exception cref="System.ArgumentNullException">Thrown when key or pageName is a zero-length string or contains only white space</exception>
         /// <exception cref="System.ArgumentException">Thrown when key or pageName is null</exception>
-        public static void AddPublishingPage(this Web web, string pageName, string pageTemplateName, string title = null, bool publish = false)
+        public static void AddPublishingPage(this Web web, string pageName, string pageTemplateName, string title = null, 
+            bool publish = false, Folder folder = null,
+            DateTime? startDate = null, DateTime? endDate = null, Boolean schedule = false)
         {
             if (string.IsNullOrEmpty(pageName))
             {
@@ -1051,11 +1103,16 @@ namespace Microsoft.SharePoint.Client
             {
                 title = pageName;
             }
+
+            // Fix page name, if needed
             pageName = pageName.ReplaceInvalidUrlChars("-");
+
             ClientContext context = web.Context as ClientContext;
             Site site = context.Site;
             context.Load(site, s => s.ServerRelativeUrl);
             context.ExecuteQueryRetry();
+
+            // Load reference Page Layout
             File pageFromPageLayout = context.Site.RootWeb.GetFileByServerRelativeUrl(String.Format("{0}_catalogs/masterpage/{1}.aspx",
                 UrlUtility.EnsureTrailingSlash(site.ServerRelativeUrl),
                 pageTemplateName));
@@ -1063,14 +1120,26 @@ namespace Microsoft.SharePoint.Client
             context.Load(pageLayoutItem);
             context.ExecuteQueryRetry();
 
+            // Create the publishing page
             PublishingWeb publishingWeb = PublishingWeb.GetPublishingWeb(context, web);
             context.Load(publishingWeb);
-            PublishingPage page = publishingWeb.AddPublishingPage(new PublishingPageInformation
+
+            // Configure the publishing page
+            var pageInformation = new PublishingPageInformation
             {
-                Name = string.Format("{0}.aspx", pageName),
-                PageLayoutListItem = pageLayoutItem
-            });
-            //Get parent list of item, this way we can handle all languages
+                Name = !pageName.EndsWith(".aspx", StringComparison.InvariantCultureIgnoreCase) ? 
+                    string.Format("{0}.aspx", pageName) : pageName,
+                PageLayoutListItem = pageLayoutItem,
+            };
+
+            // Handle target folder, if any
+            if (folder != null)
+            {
+                pageInformation.Folder = folder;
+            }
+            PublishingPage page = publishingWeb.AddPublishingPage(pageInformation);
+
+            // Get parent list of item, this way we can handle all languages
             List pagesLibrary = page.ListItem.ParentList;
             context.Load(pagesLibrary);
             context.ExecuteQueryRetry();
@@ -1078,6 +1147,7 @@ namespace Microsoft.SharePoint.Client
             pageItem["Title"] = title;
             pageItem.Update();
 
+            // Checkin the page file, if needed
             web.Context.Load(pageItem, p => p.File.CheckOutType);
             web.Context.ExecuteQueryRetry();
             if (pageItem.File.CheckOutType != CheckOutType.None)
@@ -1085,26 +1155,113 @@ namespace Microsoft.SharePoint.Client
                 pageItem.File.CheckIn(String.Empty, CheckinType.MajorCheckIn);
             }
 
+            // Publish the page, if required
             if (publish)
             {
                 pageItem.File.Publish(String.Empty);
                 if (pagesLibrary.EnableModeration)
                 {
                     pageItem.File.Approve(String.Empty);
+
+                    // Setup scheduling, if required
+                    if (schedule && startDate.HasValue)
+                    {
+                        page.StartDate = startDate.Value;
+                        page.EndDate = endDate.HasValue ? endDate.Value : new DateTime(2050, 01, 01);
+                        page.Schedule(String.Empty);
+                    }
                 }
             }
             context.ExecuteQueryRetry();
         }
 
         /// <summary>
-        /// Gets a publishing page.
+        /// Adds a user-friendly URL for a PublishingPage object.
+        /// </summary>
+        /// <param name="page">The target page to add to managed navigation.</param>
+        /// <param name="web">The target web.</param>
+        /// <param name="navigationTitle">The title for the navigation item.</param>
+        /// <param name="friendlyUrlSegment">The user-friendly text to use as the URL segment.</param>
+        /// <param name="editableParent">The parent NavigationTermSetItem object below which this new friendly URL should be created.</param>
+        /// <param name="showInGlobalNavigation">Defines whether the navigation item has to be shown in the Global Navigation, optional and default to true.</param>
+        /// <param name="showInCurrentNavigation">Defines whether the navigation item has to be shown in the Current Navigation, optional and default to true.</param>
+        /// <returns>The simple link URL just created.</returns>
+        public static String AddNavigationFriendlyUrl(this PublishingPage page, Web web, 
+            String navigationTitle, String friendlyUrlSegment, NavigationTermSetItem editableParent, 
+            Boolean showInGlobalNavigation = true, Boolean showInCurrentNavigation = true)
+        {
+            // Add the Friendly URL
+            var friendlyUrl = page.AddFriendlyUrl(friendlyUrlSegment, editableParent, true);
+
+            // Retrieve terms for searching parent
+            web.Context.Load(editableParent.Terms, ts => ts.Include(t => t.FriendlyUrlSegment, t => t.Title));
+            web.Context.ExecuteQueryRetry();
+
+            // Configure the friendly URL Title
+            NavigationTerm friendlyUrlTerm = editableParent.Terms
+                .FirstOrDefault(t => t.FriendlyUrlSegment.Value == friendlyUrlSegment);
+            if (friendlyUrlTerm != null)
+            {
+                // Assign term label for taxonomy equal to navigation item title
+                Term friendlyUrlBackingTerm = friendlyUrlTerm.GetTaxonomyTerm();
+                web.Context.Load(friendlyUrlBackingTerm, t => t.Labels);
+                web.Context.ExecuteQueryRetry();
+
+                Label defaultLabel = friendlyUrlBackingTerm.Labels.FirstOrDefault(l => l.IsDefaultForLanguage);
+                if (defaultLabel != null)
+                {
+                    defaultLabel.Value = navigationTitle;
+                }
+
+                // Configure the navigation settings
+                if (!showInGlobalNavigation || !showInCurrentNavigation)
+                {
+                    if (!showInGlobalNavigation && !showInCurrentNavigation)
+                    {
+                        friendlyUrlBackingTerm.SetLocalCustomProperty("_Sys_Nav_ExcludedProviders", "\"GlobalNavigationTaxonomyProvider\",\"CurrentNavigationTaxonomyProvider\"");
+                    }
+                    if (!showInGlobalNavigation)
+                    {
+                        friendlyUrlBackingTerm.SetLocalCustomProperty("_Sys_Nav_ExcludedProviders", "\"GlobalNavigationTaxonomyProvider\"");
+                    }
+                    else
+                    {
+                        friendlyUrlBackingTerm.SetLocalCustomProperty("_Sys_Nav_ExcludedProviders", "\"CurrentNavigationTaxonomyProvider\"");
+                    }
+                }
+
+                // Assign term title for site navigation
+                friendlyUrlTerm.Title.Value = navigationTitle;
+                friendlyUrlTerm.GetTaxonomyTermStore().CommitAll();
+                web.Context.ExecuteQueryRetry();
+            }
+
+            return (friendlyUrl.Value);
+        }
+
+        /// <summary>
+        /// Gets a Publishing Page from the root folder of the Pages library.
         /// </summary>
         /// <param name="web">The web.</param>
         /// <param name="fileLeafRef">The file leaf reference.</param>
-        /// <returns></returns>
+        /// <returns>The PublishingPage object, if any. Otherwise null.</returns>
         /// <exception cref="System.ArgumentNullException">fileLeafRef</exception>
         /// <exception cref="System.ArgumentException">fileLeafRef</exception>
         public static PublishingPage GetPublishingPage(this Web web, string fileLeafRef)
+        {
+            return (web.GetPublishingPage(fileLeafRef, null));
+        }
+
+        /// <summary>
+        /// Gets a Publishing Page from any folder in the Pages library.
+        /// </summary>
+        /// <param name="web">The web.</param>
+        /// <param name="fileLeafRef">The file leaf reference.</param>
+        /// <param name="folder">The folder where to search the page.</param>
+        /// <returns>The PublishingPage object, if any. Otherwise null.</returns>
+        /// <exception cref="System.ArgumentNullException">fileLeafRef</exception>
+        /// <exception cref="System.ArgumentException">fileLeafRef</exception>
+        public static PublishingPage GetPublishingPage(this Web web, string fileLeafRef, Folder folder)
         {
             if (string.IsNullOrEmpty(fileLeafRef))
             {
@@ -1113,29 +1270,23 @@ namespace Microsoft.SharePoint.Client
                   : new ArgumentException(CoreResources.Exception_Message_EmptyString_Arg, "fileLeafRef");
             }
 
-            ClientContext context = web.Context as ClientContext;
-
-            // Get the language agnostic "Pages" library name
-            context.Load(web, l => l.Language);
+            var context = web.Context as ClientContext;
+            List pages = web.GetPagesLibrary();
+            // Get the language agnostic "Pages" library name         
+            context.Load(pages, p => p.RootFolder, p => p.ItemCount);
             context.ExecuteQueryRetry();
 
-            ClientResult<string> pagesLibraryName = Utility.GetLocalizedString(context, "$Resources:List_Pages_UrlName", "cmscore", (int)web.Language);
-            context.ExecuteQueryRetry();
-
-            List spList = web.Lists.GetByTitle(pagesLibraryName.Value);
-            context.Load(spList);
-            context.ExecuteQueryRetry();
-
-            if (spList != null && spList.ItemCount > 0)
+            if (pages != null && pages.ItemCount > 0)
             {
                 CamlQuery camlQuery = new CamlQuery();
-                camlQuery.ViewXml = string.Format(@"<View>  
+                camlQuery.FolderServerRelativeUrl = folder != null ? folder.ServerRelativeUrl : pages.RootFolder.ServerRelativeUrl;
+                camlQuery.ViewXml = string.Format(@"<View Scope='RecursiveAll'>  
                                                         <Query> 
                                                            <Where><Eq><FieldRef Name='FileLeafRef' /><Value Type='Text'>{0}</Value></Eq></Where> 
                                                         </Query> 
                                                     </View>", fileLeafRef);
 
-                ListItemCollection listItems = spList.GetItems(camlQuery);
+                ListItemCollection listItems = pages.GetItems(camlQuery);
                 context.Load(listItems);
                 context.ExecuteQueryRetry();
 

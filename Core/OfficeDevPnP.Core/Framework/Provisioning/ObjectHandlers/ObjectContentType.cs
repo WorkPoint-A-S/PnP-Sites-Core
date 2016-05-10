@@ -169,7 +169,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 existingContentType.NewFormUrl = parser.ParseString(templateContentType.NewFormUrl);
                 isDirty = true;
             }
-#if !CLIENTSDKV15
+#if !ONPREMISES
             if (templateContentType.Name.ContainsResourceToken())
             {
                 existingContentType.NameResource.SetUserResourceValue(templateContentType.Name, parser);
@@ -269,7 +269,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             // Add new CTs
             parser.AddToken(new ContentTypeIdToken(web, name, id));
 
-#if !CLIENTSDKV15
+#if !ONPREMISES
             // Set resources
             if (templateContentType.Name.ContainsResourceToken())
             {
@@ -285,8 +285,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             //In this case the new Content Type has all field of the original Content Type and missing fields 
             //will be added at the end. To fix this issue we ordering the fields once more.
             createdCT.FieldLinks.Reorder(templateContentType.FieldRefs.Select(fld => fld.Name).ToArray());
-            createdCT.Update(true);
-            web.Context.ExecuteQueryRetry();
 
             createdCT.ReadOnly = templateContentType.ReadOnly;
             createdCT.Hidden = templateContentType.Hidden;
@@ -307,6 +305,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 createdCT.DisplayFormUrl = templateContentType.DisplayFormUrl;
             }
+
+            createdCT.Update(true);
+            web.Context.ExecuteQueryRetry();
 
             // If the CT is a DocumentSet
             if (templateContentType.DocumentSetTemplate != null)
@@ -404,8 +405,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 if (!BuiltInContentTypeId.Contains(ct.StringId))
                 {
-                    ContentType newCT = new ContentType(
-                        ct.StringId,
+                    ContentType newCT = new ContentType
+                        (ct.StringId,
                         ct.Name,
                         ct.Description,
                         ct.Group,
@@ -420,8 +421,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                  Id = fieldLink.Id,
                                  Hidden = fieldLink.Hidden,
                                  Required = fieldLink.Required,
-                             }),
-                            null
+                             })
                         )
                     {
                         DisplayFormUrl = ct.DisplayFormUrl,

@@ -28,7 +28,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         private SiteSecurity _siteSecurity;
         private CustomActions _customActions;
         private FileCollection _files;
-        private ProviderCollection _providers;
+        private ExtensibilityHandlerCollection _extensibilityHandlers;
         private PageCollection _pages;
         private TermGroupCollection _termGroups;
         private List<Localization> _siteFieldsLocalization = new List<Localization>();
@@ -69,7 +69,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
             this._customActions.ParentTemplate = this;
 
             this._files = new FileCollection(this);
-            this._providers = new ProviderCollection(this);
+            this._providers = new ProviderCollection(this); // Deprecated
+            this._extensibilityHandlers = new ExtensibilityHandlerCollection(this);
             this._pages = new PageCollection(this);
             this._termGroups = new TermGroupCollection(this);
 
@@ -102,10 +103,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
             private set { this._localizations = value; }
         }
 
-/// <summary>
-/// Gets or sets the ID of the Provisioning Template
-/// </summary>
-public string Id { get { return _id; } set { _id = value; } }
+        /// <summary>
+        /// Gets or sets the ID of the Provisioning Template
+        /// </summary>
+        public string Id { get { return _id; } set { _id = value; } }
 
         /// <summary>
         /// Gets or sets the Version of the Provisioning Template
@@ -245,14 +246,12 @@ public string Id { get { return _id; } set { _id = value; } }
             }
         }
 
-        /// <summary>
-        /// Gets a collection of Providers that are used during the extensibility pipeline
-        /// </summary>
-        public ProviderCollection Providers
+        public ExtensibilityHandlerCollection ExtensibilityHandlers
         {
-            get { return this._providers; }
-            private set { this._providers = value; }
+            get { return this._extensibilityHandlers; }
+            private set { this._extensibilityHandlers = value; }
         }
+
 
         /// <summary>
         /// Gets a collection of Wiki Pages for the template
@@ -447,7 +446,7 @@ public string Id { get { return _id; } set { _id = value; } }
 
         public override int GetHashCode()
         {
-            return (String.Format("{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|{12}|{13}|{14}|{15}|{16}|{17}|{18}|{19}|{20}|{21}|{22}|{23}|{24}|{25}|{26}|",
+            return (String.Format("{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|{12}|{13}|{14}|{15}|{16}|{17}|{18}|{19}|{20}|{21}|{22}|{23}|{24}|{25}|{26}|{27}|{28}|",
                 (this.ComposedLook != null ? this.ComposedLook.GetHashCode() : 0),
                 this.ContentTypes.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0)),
                 this.CustomActions.SiteCustomActions.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0)),
@@ -474,7 +473,9 @@ public string Id { get { return _id; } set { _id = value; } }
                 this.Workflows.WorkflowDefinitions.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0)),
                 this.Workflows.WorkflowSubscriptions.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0)),
                 this.AddIns.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0)),
-                (this.Publishing != null ? this.Publishing.GetHashCode() : 0)
+                (this.Publishing != null ? this.Publishing.GetHashCode() : 0),
+                this.Localizations.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0)),
+                this.WebSettings.GetHashCode()
             ).GetHashCode());
         }
 
@@ -496,9 +497,9 @@ public string Id { get { return _id; } set { _id = value; } }
 
             return (
                 this.ComposedLook.Equals(other.ComposedLook) &&
-                this.ContentTypes.DeepEquals(other.ContentTypes) && 
+                this.ContentTypes.DeepEquals(other.ContentTypes) &&
                 this.CustomActions.SiteCustomActions.DeepEquals(other.CustomActions.SiteCustomActions) &&
-                this.CustomActions.WebCustomActions.DeepEquals(other.CustomActions.WebCustomActions) && 
+                this.CustomActions.WebCustomActions.DeepEquals(other.CustomActions.WebCustomActions) &&
                 this.Features.SiteFeatures.DeepEquals(other.Features.SiteFeatures) &&
                 this.Features.WebFeatures.DeepEquals(other.Features.WebFeatures) &&
                 this.Files.DeepEquals(other.Files) &&
@@ -521,7 +522,9 @@ public string Id { get { return _id; } set { _id = value; } }
                 ((this.Workflows != null && other.Workflows != null) ? this.Workflows.WorkflowDefinitions.DeepEquals(other.Workflows.WorkflowDefinitions) : true) &&
                 ((this.Workflows != null && other.Workflows != null) ? this.Workflows.WorkflowSubscriptions.DeepEquals(other.Workflows.WorkflowSubscriptions) : true) &&
                 this.AddIns.DeepEquals(other.AddIns) &&
-                this.Publishing == other.Publishing
+                this.Publishing == other.Publishing &&
+                this.Localizations.DeepEquals(other.Localizations) &&
+                this.WebSettings.Equals(other.WebSettings)
             );
         }
 

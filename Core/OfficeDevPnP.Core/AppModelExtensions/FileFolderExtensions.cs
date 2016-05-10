@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using OfficeDevPnP.Core;
 using OfficeDevPnP.Core.Diagnostics;
+using OfficeDevPnP.Core.Utilities;
 
 namespace Microsoft.SharePoint.Client
 {
@@ -975,7 +976,7 @@ namespace Microsoft.SharePoint.Client
                 catch (ServerException ex)
                 {
                     // If this throws ServerException (does not belong to list), then shouldn't be trying to set properties)
-                    if (ex.ServerErrorCode != -2146232832)
+                    if (ex.Message != "The object specified does not belong to a list.")
                     {
                         throw;
                     }
@@ -1131,7 +1132,7 @@ namespace Microsoft.SharePoint.Client
                 }
                 catch (ServerException ex)
                 {
-                    if (ex.ServerErrorCode != -2146232832)
+                    if (ex.Message != "The object specified does not belong to a list.")
                     {
                         throw;
                     }

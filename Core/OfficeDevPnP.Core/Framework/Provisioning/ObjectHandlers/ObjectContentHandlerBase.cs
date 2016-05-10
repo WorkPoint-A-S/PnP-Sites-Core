@@ -25,17 +25,17 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
             if (listItem != null)
             {
-            var list = listItem.ParentList;
+                var list = listItem.ParentList;
 
-            var fields = list.Fields;
-            web.Context.Load(fields, fs => fs.IncludeWithDefaultProperties(f => f.TypeAsString, f => f.InternalName, f => f.Title));
-            web.Context.ExecuteQueryRetry();
+                var fields = list.Fields;
+                web.Context.Load(fields, fs => fs.IncludeWithDefaultProperties(f => f.TypeAsString, f => f.InternalName, f => f.Title));
+                web.Context.ExecuteQueryRetry();
 
-            var fieldValues = listItem.FieldValues;
+                var fieldValues = listItem.FieldValues;
 
-            var fieldValuesAsText = listItem.EnsureProperty(li => li.FieldValuesAsText).FieldValues;
+                var fieldValuesAsText = listItem.EnsureProperty(li => li.FieldValuesAsText).FieldValues;
 
-            var fieldstoExclude = new[] {
+                var fieldstoExclude = new[] {
                 "ID",
                 "GUID",
                 "Author",
@@ -81,66 +81,84 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 "TaxCatchAll",
                 "TaxCatchAllLabel",
                 "_ModerationStatus",
-                "HtmlDesignAssociated",
-                "HtmlDesignStatusAndPreview",
+                //"HtmlDesignAssociated",
+                //"HtmlDesignStatusAndPreview",
+                "MetaInfo",
+                "CheckoutUser",
+                "NoExecute",
+                "_HasCopyDestinations",
+                "ContentVersion",
+                "UIVersion",
             };
 
-            foreach (var fieldValue in fieldValues.Where(f => !fieldstoExclude.Contains(f.Key)))
-            {
-                if (fieldValue.Value != null && !string.IsNullOrEmpty(fieldValue.Value.ToString()))
+                foreach (var fieldValue in fieldValues.Where(f => !fieldstoExclude.Contains(f.Key)))
                 {
-                    var field = fields.FirstOrDefault(fs => fs.InternalName == fieldValue.Key);
-
-                    string value = string.Empty;
-
-                    switch (field.TypeAsString)
+                    if (fieldValue.Value != null && !string.IsNullOrEmpty(fieldValue.Value.ToString()))
                     {
-                        case "URL":
-                            value = Tokenize(fieldValuesAsText[fieldValue.Key], web.Url);
-                            break;
-                        case "User":
-                            var fieldUserValue = fieldValue.Value as Microsoft.SharePoint.Client.FieldUserValue;
-                            if (fieldUserValue != null)
-                            {
-#if !CLIENTSDKV15
-                                value = fieldUserValue.Email;
-#else
-                                value = fieldUserValue.LookupValue;
-#endif
-                            }
-                            break;
-                        case "LookupMulti":
-                        case "TaxonomyFieldType":
-                        case "TaxonomyFieldTypeMulti":
-                            var internalFieldValue = fieldValue.Value as Microsoft.SharePoint.Client.FieldLookupValue[];
-                            if (internalFieldValue != null)
-                            {
-                                value = Tokenize(JsonUtility.Serialize(internalFieldValue), web.Url);
-                            }
-                            break;
-                        case "ContentTypeIdFieldType":
-                        default:
-                            value = Tokenize(fieldValue.Value.ToString(), web.Url);
-                            break;
-                    }
+                        var field = fields.FirstOrDefault(fs => fs.InternalName == fieldValue.Key);
 
-                    if (fieldValue.Key == "ContentTypeId")
-                    {
-                        // Replace the content typeid with a token
-                        var ct = list.GetContentTypeById(value);
-                        if (ct != null)
+                        string value = string.Empty;
+
+                        switch (field.TypeAsString)
                         {
-                            value = string.Format("{{contenttypeid:{0}}}", ct.Name);
+                            case "URL":
+                                value = Tokenize(fieldValuesAsText[fieldValue.Key], web.Url, web);
+                                break;
+                            case "User":
+                                var userFieldValue = fieldValue.Value as Microsoft.SharePoint.Client.FieldUserValue;
+                                if (userFieldValue != null)
+                                {
+#if !ONPREMISES
+                                    value = userFieldValue.Email;
+#else
+                                value = userFieldValue.LookupValue;
+#endif
+                                }
+                                break;
+                            case "LookupMulti":
+                                var lookupFieldValue = fieldValue.Value as Microsoft.SharePoint.Client.FieldLookupValue[];
+                                if (lookupFieldValue != null)
+                                {
+                                    value = Tokenize(JsonUtility.Serialize(lookupFieldValue), web.Url);
+                                }
+                                break;
+                            case "TaxonomyFieldType":
+                                var taxonomyFieldValue = fieldValue.Value as Microsoft.SharePoint.Client.Taxonomy.TaxonomyFieldValue;
+                                if (taxonomyFieldValue != null)
+                                {
+                                    value = Tokenize(JsonUtility.Serialize(taxonomyFieldValue), web.Url);
+                                }
+                                break;
+                            case "TaxonomyFieldTypeMulti":
+                                var taxonomyMultiFieldValue = fieldValue.Value as Microsoft.SharePoint.Client.Taxonomy.TaxonomyFieldValueCollection;
+                                if (taxonomyMultiFieldValue != null)
+                                {
+                                    value = Tokenize(JsonUtility.Serialize(taxonomyMultiFieldValue), web.Url);
+                                }
+                                break;
+                            case "ContentTypeIdFieldType":
+                            default:
+                                value = Tokenize(fieldValue.Value.ToString(), web.Url, web);
+                                break;
+                        }
+
+                        if (fieldValue.Key == "ContentTypeId")
+                        {
+                            // Replace the content typeid with a token
+                            var ct = list.GetContentTypeById(value);
+                            if (ct != null)
+                            {
+                                value = string.Format("{{contenttypeid:{0}}}", ct.Name);
+                            }
+                        }
+
+                        // We process real values only
+                        if (value != null && !String.IsNullOrEmpty(value) && value != "[]")
+                        {
+                            modelFile.Properties.Add(fieldValue.Key, value);
                         }
                     }
-
-                    // We process real values only
-                        if (value != null && !String.IsNullOrEmpty(value) && value != "[]")
-                    {
-                        modelFile.Properties.Add(fieldValue.Key, value);
-                    }
                 }
-            }
             }
 
             return modelFile;

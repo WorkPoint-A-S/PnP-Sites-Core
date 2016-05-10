@@ -11,7 +11,7 @@ using OfficeDevPnP.Core.Entities;
 using OfficeDevPnP.Core.Enums;
 using Microsoft.SharePoint.Client.WebParts;
 using OfficeDevPnP.Core.Diagnostics;
-using System.Linq.Expressions;
+using OfficeDevPnP.Core.Utilities;
 
 namespace Microsoft.SharePoint.Client
 {
@@ -582,7 +582,7 @@ namespace Microsoft.SharePoint.Client
 
 
 
-#if !CLIENTSDKV15
+#if !ONPREMISES
         /// <summary>
         /// Can be used to set translations for different cultures. 
         /// <see href="http://blogs.msdn.com/b/vesku/archive/2014/03/20/office365-multilingual-content-types-site-columns-and-site-other-elements.aspx"/>
@@ -626,7 +626,7 @@ namespace Microsoft.SharePoint.Client
         }
 #endif
 
-#if !CLIENTSDKV15
+#if !ONPREMISES
         /// <summary>
         /// Can be used to set translations for different cultures. 
         /// </summary>
@@ -675,11 +675,10 @@ namespace Microsoft.SharePoint.Client
         /// </summary>
         /// <param name="web">Site to be processed - can be root web or sub site</param>
         /// <param name="listTitle">Title of the list to return</param>
-        /// <param name="retrievals">The list properties to load</param>
         /// <returns>Loaded list instance matching to title or null</returns>
         /// <exception cref="System.ArgumentException">Thrown when listTitle is a zero-length string or contains only white space</exception>
         /// <exception cref="System.ArgumentNullException">listTitle is null</exception>
-        public static List GetListByTitle(this Web web, string listTitle, params Expression<Func<List, object>>[] retrievals)
+        public static List GetListByTitle(this Web web, string listTitle)
         {
             if (string.IsNullOrEmpty(listTitle))
             {
@@ -688,11 +687,9 @@ namespace Microsoft.SharePoint.Client
                   : new ArgumentException(CoreResources.Exception_Message_EmptyString_Arg, "listTitle");
             }
 
-            var lists = web.Lists;
-            web.Context.Load(lists, ls => ls.Include(l => l.Title), ls => ls.Include(retrievals));
+            var lists = web.Context.LoadQuery(web.Lists).Where(l => l.Title.Equals(listTitle, StringComparison.InvariantCultureIgnoreCase));
             web.Context.ExecuteQueryRetry();
-
-            return lists.FirstOrDefault(l => l.Title.Equals(listTitle, StringComparison.InvariantCultureIgnoreCase));
+            return lists.FirstOrDefault();
         }
 
         /// <summary>
@@ -732,6 +729,33 @@ namespace Microsoft.SharePoint.Client
             }
 
             return foundList;
+        }
+
+        /// <summary>
+        /// Gets the publishing pages library of the web based on site language
+        /// </summary>
+        /// <param name="web">The web.</param>
+        /// <returns>The publishing pages library. Returns null if library was not found.</returns>
+        /// <exception cref="System.InvalidOperationException">
+        /// Could not load pages library URL name from 'cmscore' resources file.
+        /// </exception>
+        public static List GetPagesLibrary(this Web web)
+        {
+            if (web == null) throw new ArgumentNullException("web");
+
+            var context = web.Context;
+            int language = (int)web.EnsureProperty(w => w.Language);
+
+            var result = Microsoft.SharePoint.Client.Utilities.Utility.GetLocalizedString(context, "$Resources:List_Pages_UrlName", "cmscore", language);
+            context.ExecuteQueryRetry();
+            string pagesLibraryName = result.Value;
+
+            if (string.IsNullOrEmpty(pagesLibraryName))
+            {
+                throw new InvalidOperationException("Could not load pages library URL name from 'cmscore' resources file.");
+            }
+
+            return web.GetListByUrl(pagesLibraryName) ?? web.GetListByTitle(pagesLibraryName);
         }
 
         #region List Permissions
@@ -1117,9 +1141,9 @@ namespace Microsoft.SharePoint.Client
                     if (list.GetEventReceiverByName("LocationBasedMetadataDefaultsReceiver ItemAdded") == null)
                     {
                         EventReceiverDefinitionCreationInformation eventCi = new EventReceiverDefinitionCreationInformation();
-                        eventCi.Synchronization = EventReceiverSynchronization.DefaultSynchronization;
+                        eventCi.Synchronization = EventReceiverSynchronization.Synchronous;
                         eventCi.EventType = EventReceiverType.ItemAdded;
-#if !CLIENTSDKV15
+#if !ONPREMISES
                         eventCi.ReceiverAssembly = "Microsoft.Office.DocumentManagement, Version=16.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c";
 #else
                         eventCi.ReceiverAssembly = "Microsoft.Office.DocumentManagement, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c";

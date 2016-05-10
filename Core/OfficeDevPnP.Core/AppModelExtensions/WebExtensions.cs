@@ -11,6 +11,7 @@ using OfficeDevPnP.Core.Entities;
 using OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers;
 using OfficeDevPnP.Core.Framework.Provisioning.Model;
 using OfficeDevPnP.Core.Diagnostics;
+using OfficeDevPnP.Core.Utilities;
 using System.Reflection;
 
 namespace Microsoft.SharePoint.Client
@@ -632,6 +633,17 @@ namespace Microsoft.SharePoint.Client
         /// </summary>
         /// <param name="web">Web that will hold the property bag entry</param>
         /// <param name="key">Key for the property bag entry</param>
+        /// <param name="value">Datetime value for the property bag entry</param>
+        public static void SetPropertyBagValue(this Web web, string key, DateTime value)
+        {
+            SetPropertyBagValueInternal(web, key, value);
+        }
+
+        /// <summary>
+        /// Sets a key/value pair in the web property bag
+        /// </summary>
+        /// <param name="web">Web that will hold the property bag entry</param>
+        /// <param name="key">Key for the property bag entry</param>
         /// <param name="value">Value for the property bag entry</param>
         private static void SetPropertyBagValueInternal(Web web, string key, object value)
         {
@@ -700,6 +712,26 @@ namespace Microsoft.SharePoint.Client
             if (value != null)
             {
                 return (int)value;
+            }
+            else
+            {
+                return defaultValue;
+            }
+        }
+
+        /// <summary>
+        /// Get DateTime typed property bag value. If does not contain, returns default value.
+        /// </summary>
+        /// <param name="web">Web to read the property bag value from</param>
+        /// <param name="key">Key of the property bag entry to return</param>
+        /// <param name="defaultValue"></param>
+        /// <returns>Value of the property bag entry as integer</returns>
+        public static DateTime? GetPropertyBagValueDateTime(this Web web, string key, DateTime defaultValue)
+        {
+            object value = GetPropertyBagValueInternal(web, key);
+            if (value != null)
+            {
+                return (DateTime)value;
             }
             else
             {
@@ -993,7 +1025,7 @@ namespace Microsoft.SharePoint.Client
         #endregion
 
         #region Localization
-#if !CLIENTSDKV15
+#if !ONPREMISES
         /// <summary>
         /// Can be used to set translations for different cultures. 
         /// </summary>
@@ -1088,7 +1120,7 @@ namespace Microsoft.SharePoint.Client
         #endregion
 
 #region Request Access
-#if !CLIENTSDKV15
+#if !ONPREMISES
         /// <summary>
         /// Disables the request access on the web.
         /// </summary>

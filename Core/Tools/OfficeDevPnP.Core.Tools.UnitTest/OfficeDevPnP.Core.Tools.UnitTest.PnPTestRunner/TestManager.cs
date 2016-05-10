@@ -100,6 +100,7 @@ namespace OfficeDevPnP.Core.Tools.UnitTest.PnPTestRunner
             }
 
             // persist the log file
+            
             TestRun run = context.TestRunSet.Find(this.testRunId);
             run.MSBuildLog = sb.ToString();
             // If the run did not finish by now then something went wrong
@@ -165,6 +166,8 @@ namespace OfficeDevPnP.Core.Tools.UnitTest.PnPTestRunner
         /// <param name="s">String to write</param>
         private void WriteLine(string s)
         {
+            s = string.Format("[{0}] {1}", DateTime.Now.ToString(), s);
+
             sb.AppendLine(s);
             Console.WriteLine(s);
         }

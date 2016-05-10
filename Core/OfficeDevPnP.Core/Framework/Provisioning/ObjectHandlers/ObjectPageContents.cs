@@ -16,6 +16,7 @@ using System.Web;
 using System.IO;
 using Newtonsoft.Json;
 using OfficeDevPnP.Core.Framework.Provisioning.Connectors;
+using OfficeDevPnP.Core.Utilities;
 
 namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 {
@@ -185,7 +186,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
         private ProvisioningTemplate GetFileContents(Web web, ProvisioningTemplate template, string welcomePageUrl, ProvisioningTemplateCreationInformation creationInfo, PnPMonitoredScope scope)
         {
-            var fullUri = new Uri(UrlUtility.Combine(web.Url, web.RootFolder.WelcomePage));
+            var homepageUrl = web.RootFolder.WelcomePage;
+            if (string.IsNullOrEmpty(homepageUrl))
+            {
+                homepageUrl = "Default.aspx";
+            }
+
+            var fullUri = new Uri(UrlUtility.Combine(web.Url, homepageUrl));
 
             var folderPath = fullUri.Segments.Take(fullUri.Segments.Count() - 1).ToArray().Aggregate((i, x) => i + x).TrimEnd('/');
             var fileName = fullUri.Segments[fullUri.Segments.Count() - 1];
@@ -214,9 +221,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 {
                     Title = webPart.WebPart.Title,
                     Row = (uint)webPart.WebPart.ZoneIndex,
+                    Order = (uint)webPart.WebPart.ZoneIndex,
                     Contents = webPartxml
                 };
-#if !CLIENTSDKV15
+#if !ONPREMISES
                 // As long as we've no CSOM library that has the ZoneID we can't use the version check as things don't compile...
                 if (web.Context.HasMinimalServerLibraryVersion(Constants.MINIMUMZONEIDREQUIREDSERVERVERSION))
                 {

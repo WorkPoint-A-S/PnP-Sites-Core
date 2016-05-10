@@ -12,6 +12,7 @@ using System.IO;
 using OfficeDevPnP.Core.Framework.Provisioning.Providers;
 using OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml;
 using System.Web;
+using OfficeDevPnP.Core.Utilities;
 
 namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 {
@@ -22,9 +23,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         private readonly Guid PUBLISHING_FEATURE_WEB = new Guid("94c94ca6-b32f-4da9-a9e3-1f3d343d7ecb");
         private readonly Guid PUBLISHING_FEATURE_SITE = new Guid("f6924d36-2fa8-4f0b-b16d-06b7250180fa");
         private const string PAGE_LAYOUT_CONTENT_TYPE_ID = "0x01010007FF3E057FA8AB4AA42FCB67B453FFC100E214EEE741181F4E9F7ACC43278EE811";
+        private const string HTML_PAGE_LAYOUT_CONTENT_TYPE_ID = "0x01010007FF3E057FA8AB4AA42FCB67B453FFC100E214EEE741181F4E9F7ACC43278EE8110003D357F861E29844953D5CAA1D4D8A3B";
         private const string MASTER_PAGE_CONTENT_TYPE_ID = "0x010105";
-        private const string URL_TOKEN_REGEX = @"^(?<siteCollectionUrl>(?<webApplicationUrl>http(s)?\:\/\/(\w|\-|\.)+\/)(\w|\-)*\/(?<siteCollection>(\w|\-)+))(\/(?<subSite>(\w|\-)+))*";
-
+        private const string HTML_MASTER_PAGE_CONTENT_TYPE_ID =    "0x0101000F1C8B9E0EB4BE489F09807B2C53288F0054AD6EF48B9F7B45A142F8173F171BD10003D357F861E29844953D5CAA1D4D8A3A";
+        private const string ASP_NET_MASTER_PAGE_CONTENT_TYPE_ID = "0x0101000F1C8B9E0EB4BE489F09807B2C53288F0054AD6EF48B9F7B45A142F8173F171BD1";
         public override string Name
         {
             get { return "Publishing"; }
@@ -55,6 +57,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
         private void ExtractMasterPagesAndPageLayouts(Web web, ProvisioningTemplate template, PnPMonitoredScope scope, ProvisioningTemplateCreationInformation creationInfo)
         {
+            web.EnsureProperty(w => w.Url);
             String webApplicationUrl = GetWebApplicationUrl(web.Url);
 
             if (!String.IsNullOrEmpty(webApplicationUrl))
@@ -73,58 +76,103 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 web.Context.Load(masterPageGalleryFolder.Files);
                 web.Context.ExecuteQueryRetry();
 
-                foreach (var file in masterPageGalleryFolder.Files.AsEnumerable().Where(
+
+                var sourceFiles = GetFiles(masterPageGalleryFolder).Where(
                     f => f.Name.EndsWith(".aspx", StringComparison.InvariantCultureIgnoreCase) ||
-                    f.Name.EndsWith(".master", StringComparison.InvariantCultureIgnoreCase)))
+                    f.Name.EndsWith(".html", StringComparison.InvariantCultureIgnoreCase) ||
+                    f.Name.EndsWith(".master", StringComparison.InvariantCultureIgnoreCase));
+
+                /*var sourceFiles = masterPageGalleryFolder.Files.AsEnumerable().Where(
+                    f => f.Name.EndsWith(".aspx", StringComparison.InvariantCultureIgnoreCase) ||
+                    f.Name.EndsWith(".html", StringComparison.InvariantCultureIgnoreCase) ||
+                    f.Name.EndsWith(".master", StringComparison.InvariantCultureIgnoreCase));
+                    */
+
+                foreach (var file in sourceFiles)
                 {
-                    var listItem = file.EnsureProperty(f => f.ListItemAllFields);
-                    listItem.ContentType.EnsureProperties(ct => ct.Id, ct => ct.StringId);
-
-                    // Check if the content type is of type Master Page or Page Layout
-                    if (listItem.ContentType.StringId.StartsWith(MASTER_PAGE_CONTENT_TYPE_ID) ||
-                        listItem.ContentType.StringId.StartsWith(PAGE_LAYOUT_CONTENT_TYPE_ID))
+                    if (file.ListItemAllFields.ServerObjectIsNull != null && !file.ListItemAllFields.ServerObjectIsNull.Value)
                     {
-                        // If the file is a custom one, and not one native
-                        // and coming out from the publishing feature
-                        if (creationInfo.IncludeNativePublishingFiles || 
-                            !IsPublishingFeatureNativeFile(publishingFeatureTemplate, file.Name))
+                        var listItem = file.EnsureProperty(f => f.ListItemAllFields);
+                        listItem.ContentType.EnsureProperties(ct => ct.Id, ct => ct.StringId);
+
+                        // Check if the content type is of type Master Page or Page Layout
+                        if (listItem.ContentType.StringId.StartsWith(MASTER_PAGE_CONTENT_TYPE_ID) ||
+                            listItem.ContentType.StringId.StartsWith(PAGE_LAYOUT_CONTENT_TYPE_ID) ||
+                            listItem.ContentType.StringId.StartsWith(ASP_NET_MASTER_PAGE_CONTENT_TYPE_ID) ||
+                            listItem.ContentType.StringId.StartsWith(HTML_PAGE_LAYOUT_CONTENT_TYPE_ID))
                         {
-                            var fullUri = new Uri(UrlUtility.Combine(webApplicationUrl, file.ServerRelativeUrl));
-
-                            var folderPath = fullUri.Segments.Take(fullUri.Segments.Count() - 1).ToArray().Aggregate((i, x) => i + x).TrimEnd('/');
-                            var fileName = fullUri.Segments[fullUri.Segments.Count() - 1];
-
-                            var publishingFile = new Model.File()
+                            // Skip any .ASPX or .MASTER file related to an .HTML designer file
+                            if ((file.Name.EndsWith(".aspx", StringComparison.InvariantCultureIgnoreCase)
+                                && sourceFiles.Any(f => f.Name.Equals(file.Name.ToLower().Replace(".aspx", ".html"),
+                                    StringComparison.InvariantCultureIgnoreCase))) ||
+                                (file.Name.EndsWith(".master", StringComparison.InvariantCultureIgnoreCase)
+                                && sourceFiles.Any(f => f.Name.Equals(file.Name.ToLower().Replace(".master", ".html"),
+                                    StringComparison.InvariantCultureIgnoreCase))))
                             {
-                                Folder = Tokenize(folderPath, web.Url),
-                                Src = HttpUtility.UrlDecode(fileName),
-                                Overwrite = true,
-                            };
-
-                            // Add field values to file
-                            RetrieveFieldValues(web, file, publishingFile);
-
-                            // Add the file to the template
-                            template.Files.Add(publishingFile);
-
-                            // Persist file using connector, if needed
-                            if (creationInfo.PersistPublishingFiles)
-                            {
-                                PersistFile(web, creationInfo, scope, folderPath, fileName, true);
+                                continue;
                             }
 
-                            if (listItem.ContentType.StringId.StartsWith(MASTER_PAGE_CONTENT_TYPE_ID))
+                            // If the file is a custom one, and not one native
+                            // and coming out from the publishing feature
+                            if (creationInfo.IncludeNativePublishingFiles ||
+                                !IsPublishingFeatureNativeFile(publishingFeatureTemplate, file.Name))
                             {
-                                scope.LogWarning(String.Format("The file \"{0}\" is a custom MasterPage. Accordingly to the PnP Guidance (http://aka.ms/o365pnpguidancemasterpages) you should try to avoid using custom MasterPages.", file.Name));
+                                var fullUri = new Uri(UrlUtility.Combine(webApplicationUrl, file.ServerRelativeUrl));
+
+                                var folderPath = fullUri.Segments.Take(fullUri.Segments.Count() - 1).ToArray().Aggregate((i, x) => i + x).TrimEnd('/');
+                                var fileName = fullUri.Segments[fullUri.Segments.Count() - 1];
+
+                                var publishingFile = new Model.File()
+                                {
+                                    Folder = Tokenize(folderPath, web.Url),
+                                    Src = HttpUtility.UrlDecode(fileName),
+                                    Overwrite = true,
+                                };
+
+                                // Add field values to file
+                                RetrieveFieldValues(web, file, publishingFile);
+
+                                // Add the file to the template
+                                template.Files.Add(publishingFile);
+
+                                // Persist file using connector, if needed
+                                if (creationInfo.PersistPublishingFiles)
+                                {
+                                    PersistFile(web, creationInfo, scope, folderPath, fileName, true);
+                                }
+
+                                if (listItem.ContentType.StringId.StartsWith(MASTER_PAGE_CONTENT_TYPE_ID))
+                                {
+                                    scope.LogWarning(String.Format("The file \"{0}\" is a custom MasterPage. Accordingly to the PnP Guidance (http://aka.ms/o365pnpguidancemasterpages) you should try to avoid using custom MasterPages.", file.Name));
+                                }
                             }
-                        }
-                        else
-                        {
-                            scope.LogWarning(String.Format("Skipping file \"{0}\" because it is native in the publishing feature.", file.Name));
+                            else
+                            {
+                                scope.LogWarning(String.Format("Skipping file \"{0}\" because it is native in the publishing feature.", file.Name));
+                            }
                         }
                     }
                 }
             }
+        }
+
+        private IEnumerable<Microsoft.SharePoint.Client.File> GetFiles(Microsoft.SharePoint.Client.Folder folder)
+        {
+            var files = new List<Microsoft.SharePoint.Client.File>();
+            folder.EnsureProperty(f => f.Folders);
+            if (folder.Folders.Any())
+            {
+                foreach (var subfolder in folder.Folders)
+                {
+                    files.AddRange(GetFiles(subfolder));
+                }
+            }
+
+            var folderFiles = folder.EnsureProperty(f => f.Files);
+
+            files.AddRange(folderFiles);
+
+            return files;
         }
 
         /// <summary>
@@ -170,8 +218,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         {
             Boolean result = false;
 
-            if (nativeFilesTemplate != null 
-                && nativeFilesTemplate.Files != null 
+            if (nativeFilesTemplate != null
+                && nativeFilesTemplate.Files != null
                 && nativeFilesTemplate.Files.Count > 0)
             {
                 result = nativeFilesTemplate.Files.Any(f => f.Src == fileName);
@@ -187,15 +235,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         /// <returns>The Web Application URL</returns>
         private String GetWebApplicationUrl(String webUrl)
         {
+            Uri uri = null;
             String result = null;
-
-            System.Text.RegularExpressions.Regex regex =
-                new System.Text.RegularExpressions.Regex(URL_TOKEN_REGEX);
-
-            var match = regex.Match(webUrl);
-            if (match.Success)
+            if (Uri.TryCreate(webUrl, UriKind.Absolute, out uri))
             {
-                result = match.Groups["webApplicationUrl"].Value;
+                result = string.Format("{0}://{1}/", uri.Scheme, uri.Authority);
             }
 
             return (result);
@@ -208,7 +252,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             var defaultPageLayoutUrl = string.Empty;
             if (defaultLayoutXml != null && defaultLayoutXml != "__inherit")
             {
-                defaultPageLayoutUrl = XElement.Parse(defaultLayoutXml).Attribute("url").Value;
+                defaultPageLayoutUrl = XElement.Parse(defaultLayoutXml).Attribute("url").Value.Replace("_catalogs/masterpage/", String.Empty);
             }
 
             List<PageLayout> layouts = new List<PageLayout>();
@@ -224,7 +268,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     if (layout.Attribute("url") != null)
                     {
                         var pageLayout = new PageLayout();
-                        pageLayout.Path = layout.Attribute("url").Value;
+                        pageLayout.Path = layout.Attribute("url").Value.Replace("_catalogs/masterpage/", String.Empty);
 
                         if (pageLayout.Path == defaultPageLayoutUrl)
                         {
@@ -273,16 +317,27 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     throw new Exception("Publishing Feature not active. Provisioning failed");
                 }
 
+                // Set allowed web templates
                 var availableWebTemplates = template.Publishing.AvailableWebTemplates.Select(t => new WebTemplateEntity() { LanguageCode = t.LanguageCode.ToString(), TemplateName = t.TemplateName }).ToList();
                 if (availableWebTemplates.Any())
                 {
                     web.SetAvailableWebTemplates(availableWebTemplates);
                 }
+
+                // Set allowed page layouts
                 var availablePageLayouts = template.Publishing.PageLayouts.Select(p => p.Path);
                 if (availablePageLayouts.Any())
                 {
                     web.SetAvailablePageLayouts(site.RootWeb, availablePageLayouts);
                 }
+
+                // Set default page layout, if any
+                var defaultPageLayout = template.Publishing.PageLayouts.FirstOrDefault(p => p.IsDefault);
+                if (defaultPageLayout != null)
+                {
+                    web.SetDefaultPageLayoutForSite(site.RootWeb, defaultPageLayout.Path);
+                }
+
                 if (template.Publishing.DesignPackage != null)
                 {
                     var package = template.Publishing.DesignPackage;

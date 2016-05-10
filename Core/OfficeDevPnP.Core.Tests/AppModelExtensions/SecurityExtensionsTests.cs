@@ -22,7 +22,7 @@ namespace Microsoft.SharePoint.Client.Tests
         public void Initialize()
         {
 
-#if !CLIENTSDKV15
+#if !ONPREMISES
             _userLogin = ConfigurationManager.AppSettings["SPOUserName"];
             if (TestCommon.AppOnlyTesting())
             {
@@ -78,7 +78,7 @@ namespace Microsoft.SharePoint.Client.Tests
             {
                 // Count admins
                 int initialCount = clientContext.Web.GetAdministrators().Count;
-                #if !CLIENTSDKV15
+                #if !ONPREMISES
                 var userEntity = new UserEntity {LoginName = _userLogin, Email = _userLogin};
                 #else
                 var userEntity = new UserEntity { LoginName = _userLogin };
@@ -386,7 +386,7 @@ namespace Microsoft.SharePoint.Client.Tests
         #endregion
 
         #region Reader access tests
-#if !CLIENTSDKV15
+#if !ONPREMISES
         [TestMethod]
         public void AddReaderAccessToEveryoneExceptExternalsTest()
         {
@@ -521,8 +521,10 @@ namespace Microsoft.SharePoint.Client.Tests
 			parentWeb.Context.Load(web);
 			parentWeb.Context.ExecuteQueryRetry();
 
-		    return web;
-
+            using (var ctxTestTeamSubSite = parentWeb.Context.Clone(TestCommon.DevSiteUrl + "/" + siteUrl))
+            {
+                return ctxTestTeamSubSite.Web;
+            }
 	    }
 
 	    private string GetRandomString()

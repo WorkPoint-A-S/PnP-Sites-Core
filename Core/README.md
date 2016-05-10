@@ -20,7 +20,7 @@ OfficeDevPnP.Core | Office Developer PnP team
 ### Version history ###
 Version  | Date | Comments
 ---------| -----| --------
-0.1  | May 6th 2014 | Initial release
+2.x  | Frist Friday of each month | Monthly release
 
 ### Disclaimer ###
 **THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS 
@@ -38,6 +38,7 @@ Core component solution structure follows the generic structure like all PnP pro
 
 ## Additional documentation ##
 Additional PnP Core component documentation.  
+- [Class and method documentation](Documentation.md)
 - [SAML support](SAML authentication.md)
 - [PnP Core nuget package](nuget.md)
 - [Timer job framework](TimerJob Framework.md)
@@ -109,22 +110,21 @@ public ClientContext GetADFSUserNameMixedAuthenticatedContext(string siteUrl, st
 Go here to learn more about the [ADFS usernamemixed authentication](https://github.com/OfficeDev/PnP/blob/dev/OfficeDevPnP.Core/SAML%20authentication.md).
 
 # Compiling for SharePoint 2013 #
-SharePoint 2013 depends on version 15 client assemblies whereas Office 365 (SharePoint Online) uses version 16 client assemblies. The PnP core solution foresees support for this. The solution contains 3 configurations:
-- **Debug**: compiles the solution in debug mode using the **version 16** assemblies (=default)
-- **Release**: compiles the solution in release mode using the **version 16** assemblies
+SharePoint 2013 depends on version 15 client assemblies, SharePoint 2016 depends on 16 client assemblies whereas Office 365 (SharePoint Online) uses version 16.1 client assemblies. The PnP core solution foresees support for this. The solution contains 6 configurations:
+- **Debug**: compiles the solution in debug mode using the **version 16.1** assemblies (=default)
+- **Release**: compiles the solution in release mode using the **version 16.1** assemblies
 - **Debug15**: compiles the solution in debug mode using the **version 15** assemblies (=default)
 - **Release15**: compiles the solution in release mode using the **version 15** assemblies
+- **Debug16**: compiles the solution in debug mode using the **version 16** assemblies (=default)
+- **Release16**: compiles the solution in release mode using the **version 16** assemblies
 
-If you want to use the core library in a SharePoint 2013 project you'll need to switch the configuration to either Debug15 or Release15. This can be easily done from Visual Studio:
+If you want to use the core library in a SharePoint 2013 project you'll need to switch the configuration to either Debug15 or Release15. For using against SharePoint 2016 you switch to either Debug16 or Release16. This can be easily done from Visual Studio:
 
 ![](http://i.imgur.com/bxkuadQ.png)
 
-## Important! ##
-Once switched you **need to close the solution and reopen it!** This is needed because the csproj files used in the solution have a dynamic assembly reference. When you reload you'll see that the version 15 assemblies are hooked up:
-
-![](http://i.imgur.com/QG24OCu.png)
-
-Also a compiler directive CLIENTSDKV15 has been set. This compiler directive is used in the code to choose a different implementation for version 15 where needed.
+Also a compiler directive **ONPREMISES** has been set. This compiler directive is used in the code to choose a different implementation for SharePoint On-Premises (2013/2016) where needed. There's also specific compiler directives:
+- **SP2013** for SharePoint 2013 specific code
+- **SP2016** for SharePoint 2016 specific code
 
 ![](http://i.imgur.com/xqDUgcd.png)
 
@@ -257,9 +257,9 @@ Unit tests are in the OfficeDevPnP.Core.Tests project. Follow guidance for MSTes
 All code should be version independent, meaning that code should not assume that paths are in the 15 or 16 folders unless the folder usage would work in both cases and the number is not meaningful. In case code elements only apply to for example the version 16 CSOM libraries then you'll need to exclude the code at compile time:
 
 ```C#
-#if !CLIENTSDKV15
+#if !ONPREMISES
 
-//your SharePoint version 15 specific code goes here
+//your SharePoint version 16 specific code goes here
 
 #endif
 ```

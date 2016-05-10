@@ -30,10 +30,10 @@ namespace OfficeDevPnP.Core
         internal static readonly string[] SkipPathes = new string[] { "/_catalogs/", "/Style Library", "/IWConvertedForms", "/Translation Packages" };
         internal const string AllItemCamlQuery = "<View Scope='RecursiveAll'><ViewFields><FieldRef Name='{0}'/><FieldRef Name='{1}'/></ViewFields></View>";
 
-#if !CLIENTSDKV15
-        internal const string MINIMUMZONEIDREQUIREDSERVERVERSION = "16.0.4803.1200";
+#if !ONPREMISES
+        public const string MINIMUMZONEIDREQUIREDSERVERVERSION = "16.0.4803.1200";
 #else
-        internal const string MINIMUMZONEIDREQUIREDSERVERVERSION = "15.0.4787.1000";
+        public const string MINIMUMZONEIDREQUIREDSERVERVERSION = "15.0.4787.1000";
 #endif
 
     }

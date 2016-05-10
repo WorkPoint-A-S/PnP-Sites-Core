@@ -9,6 +9,10 @@ namespace Microsoft.SharePoint.Client
 {
     public static partial class ClientContextExtensions
     {
+        private static string PnPCoreVersion;
+        private static readonly object PnPCoreVersionLock = new object();
+
+
         /// <summary>
         /// Clones a ClientContext object while "taking over" the security context of the existing ClientContext instance
         /// </summary>
@@ -25,6 +29,7 @@ namespace Microsoft.SharePoint.Client
             return clientContext.Clone(new Uri(siteUrl));
         }
 
+
         /// <summary>
         /// 
         /// </summary>
@@ -38,6 +43,13 @@ namespace Microsoft.SharePoint.Client
 
         private static void ExecuteQueryImplementation(ClientRuntimeContext clientContext, int retryCount = 10, int delay = 500)
         {
+
+            if (clientContext is PnPClientContext)
+            {
+                retryCount = (clientContext as PnPClientContext).RetryCount;
+                delay = (clientContext as PnPClientContext).Delay;
+            }
+
             int retryAttempts = 0;
             int backoffInterval = delay;
             if (retryCount <= 0)
@@ -51,6 +63,11 @@ namespace Microsoft.SharePoint.Client
             {
                 try
                 {
+                    // If the customer is not using the clienttag then fill with the PnP Core library tag
+                    if (String.IsNullOrEmpty(clientContext.ClientTag))
+                    {
+                        clientContext.ClientTag = GetCoreVersionTag();
+                    }
                     clientContext.ExecuteQuery();
                     return;
 
@@ -172,11 +189,32 @@ namespace Microsoft.SharePoint.Client
             try
             {
                 hasMinimalVersion = clientContext.ServerLibraryVersion.CompareTo(minimallyRequiredVersion) >= 0;
-            } catch (PropertyOrFieldNotInitializedException)
+            }
+            catch (PropertyOrFieldNotInitializedException)
             {
                 // swallow the exception.
             }
             return hasMinimalVersion;
         }
+
+        /// <summary>
+        /// Get's a tag that identifies the PnP Core library
+        /// </summary>
+        /// <returns>PnP Core library identification tag</returns>
+        private static string GetCoreVersionTag()
+        {
+            if (String.IsNullOrEmpty(PnPCoreVersion))
+            {
+                Assembly coreAssembly = Assembly.GetExecutingAssembly();
+                lock (PnPCoreVersionLock)
+                {
+                    PnPCoreVersion = String.Format("{0}:{1}", ((AssemblyTitleAttribute)coreAssembly.GetCustomAttribute(typeof(AssemblyTitleAttribute))).Title, 
+                                                             ((AssemblyFileVersionAttribute)coreAssembly.GetCustomAttribute(typeof(AssemblyFileVersionAttribute))).Version);
+                }
+            }
+
+            return PnPCoreVersion;
+        }
+
     }
 }

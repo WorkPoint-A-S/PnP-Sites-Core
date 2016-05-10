@@ -318,7 +318,8 @@ namespace Microsoft.SharePoint.Client
 
         #endregion
 
-        #region External sharing management
+#if !ONPREMISES
+#region External sharing management
         /// <summary>
         /// Get the external sharing settings for the provided site. Only works in Office 365 Multi-Tenant
         /// </summary>
@@ -364,9 +365,9 @@ namespace Microsoft.SharePoint.Client
                         DisplayName = externalUser.DisplayName,
                         AcceptedAs = externalUser.AcceptedAs,
                         InvitedAs = externalUser.InvitedAs,
-                        InvitedBy = externalUser.InvitedBy,
                         UniqueId = externalUser.UniqueId,
-                        WhenCreated = externalUser.WhenCreated
+                        InvitedBy = externalUser.InvitedBy,
+                        WhenCreated = externalUser.WhenCreated,
                     });
                 }
 
@@ -425,9 +426,9 @@ namespace Microsoft.SharePoint.Client
                             DisplayName = externalUser.DisplayName,
                             AcceptedAs = externalUser.AcceptedAs,
                             InvitedAs = externalUser.InvitedAs,
-                            InvitedBy = externalUser.InvitedBy,
                             UniqueId = externalUser.UniqueId,
-                            WhenCreated = externalUser.WhenCreated
+                            InvitedBy = externalUser.InvitedBy,
+                            WhenCreated = externalUser.WhenCreated,
                         });
                     }
 
@@ -444,9 +445,10 @@ namespace Microsoft.SharePoint.Client
             return externalUsers;
         }
 
-        #endregion
+#endregion
+#endif
 
-        #region Group management
+#region Group management
         /// <summary>
         /// Returns the integer ID for a given group name
         /// </summary>
@@ -479,8 +481,9 @@ namespace Microsoft.SharePoint.Client
         /// <param name="groupDescription">Description of the group</param>
         /// <param name="groupIsOwner">Sets the created group as group owner if true</param>
         /// <param name="updateAndExecuteQuery">Set to false to postpone the executequery call</param>
+        /// <param name="onlyAllowMembersViewMembership">Set whether members are allowed to see group membership, defaults to false</param>
         /// <returns>The created group</returns>
-        public static Group AddGroup(this Web web, string groupName, string groupDescription, bool groupIsOwner, bool updateAndExecuteQuery = true)
+        public static Group AddGroup(this Web web, string groupName, string groupDescription, bool groupIsOwner, bool updateAndExecuteQuery = true, bool onlyAllowMembersViewMembership = false)
         {
             if (string.IsNullOrEmpty(groupName))
                 throw new ArgumentNullException("groupName");
@@ -494,7 +497,7 @@ namespace Microsoft.SharePoint.Client
                 group.Owner = group;
             }
 
-            group.OnlyAllowMembersViewMembership = false;
+            group.OnlyAllowMembersViewMembership = onlyAllowMembersViewMembership;
             group.Update();
 
             if (updateAndExecuteQuery)
@@ -1154,9 +1157,9 @@ namespace Microsoft.SharePoint.Client
                 return false;
             }
         }
-        #endregion
+#endregion
 
-        #region Authentication Realm
+#region Authentication Realm
         /// <summary>
         /// Returns the authentication realm for the current web
         /// </summary>
@@ -1174,11 +1177,11 @@ namespace Microsoft.SharePoint.Client
             return returnGuid;
 
         }
-        #endregion
+#endregion
 
-        #region SecurableObject traversal
+#region SecurableObject traversal
 
-        #region Helpers
+#region Helpers
 
         /// <summary>
         /// Get URL path of a securable object
@@ -1226,8 +1229,8 @@ namespace Microsoft.SharePoint.Client
                 context.ExecuteQueryRetry();
                 if (web.HasUniqueRoleAssignments)
                 {
-                context.Load(web.RoleAssignments);
-                context.Load(web.RoleAssignments.Groups);
+                    context.Load(web.RoleAssignments);
+                    context.Load(web.RoleAssignments.Groups);
                     context.ExecuteQueryRetry();
                 }
                 var lists = context.LoadQuery(web.Lists.Where(l => l.BaseType == BaseType.DocumentLibrary));
@@ -1244,9 +1247,9 @@ namespace Microsoft.SharePoint.Client
                     return null;
                 if (list.HasUniqueRoleAssignments)
                 {
-                context.Load(list.RoleAssignments);
-                context.Load(list.RoleAssignments.Groups);
-                context.ExecuteQueryRetry();
+                    context.Load(list.RoleAssignments);
+                    context.Load(list.RoleAssignments.Groups);
+                    context.ExecuteQueryRetry();
                 }
                 if (leafBreadthLimit > 0 && list.ItemCount > 0)
                 {
@@ -1312,9 +1315,9 @@ namespace Microsoft.SharePoint.Client
             }
         }
 
-        #endregion
+#endregion
 
-        #region Entity cache
+#region Entity cache
 
         /// <summary>
         /// A dictionary to cache resolved user emails. key: user login name, value: user email.
@@ -1369,7 +1372,7 @@ namespace Microsoft.SharePoint.Client
             }
         }
 
-        #endregion
+#endregion
 
         /// <summary>
         /// Get all unique role assignments for a web object and all its descendents down to document or list item level.
@@ -1434,6 +1437,6 @@ namespace Microsoft.SharePoint.Client
             return result;
         }
 
-        #endregion
+#endregion
     }
 }
