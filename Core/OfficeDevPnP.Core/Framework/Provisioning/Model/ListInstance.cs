@@ -23,19 +23,19 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         }
 
         public ListInstance(IEnumerable<ContentTypeBinding> contentTypeBindings,
-                   IEnumerable<View> views, IEnumerable<Field> fields, IEnumerable<FieldRef> fieldRefs, List<DataRow> dataRows) :
-                       this(contentTypeBindings, views, fields, fieldRefs, dataRows, null, null, null, null, null)
+            IEnumerable<View> views, IEnumerable<Field> fields, IEnumerable<FieldRef> fieldRefs, List<DataRow> dataRows) :
+                this(contentTypeBindings, views, fields, fieldRefs, dataRows, null, null, null)
         {
         }
 
         public ListInstance(IEnumerable<ContentTypeBinding> contentTypeBindings,
-          IEnumerable<View> views, IEnumerable<Field> fields, IEnumerable<FieldRef> fieldRefs, List<DataRow> dataRows, Dictionary<String, String> fieldDefaults, ObjectSecurity security) :
-              this(contentTypeBindings, views, fields, fieldRefs, dataRows, fieldDefaults, security, null, null, null)
+            IEnumerable<View> views, IEnumerable<Field> fields, IEnumerable<FieldRef> fieldRefs, List<DataRow> dataRows, Dictionary<String, String> fieldDefaults, ObjectSecurity security) :
+                this(contentTypeBindings, views, fields, fieldRefs, dataRows, fieldDefaults, security, null)
         {
         }
 
         public ListInstance(IEnumerable<ContentTypeBinding> contentTypeBindings,
-            IEnumerable<View> views, IEnumerable<Field> fields, IEnumerable<FieldRef> fieldRefs, List<DataRow> dataRows, Dictionary<String, String> fieldDefaults, ObjectSecurity security, List<Folder> folders, List<Localization> listLocalizations, List<Localization> fieldsLocalizations) :
+            IEnumerable<View> views, IEnumerable<Field> fields, IEnumerable<FieldRef> fieldRefs, List<DataRow> dataRows, Dictionary<String, String> fieldDefaults, ObjectSecurity security, List<Folder> folders) :
             this()
         {
             this.ContentTypeBindings.AddRange(contentTypeBindings);
@@ -52,15 +52,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
                 this.Security = security;
             }
             this.Folders.AddRange(folders);
-
-            if (listLocalizations != null)
-            {
-                this._listLocalizations.AddRange(listLocalizations);
-            }
-            if (fieldsLocalizations != null)
-            {
-                this._fieldsLocalizations.AddRange(fieldsLocalizations);
-            }
         }
 
         #endregion
@@ -76,8 +67,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         private FolderCollection _folders;
         private bool _enableFolderCreation = true;
         private bool _enableAttachments = true;
-        private List<Localization> _listLocalizations = new List<Localization>();
-        private List<Localization> _fieldsLocalizations = new List<Localization>();
         #endregion
 
         #region Properties
@@ -256,25 +245,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
             private set { this._folders = value; }
         }
 
-        public List<Localization> ListLocalizations
-        {
-            get { return this._listLocalizations; }
-            private set { this._listLocalizations = value; }
-        }
-
-        public List<Localization> FieldsLocalizations
-        {
-            get { return this._fieldsLocalizations; }
-            private set { this._fieldsLocalizations = value; }
-        }
         #endregion
 
         #region Comparison code
 
         public override int GetHashCode()
         {
-            return (String.Format("{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|{12}|{13}|{14}|{15}|{16}|{17}|{18}|{19}|{20}|{21}|{22}|{23}|{24}|{25}|{26}",
-              this.ContentTypesEnabled.GetHashCode(),
+            return (String.Format("{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|{12}|{13}|{14}|{15}|{16}|{17}|{18}|{19}|{20}|{21}|{22}|{23}|{24}",
+                this.ContentTypesEnabled.GetHashCode(),
                 (this.Description != null ? this.Description.GetHashCode() : 0),
                 (this.DocumentTemplate != null ? this.DocumentTemplate.GetHashCode() : 0),
                 this.EnableVersioning.GetHashCode(),
@@ -298,9 +276,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
                 this.FieldRefs.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0)),
                 this.FieldDefaults.Aggregate(0, (acc, next) => acc += next.GetHashCode()),
                 (this.Security != null ? this.Security.GetHashCode() : 0),
-                this.Folders.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0)),
-                this.ListLocalizations.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0)),
-                this.FieldsLocalizations.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0))
+                this.Folders.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0))
             ).GetHashCode());
         }
 
@@ -344,12 +320,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
                 this.FieldRefs.DeepEquals(other.FieldRefs) &&
                 this.FieldDefaults.DeepEquals(other.FieldDefaults) &&
                 (this.Security != null ? this.Security.Equals(other.Security) : true) &&
-                this.Folders.DeepEquals(other.Folders) &&
-                this.ListLocalizations.DeepEquals(other.ListLocalizations) &&
-                this.FieldsLocalizations.DeepEquals(other.FieldsLocalizations)
+                this.Folders.DeepEquals(other.Folders)
                 );
         }
 
         #endregion
     }
 }
+

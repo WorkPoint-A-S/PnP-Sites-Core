@@ -68,7 +68,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                 {
                                     web.AddLayoutToWikiPage(WikiPageLayout.OneColumn, url);
                                 }
-                                else {
+                                else
+                                {
                                     web.AddLayoutToWikiPage(page.Layout, url);
                                 }
                             }
@@ -89,7 +90,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             {
                                 web.AddLayoutToWikiPage(WikiPageLayout.OneColumn, url);
                             }
-                            else {
+                            else
+                            {
                                 web.AddLayoutToWikiPage(page.Layout, url);
                             }
                         }
@@ -193,3 +195,4 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         }
     }
 }
+

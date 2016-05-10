@@ -14,12 +14,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
     /// </summary>
     public partial class ContentType : BaseModel, IEquatable<ContentType>
     {
-
         #region Private Members
         private string _id;
         private FieldRefCollection _fieldRefs;
-        private List<Localization> _localizations = new List<Localization>();
-        
         #endregion
 
         #region Properties
@@ -98,12 +95,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         /// </summary>
         public String NewFormUrl { get; set; }
 
-        public List<Localization> Localizations
-        {
-            get { return this._localizations; }
-            private set { this._localizations = value; }
-        }
-
         #endregion
 
         #region Constructors
@@ -112,7 +103,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
             _fieldRefs = new FieldRefCollection(this.ParentTemplate);
         }
 
-        public ContentType(string id, string name, string description, string group, bool contenttypeSealed, bool hidden, bool readyonly, string documentTemplate, bool overwrite, IEnumerable<FieldRef> fieldRefs, IEnumerable<Localization> localizations) :
+        public ContentType(string id, string name, string description, string group, bool contenttypeSealed, bool hidden, bool readyonly, string documentTemplate, bool overwrite, IEnumerable<FieldRef> fieldRefs) :
             this()
         {
             this.Id = id;
@@ -125,17 +116,15 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
             this.ReadOnly = ReadOnly;
             this.DocumentTemplate = documentTemplate;
             this.FieldRefs.AddRange(fieldRefs);
-
-            if (localizations != null)
-                this.Localizations.AddRange(localizations);
         }
+
         #endregion
 
         #region Comparison code
 
         public override int GetHashCode()
         {
-            return (String.Format("{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|",
+            return (String.Format("{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|",
                 (this.Id != null ? this.Id.GetHashCode() : 0),
                 (this.Name != null ? this.Name.GetHashCode() : 0),
                 (this.Description != null ? this.Description.GetHashCode() : 0),
@@ -146,8 +135,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
                 this.Sealed.GetHashCode(),
                 (this.DocumentTemplate != null ? this.DocumentTemplate.GetHashCode() : 0),
                 (this.DocumentSetTemplate != null ? this.DocumentSetTemplate.GetHashCode() : 0),
-                this.FieldRefs.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0)),
-                this.Localizations.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0))
+                this.FieldRefs.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0))
             ).GetHashCode());
         }
 
@@ -177,8 +165,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
                     this.Sealed == other.Sealed &&
                     this.DocumentTemplate == other.DocumentTemplate &&
                     this.DocumentSetTemplate == other.DocumentSetTemplate &&
-                    this.FieldRefs.DeepEquals(other.FieldRefs) &&
-                    this.Localizations.DeepEquals(other.Localizations)
+                    this.FieldRefs.DeepEquals(other.FieldRefs)
                 );
 
         }
@@ -186,3 +173,4 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         #endregion
     }
 }
+

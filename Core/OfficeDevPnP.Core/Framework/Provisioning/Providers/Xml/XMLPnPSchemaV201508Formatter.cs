@@ -369,19 +369,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
 
             #endregion
 
-            #region Site Columns Localization
-
-            result.SiteFieldsLocalizations = template.SiteFieldsLocalizations != null && template.SiteFieldsLocalizations.Count > 0 ?
-                (from siteFieldLocalization in template.SiteFieldsLocalizations
-                 select new V201508.LocalizationField
-                 {
-                     ID = siteFieldLocalization.Id.ToString(),
-                     CultureName = siteFieldLocalization.CultureName,
-                     TitleResource = siteFieldLocalization.TitleResource,
-                     DescriptionResource = siteFieldLocalization.DescriptionResource,
-                 }).ToArray() : null;
-            #endregion
-
             #region Content Types
 
             // Translate ContentTypes, if any
@@ -438,14 +425,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
                          DisplayFormUrl = ct.DisplayFormUrl,
                          EditFormUrl = ct.EditFormUrl,
                          NewFormUrl = ct.NewFormUrl,
-                         Localizations = ct.Localizations != null && ct.Localizations.Count > 0 ?
-                            (from localizations in ct.Localizations
-                             select new V201508.LocalizationBase
-                             {
-                                 CultureName = localizations.CultureName,
-                                 TitleResource = localizations.TitleResource,
-                                 DescriptionResource = localizations.DescriptionResource,
-                             }).ToArray() : null
                      }).ToArray();
             }
             else
@@ -530,23 +509,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
                                  Security = dr.Security.FromTemplateToSchemaObjectSecurityV201508()
                              }).ToArray() : null,
                          Security = list.Security.FromTemplateToSchemaObjectSecurityV201508(),
-                         Localizations = list.ListLocalizations.Count > 0 ?
-                            (from listLocalization in list.ListLocalizations
-                             select new V201508.LocalizationBase
-                             {
-                                 CultureName = listLocalization.CultureName,
-                                 TitleResource = listLocalization.TitleResource,
-                                 DescriptionResource = listLocalization.DescriptionResource,
-                             }).ToArray() : null,
-                         FieldLocalizations = list.FieldsLocalizations.Count > 0 ?
-                            (from fieldLocalization in list.FieldsLocalizations
-                             select new V201508.LocalizationField
-                             {
-                                 ID = fieldLocalization.Id.ToString(),
-                                 CultureName = fieldLocalization.CultureName,
-                                 TitleResource = fieldLocalization.TitleResource,
-                                 DescriptionResource = fieldLocalization.DescriptionResource,
-                             }).ToArray() : null,
                      }).ToArray();
             }
             else
@@ -755,7 +717,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
                     }
                     schemaPage.Layout = pageLayout;
                     schemaPage.Overwrite = page.Overwrite;
-                    schemaPage.Security = page.Security.FromTemplateToSchemaObjectSecurityV201508();
+                    schemaPage.Security = (page.Security != null) ? page.Security.FromTemplateToSchemaObjectSecurityV201508() : null;
 
                     schemaPage.WebParts = page.WebParts.Count > 0 ?
                         (from wp in page.WebParts
@@ -855,7 +817,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
                              Description = wd.Description,
                              DisplayName = wd.DisplayName,
                              DraftVersion = wd.DraftVersion,
-                             FormField = wd.FormField.ToXmlElement(),
+                             FormField = (wd.FormField != null) ? wd.FormField.ToXmlElement() : null,
                              Id = wd.Id.ToString(),
                              InitiationUrl = wd.InitiationUrl,
                              Properties = (wd.Properties != null && wd.Properties.Count > 0) ?
@@ -987,7 +949,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
 
             // Translate Providers, if any
             if ((template.Providers != null && template.Providers.Count > 0) || (template.ExtensibilityHandlers != null && template.ExtensibilityHandlers.Count > 0))
-             {
+            {
                 var extensibilityHandlers = template.ExtensibilityHandlers.Union(template.Providers);
                 result.Providers =
                     (from provider in extensibilityHandlers
@@ -1309,20 +1271,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
 
             #endregion
 
-            #region Site Column Localization
-            if ((source.SiteFieldsLocalizations != null) && (source.SiteFieldsLocalizations.Count() >= 0))
-            {
-                result.SiteFieldsLocalizations.AddRange(
-                    from localization in source.SiteFieldsLocalizations
-                    select new Localization(localization.CultureName)
-                    {
-                        Id = Guid.Parse(localization.ID),
-                        TitleResource = localization.TitleResource,
-                        DescriptionResource = localization.DescriptionResource
-                    });
-            }
-            #endregion
-
             #region Content Types
 
             // Translate ContentTypes, if any
@@ -1348,13 +1296,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
                                  Id = Guid.Parse(fieldRef.ID),
                                  Hidden = fieldRef.Hidden,
                                  Required = fieldRef.Required
-                             }) : null),
-                        (contentType.Localizations != null ?
-                            (from localization in contentType.Localizations
-                             select new Model.Localization(localization.CultureName)
-                             {
-                                 TitleResource = localization.TitleResource,
-                                 DescriptionResource = localization.DescriptionResource
                              }) : null)
                         )
                     {
@@ -1434,23 +1375,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
                         (list.FieldDefaults != null ?
                             (from fd in list.FieldDefaults
                              select fd).ToDictionary(k => k.FieldName, v => v.Value) : null),
-                        list.Security.FromSchemaToTemplateObjectSecurityV201508(),
-                        null,
-                        (list.Localizations != null ?
-                            (from localization in list.Localizations
-                             select new Model.Localization(localization.CultureName)
-                             {
-                                 TitleResource = localization.TitleResource,
-                                 DescriptionResource = localization.DescriptionResource
-                             }).ToList() : null),
-                        (list.FieldLocalizations != null ?
-                            (from localization in list.FieldLocalizations
-                             select new Model.Localization(localization.CultureName)
-                             {
-                                 Id = Guid.Parse(localization.ID),
-                                 TitleResource = localization.TitleResource,
-                                 DescriptionResource = localization.DescriptionResource
-                             }).ToList() : null)
+                        list.Security.FromSchemaToTemplateObjectSecurityV201508()
                         )
                     {
                         ContentTypesEnabled = list.ContentTypesEnabled,
@@ -1591,13 +1516,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
             // Translate Pages, if any
             if (source.Pages != null)
             {
-                if (source.Pages.WelcomePage != null)
-                {
-                    var webSettings = new WebSettings();
-                    webSettings.WelcomePage = source.Pages.WelcomePage;
-                    result.WebSettings = webSettings;
-                }
-
                 foreach (var page in source.Pages.Page)
                 {
 
@@ -1630,7 +1548,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
                             break;
                     }
 
-                    Model.Page schemaPage = new Model.Page(page.Url, page.Overwrite, pageLayout,
+                    result.Pages.Add(new Model.Page(page.Url, page.Overwrite, pageLayout,
                         (page.WebParts != null ?
                             (from wp in page.WebParts
                              select new Model.WebPart
@@ -1641,12 +1559,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
                                  Contents = wp.Contents
 
                              }).ToList() : null),
-                        page.Security.FromSchemaToTemplateObjectSecurityV201508());
-
-                    schemaPage.ParentTemplate = result;
-                    schemaPage.WelcomePage = source.Pages.WelcomePage == page.Url;
-
-                    result.Pages.Add(schemaPage);
+                        source.Pages.WelcomePage == page.Url,
+                        page.Security.FromSchemaToTemplateObjectSecurityV201508()));
                 }
             }
 
@@ -2114,7 +2028,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
         public static V201508.AuditSettingsAudit[] FromTemplateToSchemaAuditsV201508(this Microsoft.SharePoint.Client.AuditMaskType audits)
         {
             List<V201508.AuditSettingsAudit> result = new List<AuditSettingsAudit>();
-
             if (audits.HasFlag(Microsoft.SharePoint.Client.AuditMaskType.All))
             {
                 result.Add(new AuditSettingsAudit { AuditFlag = AuditSettingsAuditAuditFlag.All });
@@ -2222,4 +2135,3 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
         }
     }
 }
-

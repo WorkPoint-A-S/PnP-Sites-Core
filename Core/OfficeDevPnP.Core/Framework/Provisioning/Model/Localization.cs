@@ -1,53 +1,44 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace OfficeDevPnP.Core.Framework.Provisioning.Model
 {
     /// <summary>
-    /// Represents a Field XML Markup that is used to define information about a field
+    /// Domain Object used in the Provisioning template that defines a Localization item
     /// </summary>
     public partial class Localization : BaseModel, IEquatable<Localization>
     {
-        #region Private Members
-
-        private Guid _id = Guid.Empty;
-        #endregion
-
-        #region Public Properties
+        #region Properties
 
         /// <summary>
-        /// Gets ot sets the field ID if the Localization is for a Field
+        /// The Locale ID of a Localization Language
         /// </summary>
-        public Guid Id
-        {
-            get { return this._id; }
-            set { this._id = value; }
-        }
+        public Int32 LCID { get; set; }
 
         /// <summary>
-        /// Gets or sets the CultureName
+        /// The Name of a Localization Language
         /// </summary>
-        public string CultureName { get; private set; }
+        public String Name { get; set; }
 
         /// <summary>
-        /// Gets or sets translation for Title
+        /// The path to the .RESX (XML) resource file for the current Localization
         /// </summary>
-        public string TitleResource { get; set; }
+        public String ResourceFile { get; set; }
 
-        /// <summary>
-        /// Gets or sets translation for Description
-        /// </summary>
-        public string DescriptionResource { get; set; }
         #endregion
 
         #region Constructors
 
-        public Localization()
-        {
-        }
+        public Localization() { }
 
-        public Localization(string cultureName)
+        public Localization(Int32 lcid, String name, String resourceFile)
         {
-            this.CultureName = cultureName;
+            this.LCID = lcid;
+            this.Name = name;
+            this.ResourceFile = resourceFile;
         }
 
         #endregion
@@ -56,11 +47,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
 
         public override int GetHashCode()
         {
-            return (string.Format("{0}|{1}|{2}|{3}|",
-                (this.Id != null ? this.Id.GetHashCode() : 0),
-                this.CultureName.GetHashCode(),
-                this.TitleResource.GetHashCode(),
-                this.DescriptionResource.GetHashCode()
+            return (String.Format("{0}|{1}|{2}|",
+                (this.LCID.GetHashCode()),
+                (this.Name != null ? this.Name.GetHashCode() : 0),
+                (this.ResourceFile != null ? this.ResourceFile.GetHashCode() : 0)
             ).GetHashCode());
         }
 
@@ -75,12 +65,19 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
 
         public bool Equals(Localization other)
         {
-            return (this.Id == other.Id &&
-                this.CultureName == other.CultureName &&
-                this.TitleResource == other.TitleResource &&
-                this.DescriptionResource == other.DescriptionResource);
+            if (other == null)
+            {
+                return (false);
+            }
+
+            return (this.LCID == other.LCID &&
+                    this.Name == other.Name &&
+                    this.ResourceFile == other.ResourceFile
+                );
+
         }
 
         #endregion
     }
 }
+

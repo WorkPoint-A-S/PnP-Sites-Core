@@ -118,17 +118,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                     #endregion
 
-                    #region List Localization
-                    foreach (var listInfo in processedLists)
-                    {
-                        foreach (var localization in listInfo.TemplateList.ListLocalizations.Where(l => cultureNames.Contains(l.CultureName, StringComparer.InvariantCultureIgnoreCase)))
-                        {
-                            listInfo.SiteList.SetLocalizationLabelsForList(localization.CultureName, localization.TitleResource, localization.DescriptionResource);
-                        }
-                    }
-
-                    #endregion
-
                     #region FieldRefs
 
                     foreach (var listInfo in processedLists)
@@ -226,22 +215,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                         }
                                     }
 
-                                    // Localization
-                                    fieldFromList.EnsureProperties(f => f.Title, f => f.Description);
-                                    // IMPORTANT! Title or Description corresponding to the culture of the web, must be set first, otherwise localizations doesn't work.
-                                    var primaryLocalization = listInfo.TemplateList.FieldsLocalizations.FirstOrDefault(l => l.Id.Equals(fieldGuid) && webCultureInfo.Name.Equals(l.CultureName, StringComparison.InvariantCultureIgnoreCase));
-                                    if (primaryLocalization != null && (fieldFromList.Title != primaryLocalization.TitleResource || fieldFromList.Description != primaryLocalization.DescriptionResource))
-                                    {
-                                        fieldFromList.Title = primaryLocalization.TitleResource;
-                                        fieldFromList.Description = primaryLocalization.DescriptionResource;
-                                    }
-
-                                    foreach (var fieldLocalization in listInfo.TemplateList.FieldsLocalizations.Where(l => l.Id.Equals(fieldGuid) && cultureNames.Contains(l.CultureName, StringComparer.InvariantCultureIgnoreCase)))
-                                    {
-                                        fieldFromList.SetLocalizationForField(fieldLocalization.CultureName, fieldLocalization.TitleResource, fieldLocalization.DescriptionResource);
+                                    
                                 }
                             }
-                        }
                         }
                         listInfo.SiteList.Update();
                         web.Context.ExecuteQueryRetry();
@@ -336,7 +312,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return parser;
         }
 
-        private void CreateView(Web web, View view, Microsoft.SharePoint.Client.ViewCollection existingViews, List createdList, PnPMonitoredScope monitoredScope)
+        private void CreateView(Web web, View view, List createdList, PnPMonitoredScope monitoredScope, TokenParser parser)
         {
             try
             {
@@ -612,7 +588,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return createdField;
         }
 
-        private static void CreateField(XElement fieldElement, ListInfo listInfo, TokenParser parser, string originalFieldXml, ClientRuntimeContext context, PnPMonitoredScope scope)
+        private static Field CreateField(XElement fieldElement, ListInfo listInfo, TokenParser parser, string originalFieldXml, ClientRuntimeContext context, PnPMonitoredScope scope)
         {
             fieldElement = PrepareField(fieldElement);
 
@@ -628,7 +604,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 if (originalFieldXml.ContainsResourceToken())
                 {
                     var originalFieldElement = XElement.Parse(originalFieldXml);
-                    var nameAttributeValue = originalFieldElement.Attribute("Name") != null ? originalFieldElement.Attribute("Name").Value : "";
+                    var nameAttributeValue = originalFieldElement.Attribute("DisplayName") != null ? originalFieldElement.Attribute("DisplayName").Value : "";
                     if (nameAttributeValue.ContainsResourceToken())
                     {
                         if (field.TitleResource.SetUserResourceValue(nameAttributeValue, parser))
@@ -713,7 +689,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         if (originalFieldXml.ContainsResourceToken())
                         {
                             var originalFieldElement = XElement.Parse(originalFieldXml);
-                            var nameAttributeValue = originalFieldElement.Attribute("Name") != null ? originalFieldElement.Attribute("Name").Value : "";
+                            var nameAttributeValue = originalFieldElement.Attribute("DisplayName") != null ? originalFieldElement.Attribute("DisplayName").Value : "";
                             if (nameAttributeValue.ContainsResourceToken())
                             {
                                 if (existingField.TitleResource.SetUserResourceValue(nameAttributeValue, parser))
@@ -1298,8 +1274,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                     list = ExtractFields(web, siteList, contentTypeFields, list, lists);
 
-                    list = ExtractLocalizations(web, siteList, list);
-
                     list.Security = siteList.GetSecurity();
 
                     var logCTWarning = false;
@@ -1543,50 +1517,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         var noteSchemaXml = XElement.Parse(noteField.SchemaXml);
                         noteSchemaXml.Attribute("SourceID").Remove();
                         list.Fields.Insert(0, new Model.Field { SchemaXml = ParseFieldSchema(noteSchemaXml.ToString(), lists) });
-                    }
-
-                    // Localization
-                    foreach (var cultureName in cultureNames)
-                    {
-                        var titleResource = field.TitleResource.GetValueForUICulture(cultureName);
-                        var descriptionResource = field.DescriptionResource.GetValueForUICulture(cultureName);
-                        field.Context.ExecuteQueryRetry();
-
-                        if (!string.IsNullOrEmpty(titleResource.Value) || !string.IsNullOrEmpty(descriptionResource.Value))
-                        {
-                            list.FieldsLocalizations.Add(new Localization(cultureName)
-                            {
-                                Id = field.Id,
-                                TitleResource = titleResource.Value,
-                                DescriptionResource = descriptionResource.Value
-                            });
-                        }
-                    }
-                }
-            }
-
-            return list;
-        }
-
-        private static ListInstance ExtractLocalizations(Web web, List siteList, ListInstance list)
-        {
-            if (web.IsMultilingual)
-            {
-                foreach (var supportedlanguageId in web.SupportedUILanguageIds)
-                {
-                    var ci = new CultureInfo(supportedlanguageId);
-
-                    var titleResource = siteList.TitleResource.GetValueForUICulture(ci.Name);
-                    var descriptionResource = siteList.DescriptionResource.GetValueForUICulture(ci.Name);
-                    siteList.Context.ExecuteQueryRetry();
-
-                    if (!string.IsNullOrEmpty(titleResource.Value) || !string.IsNullOrEmpty(descriptionResource.Value))
-                    {
-                        list.ListLocalizations.Add(new Localization(ci.Name)
-                        {
-                            TitleResource = titleResource.Value,
-                            DescriptionResource = descriptionResource.Value
-                        });
                     }
                 }
             }
