@@ -22,6 +22,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 {
     internal class ObjectFiles : ObjectHandlerBase
     {
+        private readonly string[] WriteableReadOnlyFields = new string[] { "publishingpagelayout", "contenttypeid" };
+
         public override string Name
         {
             get { return "Files"; }
@@ -192,15 +194,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 {
                     var propertyName = kvp.Key;
                     var propertyValue = kvp.Value;
-
-                    var fieldValues = file.ListItemAllFields.FieldValues;
+                    
                     var targetField = parentList.Fields.GetByInternalNameOrTitle(propertyName);
                     targetField.EnsureProperties(f => f.TypeAsString, f => f.ReadOnlyField);
 
                     // Changed by PaoloPia because there are fields like PublishingPageLayout
                     // which are marked as read-only, but have to be overwritten while uploading
                     // a publishing page file and which in reality can still be written
-                    if (!targetField.ReadOnlyField || propertyName == "PublishingPageLayout") 
+                    if (!targetField.ReadOnlyField || WriteableReadOnlyFields.Contains(propertyName.ToLower())) 
                     {
                         switch (propertyName.ToUpperInvariant())
                         {
@@ -251,6 +252,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                                 linkValue.Description = urlArray[0];
                                             }
                                             file.ListItemAllFields[propertyName] = linkValue;
+                                            break;
+                                        case "MultiChoice":
+                                            var multiChoice = JsonUtility.Deserialize<String[]>(propertyValue);
+                                            file.ListItemAllFields[propertyName] = multiChoice;
                                             break;
                                         case "LookupMulti":
                                             var lookupMultiValue = JsonUtility.Deserialize<FieldLookupValue[]>(propertyValue);

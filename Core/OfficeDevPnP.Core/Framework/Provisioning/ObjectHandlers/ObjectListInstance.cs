@@ -14,7 +14,6 @@ using OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions;
 using OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.TokenDefinitions;
 using Microsoft.SharePoint.Client.Taxonomy;
 using System.Text.RegularExpressions;
-using System.Globalization;
 using OfficeDevPnP.Core.Utilities;
 
 namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
@@ -34,21 +33,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 {
                     var rootWeb = (web.Context as ClientContext).Site.RootWeb;
 
-                    web.Context.Load(web, w => w.ServerRelativeUrl, w => w.RegionalSettings.LocaleId);
+                    web.EnsureProperties(w => w.ServerRelativeUrl);
+
                     web.Context.Load(web.Lists, lc => lc.IncludeWithDefaultProperties(l => l.RootFolder.ServerRelativeUrl));
                     web.Context.ExecuteQueryRetry();
-                    var existingLists = web.Lists.AsEnumerable().Select(existingList => existingList.RootFolder.ServerRelativeUrl).ToList();
+                    var existingLists = web.Lists.AsEnumerable().ToList();
                     var serverRelativeUrl = web.ServerRelativeUrl;
 
                     var processedLists = new List<ListInfo>();
-                    var cultureNames = new List<string>();
-                    var webCultureInfo = new CultureInfo((int)web.RegionalSettings.LocaleId);
-
-                    foreach (var supportedUILanguage in template.SupportedUILanguages)
-                    {
-                        var ci = new CultureInfo(supportedUILanguage.LCID);
-                        cultureNames.Add(ci.Name);
-                    }
 
                     #region Lists
 
@@ -73,7 +65,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                 }
                             }
                         }
-                        var index = existingLists.FindIndex(x => x.Equals(UrlUtility.Combine(serverRelativeUrl, templateList.Url), StringComparison.OrdinalIgnoreCase));
+                        // check if the List exists by url or by title
+                        var index = existingLists.FindIndex(x => x.Title.Equals(templateList.Title,StringComparison.OrdinalIgnoreCase) || x.RootFolder.ServerRelativeUrl.Equals(UrlUtility.Combine(serverRelativeUrl, templateList.Url),StringComparison.OrdinalIgnoreCase));
+                        
                         if (index == -1)
                         {
                             try
@@ -137,24 +131,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                     }
                                     else
                                     {
-                                        field = UpdateFieldRef(listInfo.SiteList, field.Id, fieldRef);
+                                        UpdateFieldRef(listInfo.SiteList, field.Id, fieldRef);
                                     }
                                 }
 
-                                field.EnsureProperties(f => f.Title, f => f.Description);
-
-                                // IMPORTANT! Title or Description corresponding to the culture of the web, must be set first, otherwise localizations doesn't work.
-                                var primaryLocalization = template.SiteFieldsLocalizations.FirstOrDefault(l => l.Id.Equals(fieldRef.Id) && webCultureInfo.Name.Equals(l.CultureName, StringComparison.InvariantCultureIgnoreCase));
-                                if (primaryLocalization != null && (field.Title != primaryLocalization.TitleResource || field.Description != primaryLocalization.DescriptionResource))
-                                {
-                                    field.Title = primaryLocalization.TitleResource;
-                                    field.Description = primaryLocalization.DescriptionResource;
-                            }
-
-                                foreach (var localization in template.SiteFieldsLocalizations.Where(l => l.Id.Equals(fieldRef.Id) && cultureNames.Contains(l.CultureName, StringComparer.InvariantCultureIgnoreCase)))
-                                {
-                                    field.SetLocalizationForField(localization.CultureName, localization.TitleResource, localization.DescriptionResource);
-                                }
                             }
                             listInfo.SiteList.Update();
                             web.Context.ExecuteQueryRetry();
@@ -193,7 +173,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                         try
                                         {
                                             scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_ListInstances_Creating_field__0_, fieldGuid);
-                                            fieldFromList = CreateField(fieldElement, listInfo, parser, field.SchemaXml, web.Context, scope);
+                                            CreateField(fieldElement, listInfo, parser, field.SchemaXml, web.Context, scope);
                                         }
                                         catch (Exception ex)
                                         {
@@ -213,9 +193,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                             scope.LogError(CoreResources.Provisioning_ObjectHandlers_ListInstances_Updating_field__0__failed___1_____2_, fieldGuid, ex.Message, ex.StackTrace);
                                             throw;
                                         }
-                                    }
 
-                                    
+                                    }
                                 }
                             }
                         }
@@ -497,7 +476,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
         }
 
-        private static Field UpdateFieldRef(List siteList, Guid fieldId, FieldRef fieldRef)
+        private static void UpdateFieldRef(List siteList, Guid fieldId, FieldRef fieldRef)
         {
             // find the field in the list
             var listField = siteList.Fields.GetById(fieldId);
@@ -541,10 +520,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 catch { }
             }
 
-            return listField;
-        }
-
-        private static Field CreateFieldRef(ListInfo listInfo, Field field, FieldRef fieldRef)
+        private static void CreateFieldRef(ListInfo listInfo, Field field, FieldRef fieldRef)
         {
             field.EnsureProperty(f => f.SchemaXmlWithResourceTokens);
             XElement element = XElement.Parse(field.SchemaXmlWithResourceTokens);
@@ -585,10 +561,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 catch { }
             }
 
-            return createdField;
-        }
-
-        private static Field CreateField(XElement fieldElement, ListInfo listInfo, TokenParser parser, string originalFieldXml, ClientRuntimeContext context, PnPMonitoredScope scope)
+        private static void CreateField(XElement fieldElement, ListInfo listInfo, TokenParser parser, string originalFieldXml, ClientRuntimeContext context, PnPMonitoredScope scope)
         {
             fieldElement = PrepareField(fieldElement);
 
@@ -627,8 +600,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     field.Update();
                     listInfo.SiteList.Context.ExecuteQuery();
                 }
-
-                return field;
             }
             else
             {
@@ -973,20 +944,53 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
         private Tuple<List, TokenParser> CreateList(Web web, ListInstance list, TokenParser parser, PnPMonitoredScope scope)
         {
-            var listCreate = new ListCreationInformation();
-            listCreate.Description = list.Description;
-            listCreate.TemplateType = list.TemplateType;
-            listCreate.Title = parser.ParseString(list.Title);
+            List createdList;
+            if (list.Url.Equals("SiteAssets") && list.TemplateType == (int)ListTemplateType.DocumentLibrary)
+            {
+                //Ensure that the Site Assets library is created using the out of the box creation mechanism
+                //Site Assets that are created using the EnsureSiteAssetsLibrary method slightly differ from
+                //default Document Libraries. See issue 512 (https://github.com/OfficeDev/PnP-Sites-Core/issues/512)
+                //for details about the issue fixed by this approach.
+                createdList = web.Lists.EnsureSiteAssetsLibrary();
+                //Check that Title and Description have the correct values
+                web.Context.Load(createdList, l => l.Title,
+                                              l => l.Description);
+                web.Context.ExecuteQueryRetry();
+                var isDirty = false;
+                if (!string.Equals(createdList.Description, list.Description))
+                {
+                    createdList.Description = list.Description;
+                    isDirty = true;
+                }
+                if (!string.Equals(createdList.Title, list.Title))
+                {
+                    createdList.Title = list.Title;
+                    isDirty = true;
+                }
+                if (isDirty)
+                {
+                    createdList.Update();
+                    web.Context.ExecuteQueryRetry();
+                }
 
-            // the line of code below doesn't add the list to QuickLaunch
-            // the OnQuickLaunch property is re-set on the Created List object
-            listCreate.QuickLaunchOption = list.OnQuickLaunch ? QuickLaunchOptions.On : QuickLaunchOptions.Off;
+            }
+            else
+            {
+                var listCreate = new ListCreationInformation();
+                listCreate.Description = list.Description;
+                listCreate.TemplateType = list.TemplateType;
+                listCreate.Title = parser.ParseString(list.Title);
 
-            listCreate.Url = parser.ParseString(list.Url);
-            listCreate.TemplateFeatureId = list.TemplateFeatureID;
+                // the line of code below doesn't add the list to QuickLaunch
+                // the OnQuickLaunch property is re-set on the Created List object
+                listCreate.QuickLaunchOption = list.OnQuickLaunch ? QuickLaunchOptions.On : QuickLaunchOptions.Off;
 
-            var createdList = web.Lists.Add(listCreate);
-            createdList.Update();
+                listCreate.Url = parser.ParseString(list.Url);
+                listCreate.TemplateFeatureId = list.TemplateFeatureID;
+
+                createdList = web.Lists.Add(listCreate);
+                createdList.Update();
+            }
             web.Context.Load(createdList, l => l.BaseTemplate);
             web.Context.ExecuteQueryRetry();
 
@@ -1187,7 +1191,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         {
             using (var scope = new PnPMonitoredScope(this.Name))
             {
-                web.EnsureProperties(w => w.ServerRelativeUrl, w => w.Url, w => w.IsMultilingual, w => w.SupportedUILanguageIds);
+                web.EnsureProperties(w => w.ServerRelativeUrl, w => w.Url);
 
                 var serverRelativeUrl = web.ServerRelativeUrl;
 
@@ -1202,16 +1206,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         l => l.BaseTemplate,
                         l => l.OnQuickLaunch,
                         l => l.RootFolder.ServerRelativeUrl,
-                        l => l.TitleResource,
-                        l => l.DescriptionResource,
                         l => l.Fields.IncludeWithDefaultProperties(
                             f => f.Id,
                             f => f.Title,
                             f => f.Hidden,
                             f => f.InternalName,
-                            f => f.Required,
-                            f => f.TitleResource,
-                            f => f.DescriptionResource)));
+                            f => f.Required)));
 
                 web.Context.ExecuteQueryRetry();
 
@@ -1387,17 +1387,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             web.Context.Load(siteColumns, scs => scs.Include(sc => sc.Id));
             web.Context.ExecuteQueryRetry();
 
-            var cultureNames = new List<string>();
-
-            if (web.IsMultilingual)
-            {
-                foreach (var supportedlanguageId in web.SupportedUILanguageIds)
-                {
-                    var ci = new CultureInfo(supportedlanguageId);
-                    cultureNames.Add(ci.Name);
-                }
-            }
-
             foreach (var field in siteList.Fields.AsEnumerable().Where(field => !field.Hidden))
             {
                 if (siteColumns.FirstOrDefault(sc => sc.Id == field.Id) != null)
@@ -1518,9 +1507,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         noteSchemaXml.Attribute("SourceID").Remove();
                         list.Fields.Insert(0, new Model.Field { SchemaXml = ParseFieldSchema(noteSchemaXml.ToString(), lists) });
                     }
+
                 }
             }
-
             return list;
         }
 
