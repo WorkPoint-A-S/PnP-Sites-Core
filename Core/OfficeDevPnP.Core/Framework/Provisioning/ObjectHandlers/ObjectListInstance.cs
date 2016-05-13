@@ -127,7 +127,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                 {
                                     if (!listInfo.SiteList.FieldExistsById(fieldRef.Id))
                                     {
-                                        field = CreateFieldRef(listInfo, field, fieldRef);
+                                        CreateFieldRef(listInfo, field, fieldRef);
                                     }
                                     else
                                     {
@@ -513,12 +513,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 try
                 {
-                listField.UpdateAndPushChanges(true);
-                siteList.Context.ExecuteQueryRetry();
+                    listField.UpdateAndPushChanges(true);
+                    siteList.Context.ExecuteQueryRetry();
                     //TODO: Midlertidig fix. Michael tjek årsag til at Hidden feldt ikke kan sættes.
                 }
                 catch { }
             }
+        }
 
         private static void CreateFieldRef(ListInfo listInfo, Field field, FieldRef fieldRef)
         {
@@ -554,12 +555,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 try
                 {
-                createdField.Update();
-                createdField.Context.ExecuteQueryRetry();
+                    createdField.Update();
+                    createdField.Context.ExecuteQueryRetry();
                     //TODO: Midlertidig fix. Michael tjek årsag til at Hidden feldt ikke kan sættes.
                 }
                 catch { }
             }
+        }
 
         private static void CreateField(XElement fieldElement, ListInfo listInfo, TokenParser parser, string originalFieldXml, ClientRuntimeContext context, PnPMonitoredScope scope)
         {

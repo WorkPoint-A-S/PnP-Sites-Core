@@ -31,7 +31,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         private ExtensibilityHandlerCollection _extensibilityHandlers;
         private PageCollection _pages;
         private TermGroupCollection _termGroups;
-        private List<WPLocalization> _siteFieldsLocalization = new List<WPLocalization>();
         private FileConnectorBase connector;
         private string _id;
 
@@ -151,15 +150,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         {
             get { return this._siteFields; }
             private set { this._siteFields = value; }
-        }
-
-        /// <summary>
-        /// Gets a collection of Localizations for Site fields
-        /// </summary>
-        public List<WPLocalization> SiteFieldsLocalizations
-        {
-            get { return this._siteFieldsLocalization; }
-            private set { this._siteFieldsLocalization = value; }
         }
 
         /// <summary>
