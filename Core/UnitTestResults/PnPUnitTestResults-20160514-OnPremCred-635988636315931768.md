@@ -1,4 +1,4 @@
-# PnP Unit Test report for OnPremCred on Monday, April 18, 2016 #
+# PnP Unit Test report for OnPremCred on Saturday, May 14, 2016 #
 This page is showing the results of the PnP unit test run.
 
 ## Test configuration ##
@@ -7,20 +7,20 @@ This report contains the unit test results from the following run:
 Parameter | Value
 ----------|------
 PnP Unit Test configuration | OnPremCred
-Test run date | Monday, April 18, 2016
+Test run date | Saturday, May 14, 2016
 Test run time | 9:00 PM
 PnP branch | dev
 Visual Studio build configuration | debug15
 
 ## Test summary ##
-During this test run 297 tests have been executed with following outcome:
+During this test run 298 tests have been executed with following outcome:
 
 Parameter | Value
 ----------|------
-Executed tests | 297
-Elapsed time | 0h 24m 30s
-Passed tests | 273
-Failed tests | **3**
+Executed tests | 298
+Elapsed time | 0h 38m 29s
+Passed tests | 267
+Failed tests | **10**
 Skipped tests | 21
 Was canceled | False
 Was aborted | False
@@ -36,12 +36,30 @@ Error |
 <td><b>Duration</b></td>
 <td><b>Message</b></td>
 </tr>
-<tr><td>Tests.Framework.ProvisioningTemplates.DomainModelTests.CanSerializeToXml</td><td>Failed</td><td>0h 0m 35s</td><td>Test method OfficeDevPnP.Core.Tests.Framework.ProvisioningTemplates.DomainModelTests.CanSerializeToXml threw exception: 
-Microsoft.SharePoint.Client.ServerException: The request uses too many resources.</td></tr>
-<tr><td>Tests.Framework.ProvisioningTemplates.DomainModelTests.GetRemoteTemplateTest</td><td>Failed</td><td>0h 0m 34s</td><td>Test method OfficeDevPnP.Core.Tests.Framework.ProvisioningTemplates.DomainModelTests.GetRemoteTemplateTest threw exception: 
-Microsoft.SharePoint.Client.ServerException: The request uses too many resources.</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.GetProvisioningTemplateTest</td><td>Failed</td><td>0h 0m 35s</td><td>Test method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.GetProvisioningTemplateTest threw exception: 
-Microsoft.SharePoint.Client.ServerException: The request uses too many resources.</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.SetPropertyBagValueIntTest</td><td>Failed</td><td>0h 0m 2s</td><td>Test method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.SetPropertyBagValueIntTest threw exception: 
+Microsoft.SharePoint.Client.ServerException: The request message is too big. The server does not allow messages larger than 2097152 bytes.
+TestCleanup method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.Cleanup threw exception. Microsoft.SharePoint.Client.ServerException: Microsoft.SharePoint.Client.ServerException: The request message is too big. The server does not allow messages larger than 2097152 bytes..</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.SetPropertyBagValueStringTest</td><td>Failed</td><td>0h 0m 2s</td><td>Test method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.SetPropertyBagValueStringTest threw exception: 
+Microsoft.SharePoint.Client.ServerException: The request message is too big. The server does not allow messages larger than 2097152 bytes.
+TestCleanup method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.Cleanup threw exception. Microsoft.SharePoint.Client.ServerException: Microsoft.SharePoint.Client.ServerException: The request message is too big. The server does not allow messages larger than 2097152 bytes..</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.SetPropertyBagValueMultipleRunsTest</td><td>Failed</td><td>0h 0m 3s</td><td>Test method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.SetPropertyBagValueMultipleRunsTest threw exception: 
+Microsoft.SharePoint.Client.ServerException: The request message is too big. The server does not allow messages larger than 2097152 bytes.
+TestCleanup method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.Cleanup threw exception. Microsoft.SharePoint.Client.ServerException: Microsoft.SharePoint.Client.ServerException: The request message is too big. The server does not allow messages larger than 2097152 bytes..</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.RemovePropertyBagValueTest</td><td>Failed</td><td>0h 0m 3s</td><td>Test method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.RemovePropertyBagValueTest threw exception: 
+Microsoft.SharePoint.Client.ServerException: The request message is too big. The server does not allow messages larger than 2097152 bytes.
+TestCleanup method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.Cleanup threw exception. Microsoft.SharePoint.Client.ServerException: Microsoft.SharePoint.Client.ServerException: The request message is too big. The server does not allow messages larger than 2097152 bytes..</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.GetPropertyBagValueIntTest</td><td>Failed</td><td>0h 0m 2s</td><td>TestCleanup method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.Cleanup threw exception. Microsoft.SharePoint.Client.ServerException: Microsoft.SharePoint.Client.ServerException: The request message is too big. The server does not allow messages larger than 2097152 bytes..</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.GetPropertyBagValueStringTest</td><td>Failed</td><td>0h 0m 2s</td><td>TestCleanup method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.Cleanup threw exception. Microsoft.SharePoint.Client.ServerException: Microsoft.SharePoint.Client.ServerException: The request message is too big. The server does not allow messages larger than 2097152 bytes..</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.PropertyBagContainsKeyTest</td><td>Failed</td><td>0h 0m 2s</td><td>TestCleanup method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.Cleanup threw exception. Microsoft.SharePoint.Client.ServerException: Microsoft.SharePoint.Client.ServerException: The request message is too big. The server does not allow messages larger than 2097152 bytes..</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.GetIndexedPropertyBagKeysTest</td><td>Failed</td><td>0h 0m 2s</td><td>Test method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.GetIndexedPropertyBagKeysTest threw exception: 
+Microsoft.SharePoint.Client.ServerException: The request message is too big. The server does not allow messages larger than 2097152 bytes.
+TestCleanup method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.Cleanup threw exception. Microsoft.SharePoint.Client.ServerException: Microsoft.SharePoint.Client.ServerException: The request message is too big. The server does not allow messages larger than 2097152 bytes..</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.AddIndexedPropertyBagKeyTest</td><td>Failed</td><td>0h 0m 3s</td><td>Test method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.AddIndexedPropertyBagKeyTest threw exception: 
+Microsoft.SharePoint.Client.ServerException: The request message is too big. The server does not allow messages larger than 2097152 bytes.
+TestCleanup method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.Cleanup threw exception. Microsoft.SharePoint.Client.ServerException: Microsoft.SharePoint.Client.ServerException: The request message is too big. The server does not allow messages larger than 2097152 bytes..</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.RemoveIndexedPropertyBagKeyTest</td><td>Failed</td><td>0h 0m 3s</td><td>Test method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.RemoveIndexedPropertyBagKeyTest threw exception: 
+Microsoft.SharePoint.Client.ServerException: The request message is too big. The server does not allow messages larger than 2097152 bytes.
+TestCleanup method Microsoft.SharePoint.Client.Tests.WebExtensionsTests.Cleanup threw exception. Microsoft.SharePoint.Client.ServerException: Microsoft.SharePoint.Client.ServerException: The request message is too big. The server does not allow messages larger than 2097152 bytes..</td></tr>
 
 </table>
 
@@ -86,16 +104,16 @@ Microsoft.SharePoint.Client.ServerException: The request uses too many resources
 <td><b>Test outcome</b></td>
 <td><b>Duration</b></td>
 </tr>
-<tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.CanUploadHtmlPageLayoutAndConvertItToAspxVersionTest</td><td>Passed</td><td>0h 1m 13s</td></tr>
-<tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.CanUploadPageLayoutTest</td><td>Passed</td><td>0h 0m 47s</td></tr>
-<tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.CanUploadPageLayoutWithPathTest</td><td>Passed</td><td>0h 0m 46s</td></tr>
+<tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.CanUploadHtmlPageLayoutAndConvertItToAspxVersionTest</td><td>Passed</td><td>0h 1m 9s</td></tr>
+<tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.CanUploadPageLayoutTest</td><td>Passed</td><td>0h 0m 49s</td></tr>
+<tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.CanUploadPageLayoutWithPathTest</td><td>Passed</td><td>0h 0m 47s</td></tr>
 <tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.AllowAllPageLayoutsTest</td><td>Passed</td><td>0h 0m 44s</td></tr>
 <tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.DeployThemeAndCreateComposedLookTest</td><td>Passed</td><td>0h 0m 46s</td></tr>
-<tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.ComposedLookExistsTest</td><td>Passed</td><td>0h 0m 44s</td></tr>
-<tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.GetCurrentComposedLookTest</td><td>Passed</td><td>0h 0m 57s</td></tr>
+<tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.ComposedLookExistsTest</td><td>Passed</td><td>0h 0m 45s</td></tr>
+<tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.GetCurrentComposedLookTest</td><td>Passed</td><td>0h 0m 56s</td></tr>
 <tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.CreateComposedLookShouldWorkTest</td><td>Passed</td><td>0h 0m 44s</td></tr>
-<tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.CreateComposedLookByNameShouldWorkTest</td><td>Passed</td><td>0h 0m 45s</td></tr>
-<tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.SetComposedLookInheritsTest</td><td>Passed</td><td>0h 1m 6s</td></tr>
+<tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.CreateComposedLookByNameShouldWorkTest</td><td>Passed</td><td>0h 0m 44s</td></tr>
+<tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.SetComposedLookInheritsTest</td><td>Passed</td><td>0h 1m 5s</td></tr>
 <tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.SetComposedLookResetInheritanceTest</td><td>Passed</td><td>0h 1m 24s</td></tr>
 <tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.SeattleMasterPageIsUnchangedTest</td><td>Passed</td><td>0h 0m 45s</td></tr>
 <tr><td>Tests.AppModelExtensions.BrandingExtensionsTests.IsSubsiteTest</td><td>Passed</td><td>0h 0m 44s</td></tr>
@@ -105,7 +123,7 @@ Microsoft.SharePoint.Client.ServerException: The request uses too many resources
 <tr><td>Tests.AppModelExtensions.ClientObjectExtensionsTests.EnsureCollectionPropertyTest</td><td>Passed</td><td>0h 0m 1s</td></tr>
 <tr><td>Tests.AppModelExtensions.ClientObjectExtensionsTests.NotLoadedComplexPropertyExceptionTest</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Tests.AppModelExtensions.ClientObjectExtensionsTests.EnsureComplexPropertyTest</td><td>Passed</td><td>0h 0m 0s</td></tr>
-<tr><td>Tests.AppModelExtensions.ClientObjectExtensionsTests.EnsureMultiplePropertiesTest</td><td>Passed</td><td>0h 0m 0s</td></tr>
+<tr><td>Tests.AppModelExtensions.ClientObjectExtensionsTests.EnsureMultiplePropertiesTest</td><td>Passed</td><td>0h 0m 1s</td></tr>
 <tr><td>Tests.AppModelExtensions.ClientObjectExtensionsTests.EnsurePropertiesIncludeTest</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Tests.AppModelExtensions.ClientObjectExtensionsTests.EnsurePropertyIncludeTest</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Tests.AppModelExtensions.ClientObjectExtensionsTests.EnsureComplexPropertyWithDependencyTest</td><td>Passed</td><td>0h 0m 1s</td></tr>
@@ -128,12 +146,12 @@ Microsoft.SharePoint.Client.ServerException: The request uses too many resources
 <tr><td>Microsoft.SharePoint.Client.Tests.FieldAndContentTypeExtensionsTests.RemoveFieldByInternalNameThrowsOnNoMatchTest</td><td>Passed</td><td>0h 0m 2s</td></tr>
 <tr><td>Microsoft.SharePoint.Client.Tests.FieldAndContentTypeExtensionsTests.CreateFieldFromXmlTest</td><td>Passed</td><td>0h 0m 3s</td></tr>
 <tr><td>Microsoft.SharePoint.Client.Tests.FieldAndContentTypeExtensionsTests.ContentTypeExistsByNameTest</td><td>Passed</td><td>0h 0m 2s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.FieldAndContentTypeExtensionsTests.ContentTypeExistsByIdTest</td><td>Passed</td><td>0h 0m 3s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.FieldAndContentTypeExtensionsTests.ContentTypeExistsByNameInSubWebTest</td><td>Passed</td><td>0h 0m 10s</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.FieldAndContentTypeExtensionsTests.ContentTypeExistsByIdTest</td><td>Passed</td><td>0h 0m 4s</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.FieldAndContentTypeExtensionsTests.ContentTypeExistsByNameInSubWebTest</td><td>Passed</td><td>0h 0m 9s</td></tr>
 <tr><td>Microsoft.SharePoint.Client.Tests.FieldAndContentTypeExtensionsTests.ContentTypeExistsByIdInSubWebTest</td><td>Passed</td><td>0h 0m 8s</td></tr>
 <tr><td>Microsoft.SharePoint.Client.Tests.FieldAndContentTypeExtensionsTests.DeleteContentTypeByNameTest</td><td>Passed</td><td>0h 0m 3s</td></tr>
 <tr><td>Microsoft.SharePoint.Client.Tests.FieldAndContentTypeExtensionsTests.DeleteContentTypeByIdTest</td><td>Passed</td><td>0h 0m 6s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.FieldAndContentTypeExtensionsTests.ContentTypeExistsByNameSearchInSiteHierarchyTest</td><td>Passed</td><td>0h 0m 2s</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.FieldAndContentTypeExtensionsTests.ContentTypeExistsByNameSearchInSiteHierarchyTest</td><td>Passed</td><td>0h 0m 3s</td></tr>
 <tr><td>Microsoft.SharePoint.Client.Tests.FieldAndContentTypeExtensionsTests.ContentTypeExistsByIdSearchInSiteHierarchyTest</td><td>Passed</td><td>0h 0m 3s</td></tr>
 <tr><td>Microsoft.SharePoint.Client.Tests.FieldAndContentTypeExtensionsTests.AddFieldToContentTypeTest</td><td>Passed</td><td>0h 0m 4s</td></tr>
 <tr><td>Microsoft.SharePoint.Client.Tests.FieldAndContentTypeExtensionsTests.AddFieldToContentTypeMakeRequiredTest</td><td>Passed</td><td>0h 0m 4s</td></tr>
@@ -149,7 +167,7 @@ Microsoft.SharePoint.Client.ServerException: The request uses too many resources
 <tr><td>Microsoft.SharePoint.Client.Tests.JavaScriptExtensionsTests.AddJsBlockToWebTest</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Microsoft.SharePoint.Client.Tests.JavaScriptExtensionsTests.AddJsBlockToSiteTest</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Microsoft.SharePoint.Client.Tests.ListExtensionsTests.CreateListTest</td><td>Passed</td><td>0h 0m 4s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.ListExtensionsTests.SetDefaultColumnValuesTest</td><td>Passed</td><td>0h 0m 3s</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.ListExtensionsTests.SetDefaultColumnValuesTest</td><td>Passed</td><td>0h 0m 4s</td></tr>
 <tr><td>Microsoft.SharePoint.Client.Tests.ListRatingExtensionTest.EnableRatingExperienceTest</td><td>Passed</td><td>0h 0m 3s</td></tr>
 <tr><td>Microsoft.SharePoint.Client.Tests.ListRatingExtensionTest.EnableLikesExperienceTest</td><td>Passed</td><td>0h 0m 3s</td></tr>
 <tr><td>Tests.AppModelExtensions.SearchExtensionsTests.SetSiteCollectionSearchCenterUrlTest</td><td>Passed</td><td>0h 0m 3s</td></tr>
@@ -173,11 +191,11 @@ Microsoft.SharePoint.Client.ServerException: The request uses too many resources
 <tr><td>Tests.AppModelExtensions.StructuralNavigationExtensionsTests.GetNavigationSettingsTest</td><td>Passed</td><td>0h 0m 1s</td></tr>
 <tr><td>Tests.AppModelExtensions.StructuralNavigationExtensionsTests.UpdateNavigationSettingsTest</td><td>Passed</td><td>0h 0m 2s</td></tr>
 <tr><td>Tests.AppModelExtensions.StructuralNavigationExtensionsTests.UpdateNavigationSettings2Test</td><td>Passed</td><td>0h 0m 1s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.TaxonomyExtensionsTests.CreateTaxonomyFieldTest</td><td>Passed</td><td>0h 0m 3s</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.TaxonomyExtensionsTests.CreateTaxonomyFieldTest</td><td>Passed</td><td>0h 0m 4s</td></tr>
 <tr><td>Microsoft.SharePoint.Client.Tests.TaxonomyExtensionsTests.CreateTaxonomyFieldMultiValueTest</td><td>Passed</td><td>0h 0m 3s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.TaxonomyExtensionsTests.SetTaxonomyFieldValueTest</td><td>Passed</td><td>0h 0m 4s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.TaxonomyExtensionsTests.CreateTaxonomyFieldLinkedToTermSetTest</td><td>Passed</td><td>0h 0m 2s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.TaxonomyExtensionsTests.CreateTaxonomyFieldLinkedToTermTest</td><td>Passed</td><td>0h 0m 2s</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.TaxonomyExtensionsTests.SetTaxonomyFieldValueTest</td><td>Passed</td><td>0h 0m 3s</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.TaxonomyExtensionsTests.CreateTaxonomyFieldLinkedToTermSetTest</td><td>Passed</td><td>0h 0m 3s</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.TaxonomyExtensionsTests.CreateTaxonomyFieldLinkedToTermTest</td><td>Passed</td><td>0h 0m 3s</td></tr>
 <tr><td>Microsoft.SharePoint.Client.Tests.TaxonomyExtensionsTests.GetTaxonomySessionTest</td><td>Passed</td><td>0h 0m 2s</td></tr>
 <tr><td>Microsoft.SharePoint.Client.Tests.TaxonomyExtensionsTests.GetDefaultKeywordsTermStoreTest</td><td>Passed</td><td>0h 0m 2s</td></tr>
 <tr><td>Microsoft.SharePoint.Client.Tests.TaxonomyExtensionsTests.GetDefaultSiteCollectionTermStoreTest</td><td>Passed</td><td>0h 0m 2s</td></tr>
@@ -256,8 +274,9 @@ Microsoft.SharePoint.Client.ServerException: The request uses too many resources
 <tr><td>Tests.Framework.ExtensibilityCallOut.ExtensibilityTests.TokenProviderClientCtxIsNullThrowsAgrumentNullException</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Tests.Framework.ObjectHandlers.ObjectAuditSettingsTests.CanExtractAuditSettings</td><td>Passed</td><td>0h 0m 1s</td></tr>
 <tr><td>Tests.Framework.ObjectHandlers.ObjectAuditSettingsTests.CanProvisionAuditSettings</td><td>Passed</td><td>0h 0m 1s</td></tr>
+<tr><td>Tests.Framework.ObjectHandlers.ObjectLookupFieldsTests.CanProvisionObjects</td><td>Passed</td><td>0h 0m 6s</td></tr>
 <tr><td>Tests.Framework.ObjectHandlers.ObjectRegionalSettingsTests.CanExtractRegionalSettings</td><td>Passed</td><td>0h 0m 0s</td></tr>
-<tr><td>Tests.Framework.ObjectHandlers.ObjectRegionalSettingsTests.CanProvisionRegionalSettings</td><td>Passed</td><td>0h 0m 0s</td></tr>
+<tr><td>Tests.Framework.ObjectHandlers.ObjectRegionalSettingsTests.CanProvisionRegionalSettings</td><td>Passed</td><td>0h 0m 1s</td></tr>
 <tr><td>Tests.Framework.ObjectHandlers.ObjectSupportedUILanguagesTests.CanExtractSupportedUILanguages</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Tests.Framework.ObjectHandlers.ObjectSupportedUILanguagesTests.CanProvisionSupportedUILanguages</td><td>Passed</td><td>0h 0m 1s</td></tr>
 <tr><td>Tests.Framework.ObjectHandlers.ObjectComposedLookTests.CanCreateComposedLooks</td><td>Passed</td><td>0h 0m 1s</td></tr>
@@ -268,11 +287,11 @@ Microsoft.SharePoint.Client.ServerException: The request uses too many resources
 <tr><td>Tests.Framework.ObjectHandlers.ObjectSiteSecurityTests.CanProvisionObjects</td><td>Passed</td><td>0h 0m 1s</td></tr>
 <tr><td>Tests.Framework.ObjectHandlers.ObjectSiteSecurityTests.CanCreateEntities1</td><td>Passed</td><td>0h 0m 1s</td></tr>
 <tr><td>Tests.Framework.ObjectHandlers.ObjectSiteSecurityTests.CanCreateEntities2</td><td>Passed</td><td>0h 0m 1s</td></tr>
-<tr><td>Tests.Framework.ObjectHandlers.ObjectPropertyBagEntryTests.CanProvisionObjects</td><td>Passed</td><td>0h 0m 5s</td></tr>
-<tr><td>Tests.Framework.ObjectHandlers.ObjectPropertyBagEntryTests.CanCreateEntities</td><td>Passed</td><td>0h 0m 1s</td></tr>
-<tr><td>Tests.Framework.ObjectHandlers.ObjectListInstanceTests.CanProvisionObjects</td><td>Passed</td><td>0h 0m 0s</td></tr>
-<tr><td>Tests.Framework.ObjectHandlers.ObjectListInstanceTests.CanCreateEntities</td><td>Passed</td><td>0h 0m 7s</td></tr>
-<tr><td>Tests.Framework.ObjectHandlers.ObjectListInstanceTests.FolderContentTypeShouldNotBeRemovedFromProvisionedDocumentLibraries</td><td>Passed</td><td>0h 0m 7s</td></tr>
+<tr><td>Tests.Framework.ObjectHandlers.ObjectPropertyBagEntryTests.CanProvisionObjects</td><td>Passed</td><td>0h 0m 10s</td></tr>
+<tr><td>Tests.Framework.ObjectHandlers.ObjectPropertyBagEntryTests.CanCreateEntities</td><td>Passed</td><td>0h 0m 4s</td></tr>
+<tr><td>Tests.Framework.ObjectHandlers.ObjectListInstanceTests.CanProvisionObjects</td><td>Passed</td><td>0h 0m 2s</td></tr>
+<tr><td>Tests.Framework.ObjectHandlers.ObjectListInstanceTests.CanCreateEntities</td><td>Passed</td><td>0h 0m 20s</td></tr>
+<tr><td>Tests.Framework.ObjectHandlers.ObjectListInstanceTests.FolderContentTypeShouldNotBeRemovedFromProvisionedDocumentLibraries</td><td>Passed</td><td>0h 0m 13s</td></tr>
 <tr><td>Tests.Framework.ObjectHandlers.ObjectListInstanceTests.UpdatedListTitleShouldBeAvailableAsToken</td><td>Passed</td><td>0h 0m 7s</td></tr>
 <tr><td>Tests.Framework.ObjectHandlers.ObjectFilesTests.CanProvisionObjects</td><td>Passed</td><td>0h 0m 1s</td></tr>
 <tr><td>Tests.Framework.ObjectHandlers.ObjectFilesTests.CanAddWebPartsToForms</td><td>Passed</td><td>0h 0m 1s</td></tr>
@@ -285,7 +304,7 @@ Microsoft.SharePoint.Client.ServerException: The request uses too many resources
 <tr><td>Tests.Framework.ObjectHandlers.ObjectFieldTests.CanProvisionObjects</td><td>Passed</td><td>0h 0m 1s</td></tr>
 <tr><td>Tests.Framework.ObjectHandlers.ObjectFieldTests.CanCreateEntities</td><td>Passed</td><td>0h 0m 2s</td></tr>
 <tr><td>Tests.Framework.ObjectHandlers.ObjectContentTypeTests.CanProvisionObjects</td><td>Passed</td><td>0h 0m 4s</td></tr>
-<tr><td>Tests.Framework.ObjectHandlers.ObjectContentTypeTests.CanCreateEntities</td><td>Passed</td><td>0h 0m 1s</td></tr>
+<tr><td>Tests.Framework.ObjectHandlers.ObjectContentTypeTests.CanCreateEntities</td><td>Passed</td><td>0h 0m 6s</td></tr>
 <tr><td>Tests.Framework.ObjectHandlers.TokenParserTests.ParseTests</td><td>Passed</td><td>0h 0m 2s</td></tr>
 <tr><td>Tests.Framework.Providers.BaseTemplateTests.GetBaseTemplateForCurrentSiteTest</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Tests.Framework.Providers.XMLProvidersTests.XMLFileSystemGetTemplatesTest</td><td>Passed</td><td>0h 0m 1s</td></tr>
@@ -310,6 +329,7 @@ Microsoft.SharePoint.Client.ServerException: The request uses too many resources
 <tr><td>Tests.Framework.ProvisioningTemplates.DomainModelTests.CanGetFeatures</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Tests.Framework.ProvisioningTemplates.DomainModelTests.CanGetCustomActions</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Tests.Framework.ProvisioningTemplates.DomainModelTests.CanSerializeToJSon</td><td>Passed</td><td>0h 0m 0s</td></tr>
+<tr><td>Tests.Framework.ProvisioningTemplates.DomainModelTests.CanSerializeToXml</td><td>Passed</td><td>0h 0m 38s</td></tr>
 <tr><td>Tests.Framework.ProvisioningTemplates.DomainModelTests.ValidateFullProvisioningSchema5</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Tests.Framework.ProvisioningTemplates.DomainModelTests.ValidateSharePointProvisioningSchema6</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Tests.Framework.ProvisioningTemplates.DomainModelTests.CanDeserializeXMLToDomainObject5</td><td>Passed</td><td>0h 0m 0s</td></tr>
@@ -322,6 +342,7 @@ Microsoft.SharePoint.Client.ServerException: The request uses too many resources
 <tr><td>Tests.Framework.ProvisioningTemplates.DomainModelTests.CanDeserializeXMLToDomainObjectFrom201512Full</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Tests.Framework.ProvisioningTemplates.DomainModelTests.CanSerializeDomainObjectToXML201512Full</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Tests.Framework.ProvisioningTemplates.DomainModelTests.AreTemplatesEqual</td><td>Passed</td><td>0h 0m 0s</td></tr>
+<tr><td>Tests.Framework.ProvisioningTemplates.DomainModelTests.GetRemoteTemplateTest</td><td>Passed</td><td>0h 0m 37s</td></tr>
 <tr><td>Utilities.Tests.JsonUtilityTests.SerializeTest</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Utilities.Tests.JsonUtilityTests.DeserializeTest</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Utilities.Tests.JsonUtilityTests.DeserializeListTest</td><td>Passed</td><td>0h 0m 0s</td></tr>
@@ -336,29 +357,20 @@ Microsoft.SharePoint.Client.ServerException: The request uses too many resources
 <tr><td>Tests.AppModelExtensions.UrlUtilityTests.ContainsInvalidUrlCharsReturnsTrueForInvalidString</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Tests.AppModelExtensions.UrlUtilityTests.StripInvalidUrlCharsReturnsStrippedString</td><td>Passed</td><td>0h 0m 0s</td></tr>
 <tr><td>Tests.AppModelExtensions.UrlUtilityTests.ReplaceInvalidUrlCharsReturnsStrippedString</td><td>Passed</td><td>0h 0m 0s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.SetPropertyBagValueIntTest</td><td>Passed</td><td>0h 0m 19s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.SetPropertyBagValueStringTest</td><td>Passed</td><td>0h 0m 18s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.SetPropertyBagValueMultipleRunsTest</td><td>Passed</td><td>0h 0m 20s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.RemovePropertyBagValueTest</td><td>Passed</td><td>0h 0m 11s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.GetPropertyBagValueIntTest</td><td>Passed</td><td>0h 0m 10s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.GetPropertyBagValueStringTest</td><td>Passed</td><td>0h 0m 13s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.PropertyBagContainsKeyTest</td><td>Passed</td><td>0h 0m 9s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.GetIndexedPropertyBagKeysTest</td><td>Passed</td><td>0h 0m 18s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.AddIndexedPropertyBagKeyTest</td><td>Passed</td><td>0h 0m 11s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.RemoveIndexedPropertyBagKeyTest</td><td>Passed</td><td>0h 0m 10s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.GetAppInstancesTest</td><td>Passed</td><td>0h 0m 1s</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.GetProvisioningTemplateTest</td><td>Passed</td><td>0h 0m 36s</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.GetAppInstancesTest</td><td>Passed</td><td>0h 0m 2s</td></tr>
 <tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.RemoveAppInstanceByTitleTest</td><td>Passed</td><td>0h 0m 1s</td></tr>
-<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.IsSubWebTest</td><td>Passed</td><td>0h 0m 0s</td></tr>
+<tr><td>Microsoft.SharePoint.Client.Tests.WebExtensionsTests.IsSubWebTest</td><td>Passed</td><td>0h 0m 1s</td></tr>
 <tr><td>Tests.AppModelExtensions.PageExtensionsTests.AddWikiPageTest</td><td>Passed</td><td>0h 0m 6s</td></tr>
-<tr><td>Tests.AppModelExtensions.PageExtensionsTests.EnsureWikiPageTest</td><td>Passed</td><td>0h 0m 4s</td></tr>
+<tr><td>Tests.AppModelExtensions.PageExtensionsTests.EnsureWikiPageTest</td><td>Passed</td><td>0h 0m 5s</td></tr>
 <tr><td>Tests.AppModelExtensions.PageExtensionsTests.CanAddLayoutToWikiPageTest</td><td>Passed</td><td>0h 0m 4s</td></tr>
 <tr><td>Tests.AppModelExtensions.PageExtensionsTests.CanAddHtmlToWikiPageTest</td><td>Passed</td><td>0h 0m 4s</td></tr>
 <tr><td>Tests.AppModelExtensions.PageExtensionsTests.ProveThatWeCanAddHtmlToPageAfterChangingLayoutTest</td><td>Passed</td><td>0h 0m 5s</td></tr>
-<tr><td>Tests.AppModelExtensions.PageExtensionsTests.CanCreatePublishingPageTest</td><td>Passed</td><td>0h 0m 16s</td></tr>
-<tr><td>Tests.AppModelExtensions.PageExtensionsTests.PublishingPageWithInvalidCharsIsCorrectlyCreatedTest</td><td>Passed</td><td>0h 0m 15s</td></tr>
-<tr><td>Tests.AppModelExtensions.PageExtensionsTests.CanCreatePublishedPublishingPageWhenModerationIsEnabledTest</td><td>Passed</td><td>0h 0m 16s</td></tr>
-<tr><td>Tests.AppModelExtensions.PageExtensionsTests.CanCreatePublishedPublishingPageWhenModerationIsDisabledTest</td><td>Passed</td><td>0h 0m 15s</td></tr>
-<tr><td>Tests.AppModelExtensions.PageExtensionsTests.CreatedPublishingPagesSetsTitleCorrectlyTest</td><td>Passed</td><td>0h 0m 16s</td></tr>
+<tr><td>Tests.AppModelExtensions.PageExtensionsTests.CanCreatePublishingPageTest</td><td>Passed</td><td>0h 3m 15s</td></tr>
+<tr><td>Tests.AppModelExtensions.PageExtensionsTests.PublishingPageWithInvalidCharsIsCorrectlyCreatedTest</td><td>Passed</td><td>0h 3m 15s</td></tr>
+<tr><td>Tests.AppModelExtensions.PageExtensionsTests.CanCreatePublishedPublishingPageWhenModerationIsEnabledTest</td><td>Passed</td><td>0h 3m 16s</td></tr>
+<tr><td>Tests.AppModelExtensions.PageExtensionsTests.CanCreatePublishedPublishingPageWhenModerationIsDisabledTest</td><td>Passed</td><td>0h 3m 14s</td></tr>
+<tr><td>Tests.AppModelExtensions.PageExtensionsTests.CreatedPublishingPagesSetsTitleCorrectlyTest</td><td>Passed</td><td>0h 3m 25s</td></tr>
 
 </table>
 
