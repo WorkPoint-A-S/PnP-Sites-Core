@@ -525,41 +525,43 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         {
             field.EnsureProperty(f => f.SchemaXmlWithResourceTokens);
             XElement element = XElement.Parse(field.SchemaXmlWithResourceTokens);
-
-            element.SetAttributeValue("AllowDeletion", "TRUE");
-
-            field.SchemaXml = element.ToString();
-
-            var createdField = listInfo.SiteList.Fields.Add(field);
-
-            createdField.Context.Load(createdField, cf => cf.Title, cf => cf.Hidden, cf => cf.Required);
-            createdField.Context.ExecuteQueryRetry();
-
-            var isDirty = false;
-            if (!string.IsNullOrEmpty(fieldRef.DisplayName) && createdField.Title != fieldRef.DisplayName)
+            
+            if (element.Attribute("FieldRef") == null)
             {
-                createdField.Title = fieldRef.DisplayName;
-                isDirty = true;
-            }
-            if (createdField.Hidden != fieldRef.Hidden)
-            {
-                createdField.Hidden = fieldRef.Hidden;
-                isDirty = true;
-            }
-            if (createdField.Required != fieldRef.Required)
-            {
-                createdField.Required = fieldRef.Required;
-                isDirty = true;
-            }
-            if (isDirty)
-            {
-                try
+                element.SetAttributeValue("AllowDeletion", "TRUE");
+                field.SchemaXml = element.ToString();
+
+                var createdField = listInfo.SiteList.Fields.Add(field);
+
+                createdField.Context.Load(createdField, cf => cf.Title, cf => cf.Hidden, cf => cf.Required);
+                createdField.Context.ExecuteQueryRetry();
+
+                var isDirty = false;
+                if (!string.IsNullOrEmpty(fieldRef.DisplayName) && createdField.Title != fieldRef.DisplayName)
                 {
-                    createdField.Update();
-                    createdField.Context.ExecuteQueryRetry();
-                    //TODO: Midlertidig fix. Michael tjek årsag til at Hidden feldt ikke kan sættes.
+                    createdField.Title = fieldRef.DisplayName;
+                    isDirty = true;
                 }
-                catch { }
+                if (createdField.Hidden != fieldRef.Hidden)
+                {
+                    createdField.Hidden = fieldRef.Hidden;
+                    isDirty = true;
+                }
+                if (createdField.Required != fieldRef.Required)
+                {
+                    createdField.Required = fieldRef.Required;
+                    isDirty = true;
+                }
+                if (isDirty)
+                {
+                    try
+                    {
+                        createdField.Update();
+                        createdField.Context.ExecuteQueryRetry();
+                        //TODO: Midlertidig fix. Michael tjek årsag til at Hidden feldt ikke kan sættes.
+                    }
+                    catch { }
+                }
             }
         }
 
@@ -1525,23 +1527,24 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                 fieldElement.Attribute("List").SetValue(String.Format("{{listid:{0}}}", sourceList.Title));
                         }
 
+                        if (field.TypeAsString.StartsWith("TaxonomyField"))
+                        {
+                            schemaXml = TokenizeTaxonomyField(web, fieldElement);
+
+                            // find the corresponding taxonomy container text field and include it too
+                            var taxField = (TaxonomyField)field;
+                            taxField.EnsureProperties(f => f.TextField, f => f.Id);
+
+                            var noteField = siteList.Fields.GetById(taxField.TextField);
+                            web.Context.Load(noteField, nf => nf.SchemaXml);
+                            web.Context.ExecuteQueryRetry();
+                            var noteSchemaXml = XElement.Parse(noteField.SchemaXml);
+                            noteSchemaXml.Attribute("SourceID").Remove();
+                            list.Fields.Insert(0, new Model.Field { SchemaXml = ParseFieldSchema(noteSchemaXml.ToString(), lists) });
+                        }
+
                         list.Fields.Add(new Model.Field { SchemaXml = fieldElement.ToString() });
                     }
-
-                    if (field.TypeAsString.StartsWith("TaxonomyField"))
-                    {
-                        // find the corresponding taxonomy container text field and include it too
-                        var taxField = (TaxonomyField)field;
-                        taxField.EnsureProperties(f => f.TextField, f => f.Id);
-
-                        var noteField = siteList.Fields.GetById(taxField.TextField);
-                        web.Context.Load(noteField, nf => nf.SchemaXml);
-                        web.Context.ExecuteQueryRetry();
-                        var noteSchemaXml = XElement.Parse(noteField.SchemaXml);
-                        noteSchemaXml.Attribute("SourceID").Remove();
-                        list.Fields.Insert(0, new Model.Field { SchemaXml = ParseFieldSchema(noteSchemaXml.ToString(), lists) });
-                    }
-
                 }
             }
             return list;
