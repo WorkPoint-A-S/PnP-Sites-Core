@@ -374,6 +374,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             //}
                             //}
                         }
+                        
                         // Check if the field is of type TaxonomyField
                         if (field.TypeAsString.StartsWith("TaxonomyField"))
                         {
@@ -384,6 +385,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                             fieldXml = TokenizeTaxonomyField(web, element);
                         }
+
                         // Check if we have version attribute. Remove if exists 
                         if (element.Attribute("Version") != null)
                         {

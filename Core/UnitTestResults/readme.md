@@ -4,6 +4,26 @@ Below table is showing the last 100 test run results.
 
 Configuration | Date | Time | Branch | Build | Passed | Failed | Skipped
 :-----|:-----|:----|:----:|:----:|:----:|:----:|:----:|
+ [OnlineAppOnly](PnPUnitTestResults-20160522-OnlineAppOnly-635994783896318865.md) | Sunday, May 22, 2016 | 11:46 PM | dev | debug | 267 | 1 | 39
+ [OnlineCred](PnPUnitTestResults-20160522-OnlineCred-635994737598232793.md) | Sunday, May 22, 2016 | 10:29 PM | dev | debug | 299 | 1 | 7
+ [OnPremAppOnly](PnPUnitTestResults-20160521-OnPremAppOnly-635994707716333638.md) | Saturday, May 21, 2016 | 9:39 PM | dev | debug15 | 237 | 10 | 51
+ [OnPremCred](PnPUnitTestResults-20160521-OnPremCred-635994684195252963.md) | Saturday, May 21, 2016 | 9:00 PM | dev | debug15 | 267 | 10 | 21
+ [OnlineAppOnly](PnPUnitTestResults-20160521-OnlineAppOnly-635993908329206300.md) | Saturday, May 21, 2016 | 11:27 PM | dev | debug | 267 | 1 | 39
+ [OnlineCred](PnPUnitTestResults-20160521-OnlineCred-635993865494387937.md) | Saturday, May 21, 2016 | 10:15 PM | dev | debug | 299 | 1 | 7
+ [OnPremAppOnly](PnPUnitTestResults-20160520-OnPremAppOnly-635993843545304365.md) | Friday, May 20, 2016 | 9:39 PM | dev | debug15 | 237 | 10 | 51
+ [OnPremCred](PnPUnitTestResults-20160520-OnPremCred-635993820265900040.md) | Friday, May 20, 2016 | 9:00 PM | dev | debug15 | 267 | 10 | 21
+ [OnlineAppOnly](PnPUnitTestResults-20160520-OnlineAppOnly-635993045965403935.md) | Friday, May 20, 2016 | 11:29 PM | dev | debug | 267 | 1 | 39
+ [OnlineCred](PnPUnitTestResults-20160520-OnlineCred-635993001860742656.md) | Friday, May 20, 2016 | 10:16 PM | dev | debug | 299 | 1 | 7
+ [OnPremAppOnly](PnPUnitTestResults-20160519-OnPremAppOnly-635992979568012988.md) | Thursday, May 19, 2016 | 9:39 PM | dev | debug15 | 237 | 10 | 51
+ [OnPremCred](PnPUnitTestResults-20160519-OnPremCred-635992956327643985.md) | Thursday, May 19, 2016 | 9:00 PM | dev | debug15 | 267 | 10 | 21
+ [OnlineAppOnly](PnPUnitTestResults-20160519-OnlineAppOnly-635992184222884569.md) | Thursday, May 19, 2016 | 11:33 PM | dev | debug | 267 | 1 | 39
+ [OnlineCred](PnPUnitTestResults-20160519-OnlineCred-635992137841688861.md) | Thursday, May 19, 2016 | 10:16 PM | dev | debug | 300 | 0 | 7
+ [OnPremAppOnly](PnPUnitTestResults-20160518-OnPremAppOnly-635992115555357623.md) | Wednesday, May 18, 2016 | 9:39 PM | dev | debug15 | 237 | 10 | 51
+ [OnPremCred](PnPUnitTestResults-20160518-OnPremCred-635992092290764526.md) | Wednesday, May 18, 2016 | 9:00 PM | dev | debug15 | 267 | 10 | 21
+ [OnlineAppOnly](PnPUnitTestResults-20160518-OnlineAppOnly-635991319624259669.md) | Wednesday, May 18, 2016 | 11:32 PM | dev | debug | 267 | 1 | 39
+ [OnlineCred](PnPUnitTestResults-20160518-OnlineCred-635991273650806896.md) | Wednesday, May 18, 2016 | 10:16 PM | dev | debug | 297 | 3 | 7
+ [OnPremAppOnly](PnPUnitTestResults-20160517-OnPremAppOnly-635991251235160593.md) | Tuesday, May 17, 2016 | 9:38 PM | dev | debug15 | 237 | 10 | 51
+ [OnPremCred](PnPUnitTestResults-20160517-OnPremCred-635991228274779562.md) | Tuesday, May 17, 2016 | 9:00 PM | dev | debug15 | 267 | 10 | 21
  [OnlineAppOnly](PnPUnitTestResults-20160515-OnlineAppOnly-635988732827209629.md) | Sunday, May 15, 2016 | 11:41 PM | dev | debug | 267 | 1 | 39
  [OnlineCred](PnPUnitTestResults-20160515-OnlineCred-635988689564491180.md) | Sunday, May 15, 2016 | 10:29 PM | dev | debug | 299 | 1 | 7
  [OnPremAppOnly](PnPUnitTestResults-20160514-OnPremAppOnly-635988659741231779.md) | Saturday, May 14, 2016 | 9:39 PM | dev | debug15 | 237 | 10 | 51
@@ -84,23 +104,3 @@ Configuration | Date | Time | Branch | Build | Passed | Failed | Skipped
  [OnPremCred](PnPUnitTestResults-20160425-OnPremCred-635972220289586742.md) | Monday, April 25, 2016 | 9:00 PM | dev | debug15 | 276 | 0 | 21
  [OnlineAppOnly](PnPUnitTestResults-20160425-OnlineAppOnly-635971415405484221.md) | Monday, April 25, 2016 | 10:39 PM | dev | debug | 266 | 0 | 39
  [OnlineCred](PnPUnitTestResults-20160424-OnlineCred-635971385666270172.md) | Sunday, April 24, 2016 | 9:49 PM | dev | debug | 298 | 0 | 7
- [OnPremAppOnly](PnPUnitTestResults-20160424-OnPremAppOnly-635971371477057066.md) | Sunday, April 24, 2016 | 9:25 PM | dev | debug15 | 246 | 0 | 51
- [OnPremCred](PnPUnitTestResults-20160424-OnPremCred-635971356187747352.md) | Sunday, April 24, 2016 | 9:00 PM | dev | debug15 | 276 | 0 | 21
- [OnlineAppOnly](PnPUnitTestResults-20160423-OnlineAppOnly-635970525900521412.md) | Saturday, April 23, 2016 | 9:56 PM | dev | debug | 266 | 0 | 39
- [OnPremAppOnly](PnPUnitTestResults-20160423-OnPremAppOnly-635970507732797520.md) | Saturday, April 23, 2016 | 9:26 PM | dev | debug15 | 246 | 0 | 51
- [OnPremCred](PnPUnitTestResults-20160423-OnPremCred-635970492277795900.md) | Saturday, April 23, 2016 | 9:00 PM | dev | debug15 | 276 | 0 | 21
- [OnlineAppOnly](PnPUnitTestResults-20160423-OnlineAppOnly-635969688448926055.md) | Saturday, April 23, 2016 | 10:40 PM | dev | debug | 265 | 1 | 39
- [OnlineCred](PnPUnitTestResults-20160422-OnlineCred-635969657916752638.md) | Friday, April 22, 2016 | 9:49 PM | dev | debug | 298 | 0 | 7
- [OnPremAppOnly](PnPUnitTestResults-20160422-OnPremAppOnly-635969643619720030.md) | Friday, April 22, 2016 | 9:26 PM | dev | debug15 | 246 | 0 | 51
- [OnPremCred](PnPUnitTestResults-20160422-OnPremCred-635969628326164015.md) | Friday, April 22, 2016 | 9:00 PM | dev | debug15 | 276 | 0 | 21
- [OnlineAppOnly](PnPUnitTestResults-20160422-OnlineAppOnly-635968822533021300.md) | Friday, April 22, 2016 | 10:37 PM | dev | debug | 266 | 0 | 39
- [OnlineCred](PnPUnitTestResults-20160421-OnlineCred-635968793292704122.md) | Thursday, April 21, 2016 | 9:48 PM | dev | debug | 298 | 0 | 7
- [OnPremAppOnly](PnPUnitTestResults-20160421-OnPremAppOnly-635968779376466469.md) | Thursday, April 21, 2016 | 9:25 PM | dev | debug15 | 246 | 0 | 51
- [OnPremCred](PnPUnitTestResults-20160421-OnPremCred-635968764318400219.md) | Thursday, April 21, 2016 | 9:00 PM | dev | debug15 | 276 | 0 | 21
- [OnlineAppOnly](PnPUnitTestResults-20160421-OnlineAppOnly-635967960645553913.md) | Thursday, April 21, 2016 | 10:41 PM | dev | debug | 265 | 1 | 39
- [OnlineCred](PnPUnitTestResults-20160420-OnlineCred-635967929520429668.md) | Wednesday, April 20, 2016 | 9:49 PM | dev | debug | 297 | 1 | 7
- [OnPremAppOnly](PnPUnitTestResults-20160420-OnPremAppOnly-635967915626526716.md) | Wednesday, April 20, 2016 | 9:26 PM | dev | debug15 | 246 | 0 | 51
- [OnPremCred](PnPUnitTestResults-20160420-OnPremCred-635967900314683863.md) | Wednesday, April 20, 2016 | 9:00 PM | dev | debug15 | 276 | 0 | 21
- [OnlineAppOnly](PnPUnitTestResults-20160420-OnlineAppOnly-635967094418671260.md) | Wednesday, April 20, 2016 | 10:37 PM | dev | debug | 265 | 1 | 39
- [OnlineCred](PnPUnitTestResults-20160419-OnlineCred-635967065098863549.md) | Tuesday, April 19, 2016 | 9:48 PM | dev | debug | 298 | 0 | 7
- [OnPremAppOnly](PnPUnitTestResults-20160419-OnPremAppOnly-635967051394826192.md) | Tuesday, April 19, 2016 | 9:25 PM | dev | debug15 | 246 | 0 | 51
