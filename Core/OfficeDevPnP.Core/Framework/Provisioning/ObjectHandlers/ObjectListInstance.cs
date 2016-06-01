@@ -559,48 +559,46 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         {
             field.EnsureProperty(f => f.SchemaXmlWithResourceTokens);
             XElement element = XElement.Parse(field.SchemaXmlWithResourceTokens);
-            
-            if (element.Attribute("FieldRef") == null)
+
+            if (element.Attribute("FieldRef") != null && element.Attribute("Type").Value == "Lookup")
+                return field;
+
+            element.SetAttributeValue("AllowDeletion", "TRUE");
+            field.SchemaXml = element.ToString();
+
+            var createdField = listInfo.SiteList.Fields.Add(field);
+
+            createdField.Context.Load(createdField, cf => cf.Id, cf => cf.Title, cf => cf.Hidden, cf => cf.Required);
+            createdField.Context.ExecuteQueryRetry();
+
+            var isDirty = false;
+            if (!string.IsNullOrEmpty(fieldRef.DisplayName) && createdField.Title != fieldRef.DisplayName)
             {
-                element.SetAttributeValue("AllowDeletion", "TRUE");
-                field.SchemaXml = element.ToString();
-
-                var createdField = listInfo.SiteList.Fields.Add(field);
-
-                createdField.Context.Load(createdField, cf => cf.Title, cf => cf.Hidden, cf => cf.Required);
-                createdField.Context.ExecuteQueryRetry();
-
-                var isDirty = false;
-                if (!string.IsNullOrEmpty(fieldRef.DisplayName) && createdField.Title != fieldRef.DisplayName)
+                createdField.Title = fieldRef.DisplayName;
+                isDirty = true;
+            }
+            if (createdField.Hidden != fieldRef.Hidden)
+            {
+                createdField.Hidden = fieldRef.Hidden;
+                isDirty = true;
+            }
+            if (createdField.Required != fieldRef.Required)
+            {
+                createdField.Required = fieldRef.Required;
+                isDirty = true;
+            }
+            if (isDirty)
+            {
+                try
                 {
-                    createdField.Title = fieldRef.DisplayName;
-                    isDirty = true;
+                    createdField.Update();
+                    createdField.Context.ExecuteQueryRetry();
+                    //TODO: Midlertidig fix. Michael tjek årsag til at Hidden feldt ikke kan sættes.
                 }
-                if (createdField.Hidden != fieldRef.Hidden)
-                {
-                    createdField.Hidden = fieldRef.Hidden;
-                    isDirty = true;
-                }
-                if (createdField.Required != fieldRef.Required)
-                {
-                    createdField.Required = fieldRef.Required;
-                    isDirty = true;
-                }
-                if (isDirty)
-                {
-                    try
-                    {
-                        createdField.Update();
-                        createdField.Context.ExecuteQueryRetry();
-                        //TODO: Midlertidig fix. Michael tjek årsag til at Hidden feldt ikke kan sættes.
-                    }
-                    catch { }
-                }
-
-                return createdField;
+                catch { }
             }
 
-            return field;
+            return createdField;
         }
 
         private static void CreateField(XElement fieldElement, ListInfo listInfo, TokenParser parser, string originalFieldXml, ClientRuntimeContext context, PnPMonitoredScope scope)
