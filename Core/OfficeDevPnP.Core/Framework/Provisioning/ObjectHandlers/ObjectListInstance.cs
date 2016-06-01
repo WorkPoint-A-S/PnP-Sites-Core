@@ -1474,11 +1474,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         }
                     }
 
-                    if(siteColumn.DefaultValue != field.DefaultValue)
+                    if (siteColumn.DefaultValue != field.DefaultValue)
                     {
                         list.FieldDefaults.Add(field.InternalName, field.DefaultValue);
                     }
-                    
+
 
                     var fieldElement = XElement.Parse(field.SchemaXml);
                     var sourceId = fieldElement.Attribute("SourceID") != null ? fieldElement.Attribute("SourceID").Value : null;
@@ -1601,18 +1601,18 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         var taxField = (TaxonomyField)field;
                         taxField.EnsureProperties(f => f.TextField, f => f.Id);
 
-                            var noteField = siteList.Fields.GetById(taxField.TextField);
-                            web.Context.Load(noteField, nf => nf.SchemaXml);
-                            web.Context.ExecuteQueryRetry();
-                            var noteSchemaXml = XElement.Parse(noteField.SchemaXml);
-                            noteSchemaXml.Attribute("SourceID").Remove();
-                            list.Fields.Insert(0, new Model.Field { SchemaXml = ParseFieldSchema(noteSchemaXml.ToString(), lists) });
-                        }
-
-                        list.Fields.Add(new Model.Field { SchemaXml = fieldElement.ToString() });
+                        var noteField = siteList.Fields.GetById(taxField.TextField);
+                        web.Context.Load(noteField, nf => nf.SchemaXml);
+                        web.Context.ExecuteQueryRetry();
+                        var noteSchemaXml = XElement.Parse(noteField.SchemaXml);
+                        noteSchemaXml.Attribute("SourceID").Remove();
+                        list.Fields.Insert(0, new Model.Field { SchemaXml = ParseFieldSchema(noteSchemaXml.ToString(), lists) });
                     }
+
+                    list.Fields.Add(new Model.Field { SchemaXml = fieldElement.ToString() });
                 }
             }
+
             return list;
         }
 
