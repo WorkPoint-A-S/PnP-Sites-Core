@@ -1761,6 +1761,66 @@ namespace OfficeDevPnP.Core {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to /* PnP SharePoint - Responsiveness */
+        ///
+        ///var PnPResponsiveApp = PnPResponsiveApp || {};
+        ///
+        ///PnPResponsiveApp.responsivizeSettings = function () {
+        ///	// return if no longer on Settings page
+        ///	if (window.location.href.indexOf(&apos;/settings.aspx&apos;) &lt; 0) return;
+        ///	
+        ///	// find the Settings root element, or wait if not available yet
+        ///	var settingsRoot = $(&quot;.ms-siteSettings-root&quot;);
+        ///	if (!settingsRoot.length) {
+        ///		setTimeout(PnPResponsiveApp.responsivizeSettings, 100);
+        ///        return;
+        ///	}
+        ///	
+        ///	$(&quot;.ms-siteSettings-root . [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string SP_Responsive_UI {
+            get {
+                return ResourceManager.GetString("SP_Responsive_UI", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .mobile-only {
+        ///    display: none;
+        ///}
+        ///
+        ///#sideNavBox, #contentRow, #siteIcon {
+        ///    -webkit-transition: all 400ms ease;
+        ///    -moz-transition: all 400ms ease;
+        ///    -ms-transition: all 400ms ease;
+        ///    -o-transition: all 400ms ease;
+        ///    transition: all 400ms ease;
+        ///}
+        ///
+        ///#contentBox {
+        ///	min-width: auto;
+        ///}
+        ///
+        ////* Make sure dialog windows don&apos;t break */
+        ///.ms-dialog #contentRow {
+        ///    margin-left: 0;
+        ///}
+        ///
+        ///.ms-dialog #contentBox {
+        ///    margin-top: 0;
+        ///}
+        ///
+        ///.ms-dialog #s4-bodyContainer {
+        ///    min-width: 0;
+        ///    f [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string SP_Responsive_UI_CSS {
+            get {
+                return ResourceManager.GetString("SP_Responsive_UI_CSS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Creating term &apos;{0}|{1}&apos; under parent &apos;{2}&apos;..
         /// </summary>
         internal static string TaxonomyExtension_CreateTerm01UnderParent2 {

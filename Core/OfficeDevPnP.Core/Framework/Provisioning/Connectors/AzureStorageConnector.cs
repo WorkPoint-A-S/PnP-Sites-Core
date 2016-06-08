@@ -34,7 +34,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Connectors
         /// </summary>
         /// <param name="connectionString">Azure Storage Key (DefaultEndpointsProtocol=https;AccountName=yyyy;AccountKey=xxxx)</param>
         /// <param name="container">Name of the Azure container to operate against</param>
-        public AzureStorageConnector(string connectionString, string container): base ()
+        public AzureStorageConnector(string connectionString, string container) : base()
         {
             if (String.IsNullOrEmpty(connectionString))
             {
@@ -126,7 +126,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Connectors
             {
                 throw new ArgumentException("container");
             }
- 
+
             string result = null;
             MemoryStream stream = null;
             try
@@ -228,7 +228,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Connectors
                 fileName = string.Concat(containerTuple.Item2, fileName);
 
                 CloudBlobContainer blobContainer = blobClient.GetContainerReference(container);
-                
+
                 // Create the container if it doesn't already exist.
                 blobContainer.CreateIfNotExists();
 
@@ -321,7 +321,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Connectors
                 blobClient = storageAccount.CreateCloudBlobClient();
                 initialized = true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Log.Error(Constants.LOGGING_SOURCE, CoreResources.Provisioning_Connectors_Azure_FailedToInitialize, ex.Message);
                 throw;
@@ -369,6 +369,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Connectors
                 var orgContainer = container;
                 container = orgContainer.Substring(0, firstOccouranceOfSlash);
                 folder = orgContainer.Substring(firstOccouranceOfSlash + 1);
+                if (!folder.Substring(folder.Length - 1, 1).Equals("/", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    folder = folder + "/";
+                }
             }
 
             return Tuple.Create(container, folder);
