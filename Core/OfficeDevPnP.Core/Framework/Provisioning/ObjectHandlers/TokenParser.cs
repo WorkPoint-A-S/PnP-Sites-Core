@@ -63,6 +63,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             _tokens.Add(new CurrentUserIdToken(web));
             _tokens.Add(new CurrentUserLoginNameToken(web));
             _tokens.Add(new CurrentUserFullNameToken(web));
+            _tokens.Add(new AuthenticationRealmToken(web));
 
             // Add lists
             web.Context.Load(web.Lists, ls => ls.Include(l => l.Id, l => l.Title, l => l.RootFolder.ServerRelativeUrl));
@@ -187,9 +188,15 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                     _tokens.Add(token);
                 }
-
-
             }
+
+            // OOTB Roledefs
+            web.EnsureProperty(w => w.RoleDefinitions.Include(r => r.RoleTypeKind));
+            foreach (var roleDef in web.RoleDefinitions.Where(r => r.RoleTypeKind != RoleType.None ))
+            {
+                _tokens.Add(new RoleDefinitionToken(web,roleDef));
+            }
+
             var sortedTokens = from t in _tokens
                                orderby t.GetTokenLength() descending
                                select t;
