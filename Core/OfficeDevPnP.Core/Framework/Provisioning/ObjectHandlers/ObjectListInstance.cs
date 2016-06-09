@@ -1630,8 +1630,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         noteSchemaXml.Attribute("SourceID").Remove();
                         list.Fields.Insert(0, new Model.Field { SchemaXml = ParseFieldSchema(noteSchemaXml.ToString(), lists) });
                     }
-
-                    list.Fields.Add(new Model.Field { SchemaXml = fieldElement.ToString() });
                 }
             }
 
