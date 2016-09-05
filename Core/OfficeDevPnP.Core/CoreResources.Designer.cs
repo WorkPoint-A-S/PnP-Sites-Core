@@ -462,6 +462,15 @@ namespace OfficeDevPnP.Core {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot establish web relative URL from the {0} list root folder URI and the {1} parent web URI..
+        /// </summary>
+        internal static string ListExtensions_GetWebRelativeUrl {
+            get {
+                return ResourceManager.GetString("ListExtensions_GetWebRelativeUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}; EXCEPTION: {{{1}}}.
         /// </summary>
         internal static string LoggingUtility_MessageWithException {
@@ -530,6 +539,15 @@ namespace OfficeDevPnP.Core {
         internal static string PnPMonitoredScopeExtensions_LogPropertyUpdate_Updating_property__0_ {
             get {
                 return ResourceManager.GetString("PnPMonitoredScopeExtensions_LogPropertyUpdate_Updating_property__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The source site from which the template was generated had a base template ID value of {0}, while the current target site has a base template ID value of {1}. Thus, there could be potential issues while applying the template..
+        /// </summary>
+        internal static string Provisioning_Asymmetric_Base_Templates {
+            get {
+                return ResourceManager.GetString("Provisioning_Asymmetric_Base_Templates", resourceCulture);
             }
         }
         
@@ -1328,6 +1346,15 @@ namespace OfficeDevPnP.Core {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The List {0} references site field {1} ({2}) which could not be found in the site. Use of the site field has been aborted..
+        /// </summary>
+        internal static string Provisioning_ObjectHandlers_ListInstances_InvalidFieldReference {
+            get {
+                return ResourceManager.GetString("Provisioning_ObjectHandlers_ListInstances_InvalidFieldReference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to List {0} ({1}, {2}) exists but is of a different type. Skipping list..
         /// </summary>
         internal static string Provisioning_ObjectHandlers_ListInstances_List__0____1____2___exists_but_is_of_a_different_type__Skipping_list_ {
@@ -1426,6 +1453,51 @@ namespace OfficeDevPnP.Core {
             get {
                 return ResourceManager.GetString("Provisioning_ObjectHandlers_LookupFields_Processing_lookup_fields_failed___0_____" +
                         "1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Context web does not have the publishing features enabled, skipping navigation settings.
+        /// </summary>
+        internal static string Provisioning_ObjectHandlers_Navigation_Context_web_is_not_publishing {
+            get {
+                return ResourceManager.GetString("Provisioning_ObjectHandlers_Navigation_Context_web_is_not_publishing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing Current Managed Navigation settings in the current template.
+        /// </summary>
+        internal static string Provisioning_ObjectHandlers_Navigation_missing_current_managed_navigation {
+            get {
+                return ResourceManager.GetString("Provisioning_ObjectHandlers_Navigation_missing_current_managed_navigation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing Current Structural Navigation settings in the current template.
+        /// </summary>
+        internal static string Provisioning_ObjectHandlers_Navigation_missing_current_structural_navigation {
+            get {
+                return ResourceManager.GetString("Provisioning_ObjectHandlers_Navigation_missing_current_structural_navigation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing Global Managed Navigation settings in the current template.
+        /// </summary>
+        internal static string Provisioning_ObjectHandlers_Navigation_missing_global_managed_navigation {
+            get {
+                return ResourceManager.GetString("Provisioning_ObjectHandlers_Navigation_missing_global_managed_navigation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing Global Structural Navigation settings in the current template.
+        /// </summary>
+        internal static string Provisioning_ObjectHandlers_Navigation_missing_global_structural_navigation {
+            get {
+                return ResourceManager.GetString("Provisioning_ObjectHandlers_Navigation_missing_global_structural_navigation", resourceCulture);
             }
         }
         

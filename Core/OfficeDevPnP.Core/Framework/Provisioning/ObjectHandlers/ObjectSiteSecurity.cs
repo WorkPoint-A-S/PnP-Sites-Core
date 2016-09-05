@@ -6,6 +6,7 @@ using OfficeDevPnP.Core.Framework.Provisioning.Model;
 using User = OfficeDevPnP.Core.Framework.Provisioning.Model.User;
 using OfficeDevPnP.Core.Diagnostics;
 using Microsoft.SharePoint.Client.Utilities;
+using OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.TokenDefinitions;
 
 namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 {
@@ -19,11 +20,17 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         {
             using (var scope = new PnPMonitoredScope(this.Name))
             {
+                // Changed by Paolo Pialorsi to embrace the new sub-site attributes for break role inheritance and copy role assignments
                 // if this is a sub site then we're not provisioning security as by default security is inherited from the root site
-                if (web.IsSubSite())
+                if (web.IsSubSite() && !template.Security.BreakRoleInheritance)
                 {
                     scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_SiteSecurity_Context_web_is_subweb__skipping_site_security_provisioning);
                     return parser;
+                }
+
+                if (web.IsSubSite() && template.Security.BreakRoleInheritance)
+                {
+                    web.BreakRoleInheritance(template.Security.CopyRoleAssignments, template.Security.ClearSubscopes);
                 }
 
                 var siteSecurity = template.Security;
@@ -41,15 +48,15 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                 if (!ownerGroup.ServerObjectIsNull.Value)
                 {
-                    AddUserToGroup(web, ownerGroup, siteSecurity.AdditionalOwners, scope);
+                    AddUserToGroup(web, ownerGroup, siteSecurity.AdditionalOwners, scope, parser);
                 }
                 if (!memberGroup.ServerObjectIsNull.Value)
                 {
-                    AddUserToGroup(web, memberGroup, siteSecurity.AdditionalMembers, scope);
+                    AddUserToGroup(web, memberGroup, siteSecurity.AdditionalMembers, scope, parser);
                 }
                 if (!visitorGroup.ServerObjectIsNull.Value)
                 {
-                    AddUserToGroup(web, visitorGroup, siteSecurity.AdditionalVisitors, scope);
+                    AddUserToGroup(web, visitorGroup, siteSecurity.AdditionalVisitors, scope, parser);
                 }
 
                 foreach (var siteGroup in siteSecurity.SiteGroups)
@@ -84,7 +91,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                         }
                         group.Update();
+                        web.Context.Load(group, g => g.Id, g => g.Title);
                         web.Context.ExecuteQueryRetry();
+                        parser.AddToken(new GroupIdToken(web, group.Title, group.Id));
                     }
                     else
                     {
@@ -144,13 +153,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     }
                     if (group != null && siteGroup.Members.Any())
                     {
-                        AddUserToGroup(web, group, siteGroup.Members, scope);
+                        AddUserToGroup(web, group, siteGroup.Members, scope, parser);
                     }
                 }
 
                 foreach (var admin in siteSecurity.AdditionalAdministrators)
                 {
-                    var user = web.EnsureUser(admin.Name);
+                    var parsedAdminName = parser.ParseString(admin.Name);
+                    var user = web.EnsureUser(parsedAdminName);
                     user.IsSiteAdmin = true;
                     user.Update();
                     web.Context.ExecuteQueryRetry();
@@ -243,7 +253,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return parser;
         }
 
-        private static void AddUserToGroup(Web web, Group group, IEnumerable<User> members, PnPMonitoredScope scope)
+        private static void AddUserToGroup(Web web, Group group, IEnumerable<User> members, PnPMonitoredScope scope, TokenParser parser)
         {
             if (members.Any())
             {
@@ -252,8 +262,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 {
                     foreach (var user in members)
                     {
-                        scope.LogDebug("Adding user {0}", user.Name);
-                        var existingUser = web.EnsureUser(user.Name);
+                        var parsedUserName = parser.ParseString(user.Name);
+                        scope.LogDebug("Adding user {0}", parsedUserName);
+                        var existingUser = web.EnsureUser(parsedUserName);
                         group.Users.AddUser(existingUser);
 
                     }
@@ -272,13 +283,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         {
             using (var scope = new PnPMonitoredScope(this.Name))
             {
+                web.EnsureProperties(w => w.HasUniqueRoleAssignments, w => w.Title);
+
+                // Changed by Paolo Pialorsi to embrace the new sub-site attributes for break role inheritance and copy role assignments
                 // if this is a sub site then we're not creating security entities as by default security is inherited from the root site
-                if (web.IsSubSite())
+                if (web.IsSubSite() && !web.HasUniqueRoleAssignments)
                 {
                     return template;
                 }
-
-                web.Context.Load(web, w => w.HasUniqueRoleAssignments, w => w.Title);
 
                 var ownerGroup = web.AssociatedOwnerGroup;
                 var memberGroup = web.AssociatedMemberGroup;

@@ -24,6 +24,27 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Connectors
         #region Constructors
 
         /// <summary>
+        /// OpenXMLConnector constructor. Allows to manage a .PNP OpenXML package through an in memory stream.
+        /// </summary>
+        /// <param name="packageStream"></param>
+        public OpenXMLConnector(Stream packageStream): base()
+        {
+            if (packageStream == null)
+            {
+                throw new ArgumentNullException("package");
+            }
+
+            if (!packageStream.CanRead)
+            {
+                throw new ArgumentException("package");
+            }
+
+            // If the .PNP package exists unpack it into PnP OpenXML package info object
+            MemoryStream ms = packageStream.ToMemoryStream();
+            this.pnpInfo = ms.UnpackTemplate();
+        }
+
+        /// <summary>
         /// OpenXMLConnector constructor. Allows to manage a .PNP OpenXML package file through a supporting persistence connector.
         /// </summary>
         /// <param name="packageFileName">The name of the .PNP package file. If the .PNP extension is missing, it will be added</param>
@@ -113,6 +134,35 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Connectors
         }
 
         /// <summary>
+        /// Get the folders of the default container
+        /// </summary>
+        /// <returns>List of folders</returns>
+        public override List<string> GetFolders()
+        {
+            return GetFolders(GetContainer());
+        }
+
+        /// <summary>
+        /// Get the folders of a specified container
+        /// </summary>
+        /// <param name="container">Name of the container to get the folders from</param>
+        /// <returns>List of folders</returns>
+        public override List<string> GetFolders(string container)
+        {
+            if (String.IsNullOrEmpty(container))
+            {
+                container = "";
+            }
+
+            var result = (from file in this.pnpInfo.Files
+                          where file.Folder.StartsWith(container, StringComparison.InvariantCultureIgnoreCase) 
+                            && !file.Folder.Equals(container, StringComparison.InvariantCultureIgnoreCase)
+                          select file.Folder).ToList();
+
+            return result;
+        }
+
+        /// <summary>
         /// Gets a file as string from the default container
         /// </summary>
         /// <param name="fileName">Name of the file to get</param>
@@ -124,6 +174,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Connectors
 
         public override string GetFilenamePart(string fileName)
         {
+            fileName = fileName.Replace(@"/", @"\");
+
             if (fileName.Contains(@"\"))
             {
                 var parts = fileName.Split(new[] { @"\" }, StringSplitOptions.RemoveEmptyEntries);
