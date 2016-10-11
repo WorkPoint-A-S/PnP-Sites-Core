@@ -755,6 +755,16 @@ Field exists in content type
 > ##### Return value
 > True if exists, false otherwise
 
+#### FieldExistsByNameInContentType(Microsoft.SharePoint.Client.ContentType,System.String)
+Checks if a field exists in a content type by id
+> ##### Parameters
+> **contentType:** The content type to check
+
+> **fieldName:** The name of the field to look for
+
+> ##### Return value
+> True if field exists in content type, otherwise false
+
 #### SetJsLinkCustomizations(Microsoft.SharePoint.Client.Field,System.String)
 Adds jsLink to a field.
 > ##### Parameters
@@ -2033,6 +2043,10 @@ Class that holds deprecated generic list creation and manipulation methods
             
 Class that provides generic list creation and manipulation methods
         
+### Fields
+
+#### UrlDelimiters
+The common URL delimiters
 ### Methods
 
 
@@ -2212,6 +2226,16 @@ Checks if list exists on the particular site based on the list Title property.
 
 > **System.ArgumentNullException:** listTitle is null
 
+
+#### ListExists(Microsoft.SharePoint.Client.Web,System.Uri)
+Checks if list exists on the particular site based on the list's site relative path.
+> ##### Parameters
+> **web:** Site to be processed - can be root web or sub site
+
+> **siteRelativeUrlPath:** Site relative path of the list
+
+> ##### Return value
+> True if the list exists
 
 #### ListExists(Microsoft.SharePoint.Client.Web,System.Guid)
 Checks if list exists on the particular site based on the list id property.
@@ -2409,6 +2433,27 @@ Gets the publishing pages library of the web based on site language
 > The publishing pages library. Returns null if library was not found.
 > ##### Exceptions
 > **System.InvalidOperationException:** Could not load pages library URL name from 'cmscore' resources file.
+
+
+#### GetWebRelativeUrl(Microsoft.SharePoint.Client.List)
+Gets the web relative URL. Allow users to get the web relative URL of a list. This is useful when exporting lists as it can then be used as a parameter to Web.GetListByUrl().
+> ##### Parameters
+> **list:** The list to export the URL of.
+
+> ##### Return value
+> The web relative URL of the list.
+
+#### GetWebRelativeUrl(System.String,System.String)
+Gets the web relative URL.
+> ##### Parameters
+> **listRootFolderServerRelativeUrl:** The list root folder server relative URL.
+
+> **parentWebServerRelativeUrl:** The parent web server relative URL.
+
+> ##### Return value
+> The web relative URL.
+> ##### Exceptions
+> **System.Exception:** Cannot establish web relative URL from the list root folder URI and the parent web URI.
 
 
 #### SetListPermission(Microsoft.SharePoint.Client.List,OfficeDevPnP.Core.Enums.BuiltInIdentity,Microsoft.SharePoint.Client.RoleType)
@@ -3044,6 +3089,25 @@ Sets a web part property
 
 
 #### SetWebPartProperty(Microsoft.SharePoint.Client.Web,System.String,System.Int32,System.Guid,System.String)
+Sets a web part property
+> ##### Parameters
+> **web:** The web to process
+
+> **key:** The key to update
+
+> **value:** The value to set
+
+> **id:** The id of the webpart
+
+> **serverRelativePageUrl:** 
+
+> ##### Exceptions
+> **System.ArgumentException:** Thrown when key or serverRelativePageUrl is a zero-length string or contains only white space
+
+> **System.ArgumentNullException:** Thrown when key or serverRelativePageUrl is null
+
+
+#### SetWebPartProperty(Microsoft.SharePoint.Client.Web,System.String,System.Boolean,System.Guid,System.String)
 Sets a web part property
 > ##### Parameters
 > **web:** The web to process
@@ -4628,6 +4692,14 @@ Class that deals with site (both site collection and web site) creation, status,
 ### Methods
 
 
+#### GetBaseTemplateId(Microsoft.SharePoint.Client.Web)
+Returns the Base Template ID for the current web
+> ##### Parameters
+> **parentWeb:** The parent Web (site) to get the base template from
+
+> ##### Return value
+> The Base Template ID for the current web
+
 #### CreateWeb(Microsoft.SharePoint.Client.Web,OfficeDevPnP.Core.Entities.SiteEntity,System.Boolean,System.Boolean)
 Adds a new child Web (site) to a parent Web.
 > ##### Parameters
@@ -5588,10 +5660,12 @@ Returns a SharePoint on-premises / SharePoint Online Dedicated ClientContext obj
 > ##### Return value
 > ClientContext to be used by CSOM code
 
-#### GetWebLoginClientContext(System.String)
+#### GetWebLoginClientContext(System.String,System.Drawing.Icon)
 Returns a SharePoint on-premises / SharePoint Online ClientContext object. Requires claims based authentication with FedAuth cookie.
 > ##### Parameters
 > **siteUrl:** Site for which the ClientContext object will be instantiated
+
+> **icon:** Optional icon to use for the popup form
 
 > ##### Return value
 > ClientContext to be used by CSOM code
@@ -6223,6 +6297,8 @@ Looks up a localized string similar to Uploading file '{0}' to folder '{1}'..
 Looks up a localized string similar to The argument must be a single file name and cannot contain path characters..
 #### ListExtensions_CreateList0Template12
 Looks up a localized string similar to Creating list '{0}' from template {1}{2}..
+#### ListExtensions_GetWebRelativeUrl
+Looks up a localized string similar to Cannot establish web relative URL from the {0} list root folder URI and the {1} parent web URI..
 #### LoggingUtility_MessageWithException
 Looks up a localized string similar to {0}; EXCEPTION: {{{1}}}.
 #### MailUtility_SendException
@@ -6239,6 +6315,8 @@ Looks up a localized string similar to Code execution scope ended.
 Looks up a localized string similar to Code execution scope started.
 #### PnPMonitoredScopeExtensions_LogPropertyUpdate_Updating_property__0_
 Looks up a localized string similar to Updating property {0}.
+#### Provisioning_Asymmetric_Base_Templates
+Looks up a localized string similar to The source site from which the template was generated had a base template ID value of {0}, while the current target site has a base template ID value of {1}. Thus, there could be potential issues while applying the template..
 #### Provisioning_Connectors_Azure_FailedToInitialize
 Looks up a localized string similar to Could not initialize AzureStorageConnector. Error = {0}.
 #### Provisioning_Connectors_Azure_FileDeleted
@@ -6411,6 +6489,8 @@ Looks up a localized string similar to Field schema has no ID attribute: {0}.
 Looks up a localized string similar to Folder '{0}' already exists in parent folder '{1}'..
 #### Provisioning_ObjectHandlers_ListInstances_ID_for_field_is_not_a_valid_Guid___0_
 Looks up a localized string similar to ID for field is not a valid Guid: {0}.
+#### Provisioning_ObjectHandlers_ListInstances_InvalidFieldReference
+Looks up a localized string similar to The List {0} references site field {1} ({2}) which could not be found in the site. Use of the site field has been aborted..
 #### Provisioning_ObjectHandlers_ListInstances_List__0____1____2___exists_but_is_of_a_different_type__Skipping_list_
 Looks up a localized string similar to List {0} ({1}, {2}) exists but is of a different type. Skipping list..
 #### Provisioning_ObjectHandlers_ListInstances_Updating_field__0_
@@ -6433,6 +6513,16 @@ Looks up a localized string similar to Processing data rows for {0}.
 Looks up a localized string similar to Unable to find lookup list with Id: {0}.
 #### Provisioning_ObjectHandlers_LookupFields_Processing_lookup_fields_failed___0_____1_
 Looks up a localized string similar to Processing lookup fields failed: {0} : {1}.
+#### Provisioning_ObjectHandlers_Navigation_Context_web_is_not_publishing
+Looks up a localized string similar to Context web does not have the publishing features enabled, skipping navigation settings.
+#### Provisioning_ObjectHandlers_Navigation_missing_current_managed_navigation
+Looks up a localized string similar to Missing Current Managed Navigation settings in the current template.
+#### Provisioning_ObjectHandlers_Navigation_missing_current_structural_navigation
+Looks up a localized string similar to Missing Current Structural Navigation settings in the current template.
+#### Provisioning_ObjectHandlers_Navigation_missing_global_managed_navigation
+Looks up a localized string similar to Missing Global Managed Navigation settings in the current template.
+#### Provisioning_ObjectHandlers_Navigation_missing_global_structural_navigation
+Looks up a localized string similar to Missing Global Structural Navigation settings in the current template.
 #### Provisioning_ObjectHandlers_Pages_Creating_new_page__0_
 Looks up a localized string similar to Creating new page {0}.
 #### Provisioning_ObjectHandlers_Pages_Creating_new_page__0__failed___1_____2_
@@ -6721,6 +6811,19 @@ Get the files available in the specified container
 > ##### Return value
 > List of files
 
+#### GetFolders
+Get the folders of the default container
+> ##### Return value
+> List of folders
+
+#### GetFolders(System.String)
+Get the folders of a specified container
+> ##### Parameters
+> **container:** Name of the container to get the folders from
+
+> ##### Return value
+> List of folders
+
 #### GetFile(System.String)
 Gets a file as string from the default container
 > ##### Parameters
@@ -6808,6 +6911,19 @@ Get the files available in the specified container
 
 > ##### Return value
 > List of files
+
+#### GetFolders
+Get the folders of the default container
+> ##### Return value
+> List of folders
+
+#### GetFolders(System.String)
+Get the folders of a specified container
+> ##### Parameters
+> **container:** Name of the container to get the folders from
+
+> ##### Return value
+> List of folders
 
 #### GetFile(System.String)
 Gets a file as string from the default container
@@ -6914,6 +7030,19 @@ Get the files available in the specified container
 > ##### Return value
 > List of files
 
+#### GetFolders
+Get the folders of the default container
+> ##### Return value
+> List of folders
+
+#### GetFolders(System.String)
+Get the folders of a specified container
+> ##### Parameters
+> **container:** Name of the container to get the folders from
+
+> ##### Return value
+> List of folders
+
 #### GetFile(System.String)
 Gets a file as string from the default container
 > ##### Parameters
@@ -6995,6 +7124,12 @@ Connector that stores all the files into a unique .PNP OpenXML package
 
 
 #### Constructor
+OpenXMLConnector constructor. Allows to manage a .PNP OpenXML package through an in memory stream.
+> ##### Parameters
+> **packageStream:** 
+
+
+#### Constructor
 OpenXMLConnector constructor. Allows to manage a .PNP OpenXML package file through a supporting persistence connector.
 > ##### Parameters
 > **packageFileName:** The name of the .PNP package file. If the .PNP extension is missing, it will be added
@@ -7018,6 +7153,19 @@ Get the files available in the specified container
 
 > ##### Return value
 > List of files
+
+#### GetFolders
+Get the folders of the default container
+> ##### Return value
+> List of folders
+
+#### GetFolders(System.String)
+Get the folders of a specified container
+> ##### Parameters
+> **container:** Name of the container to get the folders from
+
+> ##### Return value
+> List of folders
 
 #### GetFile(System.String)
 Gets a file as string from the default container
@@ -7220,6 +7368,19 @@ Get the files available in the specified container
 > ##### Return value
 > List of files
 
+#### GetFolders
+Get the folders of the default container
+> ##### Return value
+> List of folders
+
+#### GetFolders(System.String)
+Get the folders of a specified container
+> ##### Parameters
+> **container:** Name of the container to get the folders from
+
+> ##### Return value
+> List of folders
+
 #### GetFile(System.String)
 Gets a file as string from the default container
 > ##### Parameters
@@ -7314,7 +7475,7 @@ Method to Invoke Custom Provisioning Providers. Ensure the ClientContext is not 
 > **System.ArgumentNullException:** ClientContext is Null>
 
 
-#### ExecuteTokenProviderCallOut(Microsoft.SharePoint.Client.ClientContext,OfficeDevPnP.Core.Framework.Provisioning.Model.Provider,OfficeDevPnP.Core.Framework.Provisioning.Model.ProvisioningTemplate)
+#### ExecuteTokenProviderCallOut(Microsoft.SharePoint.Client.ClientContext,OfficeDevPnP.Core.Framework.Provisioning.Model.ExtensibilityHandler,OfficeDevPnP.Core.Framework.Provisioning.Model.ProvisioningTemplate)
 Method to Invoke Custom Provisioning Token Providers which implement the IProvisioningExtensibilityTokenProvider interface. Ensure the ClientContext is not disposed in the custom provider.
 > ##### Parameters
 > **ctx:** Authenticated ClientContext that is passed to the custom provider.
@@ -7544,6 +7705,8 @@ Specifies the URL of a custom new form to use for list items that have been assi
 Gets or Sets the Content Type ID
 #### 
 Gets or Sets if the Content Type should be the default Content Type in the library
+#### 
+Declares if the Content Type should be Removed from the list or library
 
 ## Core.Framework.Provisioning.Model.ContentTypeBinding
             
@@ -7555,6 +7718,8 @@ Domain Object for Content Type Binding in the Provisioning Template
 Gets or Sets the Content Type ID
 #### Default
 Gets or Sets if the Content Type should be the default Content Type in the library
+#### Remove
+Declares if the Content Type should be Removed from the list or library
 
 ## Core.Framework.Provisioning.Model.Feature
             
@@ -7632,6 +7797,8 @@ Gets or sets whether existing views should be removed
 Gets or sets whether content types are enabled
 #### Hidden
 Gets or sets whether to hide the list
+#### ForceCheckout
+Gets or sets whether to force checkout of documents in the library
 #### EnableAttachments
 Gets or sets whether attachments are enabled. Defaults to true.
 #### EnableFolderCreation
@@ -7646,6 +7813,8 @@ Defines a list of default values for the Fields of the List Instance
 Defines the Security rules for the List Instance
 #### Folders
 Defines a collection of folders (eventually nested) that will be provisioned into the target list/library
+#### UserCustomActions
+Defines a collection of user custom actions that will be provisioned into the target list/library
 
 ## Core.Framework.Provisioning.Model.ProvisioningTemplate
             
@@ -7657,6 +7826,8 @@ Domain Object for the Provisioning Template
 
 #### Providers
 Gets a collection of Providers that are used during the extensibility pipeline
+#### SearchSettings
+The Search Settings for the Provisioning Template
 #### Parameters
 Any parameters that can be used throughout the template
 #### Id
@@ -7667,6 +7838,8 @@ Gets or sets the Version of the Provisioning Template
 Gets or Sets the Site Policy
 #### Security
 Security Groups Members for the Template
+#### Navigation
+The Navigation configurations of the Provisioning Template
 #### SiteFields
 Gets a collection of fields
 #### ContentTypes
@@ -7677,6 +7850,8 @@ Gets or sets a list of features to activate or deactivate
 Gets or sets CustomActions for the template
 #### Files
 Gets a collection of files for the template
+#### Directories
+Gets a collection of directories from which upload files for the template
 #### ComposedLook
 Gets or Sets the composed look of the template
 #### Pages
@@ -7693,8 +7868,10 @@ The Supported UI Languages for the Provisioning Template
 The Audit Settings for the Provisioning Template
 #### Workflows
 Defines the Workflows to provision
-#### SearchSettings
-The Search Settings for the Provisioning Template
+#### SiteSearchSettings
+The Site Collection level Search Settings for the Provisioning Template
+#### WebSearchSettings
+The Web level Search Settings for the Provisioning Template
 #### AddIns
 Defines the SharePoint Add-ins to provision
 #### Publishing
@@ -7707,6 +7884,8 @@ The Image Preview Url of the Provisioning Template
 The Display Name of the Provisioning Template
 #### Description
 The Description of the Provisioning Template
+#### BaseSiteTemplate
+The Base SiteTemplate of the Provisioning Template
 #### 
 References the parent ProvisioningTemplate for the current provisioning artifact
 #### 
@@ -7743,6 +7922,51 @@ Finds an item matching a search predicate
 > ##### Return value
 > The target item matching the find predicate
 
+## Core.Framework.Provisioning.Model.BaseNavigationKind
+            
+Base abstract class for the navigation kinds (global or current)
+        
+### Properties
+
+#### StructuralNavigation
+Defines the Structural Navigation settings of the site
+#### ManagedNavigation
+Defines the Managed Navigation settings of the site
+
+## Core.Framework.Provisioning.Model.CurrentNavigation
+            
+The Current Navigation settings for the Provisioning Template
+        
+### Fields
+
+#### 
+The site inherits the Global Navigation settings from its parent
+#### 
+The site uses Structural Global Navigation
+#### 
+The site uses Structural Local Current Navigation
+#### 
+The site uses Managed Global Navigation
+### Properties
+
+#### NavigationType
+Defines the type of Current Navigation
+
+## Core.Framework.Provisioning.Model.CurrentNavigationType
+            
+Defines the type of Current Navigation
+        
+### Fields
+
+#### Inherit
+The site inherits the Global Navigation settings from its parent
+#### Structural
+The site uses Structural Global Navigation
+#### StructuralLocal
+The site uses Structural Local Current Navigation
+#### Managed
+The site uses Managed Global Navigation
+
 ## Core.Framework.Provisioning.Model.CustomAction
             
 Domain Object for custom actions associated with a SharePoint list, Web site, or subsite.
@@ -7775,10 +7999,42 @@ Gets or sets the value that specifies the ECMAScript to be executed when the cus
 Gets or sets the URL of the image associated with the custom action.
 #### ScriptSrc
 Gets or sets a value that specifies the URI of a file which contains the ECMAScript to execute on the page
+#### Remove
+Gets or sets a value that specifies whether to Remove the CustomAction from the target
 #### 
 A Collection of CustomActions at the Site level
 #### 
 A Collection of CustomActions at the Web level
+
+## Core.Framework.Provisioning.Model.Directory
+            
+Defines a Directory element, to describe a folder in the current repository that will be used to upload files into the target Site
+        
+### Properties
+
+#### Src
+The Src of the Directory
+#### Folder
+The TargetFolder of the Directory
+#### Overwrite
+The Overwrite flag for the files in the Directory
+#### Level
+The Level status for the files in the Directory
+#### Recursive
+Defines whether to recursively browse through all the child folders of the Directory
+#### IncludedExtensions
+The file Extensions to include while uploading the Directory
+#### ExcludedExtensions
+The file Extensions to exclude while uploading the Directory
+#### MetadataMappingFile
+The file path of JSON mapping file with metadata for files to upload in the Directory
+#### Security
+Defines the Security rules for the File
+
+## Core.Framework.Provisioning.Model.DirectoryCollection
+            
+Collection of Directory objects
+        
 
 ## Core.Framework.Provisioning.Model.ExtensibilityHandler
             
@@ -7967,6 +8223,19 @@ Collection of Field objects
 Collection of File objects
         
 
+## Core.Framework.Provisioning.Model.FileLevel
+            
+The File Level for a File element
+        
+### Fields
+
+#### Draft
+The file will be stored as a draft
+#### Checkout
+The file will be stored as a checked out item
+#### Published
+The file will be stored as a published item
+
 ## Core.Framework.Provisioning.Model.Folder
             
 Defines a folder that will be provisioned into the target list/library
@@ -7984,6 +8253,36 @@ Defines the child folders of the current Folder, if any
             
 Collection of Folder objects
         
+
+## Core.Framework.Provisioning.Model.GlobalNavigation
+            
+The Global Navigation settings for the Provisioning Template
+        
+### Fields
+
+#### 
+The site inherits the Global Navigation settings from its parent
+#### 
+The site uses Structural Global Navigation
+#### 
+The site uses Managed Global Navigation
+### Properties
+
+#### NavigationType
+Defines the type of Global Navigation
+
+## Core.Framework.Provisioning.Model.GlobalNavigationType
+            
+Defines the type of Global Navigation
+        
+### Fields
+
+#### Inherit
+The site inherits the Global Navigation settings from its parent
+#### Structural
+The site uses Structural Global Navigation
+#### Managed
+The site uses Managed Global Navigation
 
 ## Core.Framework.Provisioning.Model.IProvisioningTemplateDescendant
             
@@ -8015,6 +8314,56 @@ The path to the .RESX (XML) resource file for the current Localization
 ## Core.Framework.Provisioning.Model.LocalizationCollection
             
 Collection of Localization objects
+        
+
+## Core.Framework.Provisioning.Model.ManagedNavigation
+            
+Defines the Managed Navigation settings of a site
+        
+### Properties
+
+#### TermStoreId
+Defines the TermStore ID for the Managed Navigation
+#### TermSetId
+Defines the TermSet ID for the Managed Navigation
+
+## Core.Framework.Provisioning.Model.Navigation
+            
+The Navigation configurations of the Provisioning Template
+        
+### Properties
+
+#### GlobalNavigation
+The Global Navigation settings for the Provisioning Template
+#### CurrentNavigation
+The Current Navigation settings for the Provisioning Template
+#### 
+A collection of navigation nodes children of the current NavigatioNode
+#### 
+Defines the Title of a Navigation Node
+#### 
+Defines the Url of a Navigation Node
+#### 
+Defines whether the Navigation Node for the Structural Navigation targets an External resource
+
+## Core.Framework.Provisioning.Model.NavigationNode
+            
+Defines a Navigation Node for the Structural Navigation of a site
+        
+### Properties
+
+#### NavigationNodes
+A collection of navigation nodes children of the current NavigatioNode
+#### Title
+Defines the Title of a Navigation Node
+#### Url
+Defines the Url of a Navigation Node
+#### IsExternal
+Defines whether the Navigation Node for the Structural Navigation targets an External resource
+
+## Core.Framework.Provisioning.Model.NavigationNodeCollection
+            
+A collection of NavigationNode objects
         
 
 ## Core.Framework.Provisioning.Model.PageLayout
@@ -8227,6 +8576,17 @@ Defines whether to allow members only to view the membership of the Site Group
 #### RequestToJoinLeaveEmailSetting
 Defines the email address used for membership requests to join or leave will be sent for the Site Group
 
+## Core.Framework.Provisioning.Model.StructuralNavigation
+            
+Defines the Structural Navigation settings of a site
+        
+### Properties
+
+#### RemoveExistingNodes
+Defines whether to remove existing nodes before creating those described through this element
+#### NavigationNodes
+A collection of navigation nodes for the site
+
 ## Core.Framework.Provisioning.Model.SupportedUILanguage
             
 Defines a single Supported UI Language for a site
@@ -8271,6 +8631,31 @@ Collection of User objects
 Collection of View objects
         
 
+## Core.Framework.Provisioning.Model.File
+            
+Defines a File element, to describe a file that will be provisioned into the target Site
+        
+### Fields
+
+#### 
+The file will be stored as a draft
+#### 
+The file will be stored as a checked out item
+#### 
+The file will be stored as a published item
+### Properties
+
+#### Src
+The Src of the File
+#### Folder
+The TargetFolder of the File
+#### Overwrite
+The Overwrite flag for the File
+#### Level
+The Level status for the File
+#### Security
+Defines the Security rules for the File
+
 ## Core.Framework.Provisioning.Model.Provider
             
 Domain Object for Extensiblity Call out
@@ -8298,6 +8683,12 @@ A Collection of users taht are associated to the sites visitors group
 List of additional Groups for the Site
 #### SiteSecurityPermissions
 List of Site Security Permissions for the Site
+#### BreakRoleInheritance
+Declares whether the to break role inheritance for the site, if it is a sub-site
+#### CopyRoleAssignments
+Defines whether to copy role assignments or not while breaking role inheritance
+#### ClearSubscopes
+Defines whether to clear subscopes or not while breaking role inheritance for the site
 
 ## Core.Framework.Provisioning.Model.User
             
@@ -13986,6 +14377,2437 @@ The default namespace prefix of the target XML Namespace
 #### ResourceFile
 
 
+## Core.Framework.Provisioning.Providers.Xml.V201605.WikiPageWebPart
+            
+
+        
+### Properties
+
+#### Contents
+
+#### Title
+
+#### Row
+
+#### Column
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.BaseFieldValue
+            
+
+        
+### Properties
+
+#### FieldName
+
+#### Value
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.WebPartPageWebPart
+            
+
+        
+### Properties
+
+#### Contents
+
+#### Title
+
+#### Zone
+
+#### Order
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.NavigationNode
+            
+
+        
+### Properties
+
+#### NavigationNode1
+
+#### Title
+
+#### Url
+
+#### IsExternal
+
+#### IsVisible
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.Provisioning
+            
+
+        
+### Properties
+
+#### Preferences
+
+#### Localizations
+
+#### Templates
+
+#### Sequence
+
+#### ImportSequence
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.Preferences
+            
+
+        
+### Properties
+
+#### Parameters
+
+#### Version
+
+#### Author
+
+#### Generator
+
+#### 
+
+#### 
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.PreferencesParameter
+            
+
+        
+### Properties
+
+#### Key
+
+#### Required
+
+#### Text
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ImportSequence
+            
+
+        
+### Properties
+
+#### File
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.TermStore
+            
+
+        
+### Fields
+
+#### 
+
+#### 
+
+### Properties
+
+#### TermGroup
+
+#### Scope
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.TermGroup
+            
+
+        
+### Properties
+
+#### TermSets
+
+#### Contributors
+
+#### Managers
+
+#### Description
+
+#### SiteCollectionTermGroup
+
+#### SiteCollectionTermGroupSpecified
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.TermSet
+            
+
+        
+### Properties
+
+#### CustomProperties
+
+#### Terms
+
+#### Language
+
+#### LanguageSpecified
+
+#### IsOpenForTermCreation
+
+#### 
+
+#### 
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.StringDictionaryItem
+            
+
+        
+### Properties
+
+#### Key
+
+#### Value
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.PropertyBagEntry
+            
+
+        
+### Properties
+
+#### Overwrite
+
+#### OverwriteSpecified
+
+#### Indexed
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.Term
+            
+
+        
+### Fields
+
+#### 
+
+#### 
+
+### Properties
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### Terms
+
+#### Labels
+
+#### CustomProperties
+
+#### LocalCustomProperties
+
+#### Language
+
+#### LanguageSpecified
+
+#### CustomSortOrder
+
+#### IsReused
+
+#### IsSourceTerm
+
+#### IsDeprecated
+
+#### SourceTermId
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.TermTerms
+            
+
+        
+### Properties
+
+#### Items
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.TermLabelsLabel
+            
+
+        
+### Properties
+
+#### Language
+
+#### Value
+
+#### IsDefaultForLanguage
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.TermSetItem
+            
+
+        
+### Properties
+
+#### Owner
+
+#### Description
+
+#### IsAvailableForTagging
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.TaxonomyItem
+            
+
+        
+### Properties
+
+#### Name
+
+#### ID
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.User
+            
+
+        
+### Properties
+
+#### Name
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.TermStoreScope
+            
+
+        
+### Fields
+
+#### Default
+
+#### Current
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.Site
+            
+
+        
+### Properties
+
+#### Templates
+
+#### Title
+
+#### SiteTemplate
+
+#### CustomJSUrl
+
+#### QuickLaunchEnabled
+
+#### QuickLaunchEnabledSpecified
+
+#### AlternateCssUrl
+
+#### Language
+
+#### AllowDesigner
+
+#### AllowDesignerSpecified
+
+#### MembersCanShare
+
+#### MembersCanShareSpecified
+
+#### TimeZone
+
+#### UseSamePermissionsAsParentSite
+
+#### UseSamePermissionsAsParentSiteSpecified
+
+#### Url
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.Templates
+            
+
+        
+### Properties
+
+#### ProvisioningTemplateFile
+
+#### ProvisioningTemplateReference
+
+#### ProvisioningTemplate
+
+#### ID
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ProvisioningTemplateFile
+            
+
+        
+### Properties
+
+#### File
+
+#### ID
+
+#### 
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ProvisioningTemplateReference
+            
+
+        
+### Properties
+
+#### ID
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ProvisioningTemplate
+            
+
+        
+### Properties
+
+#### 
+
+#### 
+
+#### 
+
+#### Properties
+
+#### SitePolicy
+
+#### WebSettings
+
+#### RegionalSettings
+
+#### SupportedUILanguages
+
+#### AuditSettings
+
+#### PropertyBagEntries
+
+#### Security
+
+#### Navigation
+
+#### SiteFields
+
+#### ContentTypes
+
+#### Lists
+
+#### Features
+
+#### CustomActions
+
+#### Files
+
+#### Pages
+
+#### TermGroups
+
+#### ComposedLook
+
+#### Workflows
+
+#### SearchSettings
+
+#### Publishing
+
+#### AddIns
+
+#### Providers
+
+#### ID
+
+#### Version
+
+#### VersionSpecified
+
+#### BaseSiteTemplate
+
+#### ImagePreviewUrl
+
+#### DisplayName
+
+#### Description
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.WebSettings
+            
+
+        
+### Properties
+
+#### RequestAccessEmail
+
+#### NoCrawl
+
+#### NoCrawlSpecified
+
+#### WelcomePage
+
+#### Title
+
+#### Description
+
+#### SiteLogo
+
+#### AlternateCSS
+
+#### MasterPageUrl
+
+#### CustomMasterPageUrl
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.RegionalSettings
+            
+
+        
+### Properties
+
+#### AdjustHijriDays
+
+#### AdjustHijriDaysSpecified
+
+#### AlternateCalendarType
+
+#### AlternateCalendarTypeSpecified
+
+#### CalendarType
+
+#### CalendarTypeSpecified
+
+#### Collation
+
+#### CollationSpecified
+
+#### FirstDayOfWeek
+
+#### FirstDayOfWeekSpecified
+
+#### FirstWeekOfYear
+
+#### FirstWeekOfYearSpecified
+
+#### LocaleId
+
+#### LocaleIdSpecified
+
+#### ShowWeeks
+
+#### ShowWeeksSpecified
+
+#### Time24
+
+#### Time24Specified
+
+#### TimeZone
+
+#### WorkDayEndHour
+
+#### WorkDayEndHourSpecified
+
+#### WorkDays
+
+#### WorkDaysSpecified
+
+#### WorkDayStartHour
+
+#### WorkDayStartHourSpecified
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.CalendarType
+            
+
+        
+### Fields
+
+#### None
+
+#### Gregorian
+
+#### Japan
+
+#### Taiwan
+
+#### Korea
+
+#### Hijri
+
+#### Thai
+
+#### Hebrew
+
+#### GregorianMiddleEastFrenchCalendar
+
+#### GregorianArabicCalendar
+
+#### GregorianTransliteratedEnglishCalendar
+
+#### GregorianTransliteratedFrenchCalendar
+
+#### KoreaandJapaneseLunar
+
+#### ChineseLunar
+
+#### SakaEra
+
+#### UmmalQura
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.DayOfWeek
+            
+
+        
+### Fields
+
+#### Sunday
+
+#### Monday
+
+#### Tuesday
+
+#### Wednesday
+
+#### Thursday
+
+#### Friday
+
+#### Saturday
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.WorkHour
+            
+
+        
+### Fields
+
+#### Item1200AM
+
+#### Item100AM
+
+#### Item200AM
+
+#### Item300AM
+
+#### Item400AM
+
+#### Item500AM
+
+#### Item600AM
+
+#### Item700AM
+
+#### Item800AM
+
+#### Item900AM
+
+#### Item1000AM
+
+#### Item1100AM
+
+#### Item1200PM
+
+#### Item100PM
+
+#### Item200PM
+
+#### Item300PM
+
+#### Item400PM
+
+#### Item500PM
+
+#### Item600PM
+
+#### Item700PM
+
+#### Item800PM
+
+#### Item900PM
+
+#### Item1000PM
+
+#### Item1100PM
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.SupportedUILanguagesSupportedUILanguage
+            
+
+        
+### Properties
+
+#### LCID
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.AuditSettings
+            
+
+        
+### Fields
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+### Properties
+
+#### Audit
+
+#### AuditLogTrimmingRetention
+
+#### AuditLogTrimmingRetentionSpecified
+
+#### TrimAuditLog
+
+#### TrimAuditLogSpecified
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.AuditSettingsAudit
+            
+
+        
+### Fields
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+### Properties
+
+#### AuditFlag
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.AuditSettingsAuditAuditFlag
+            
+
+        
+### Fields
+
+#### All
+
+#### CheckIn
+
+#### CheckOut
+
+#### ChildDelete
+
+#### Copy
+
+#### Move
+
+#### None
+
+#### ObjectDelete
+
+#### ProfileChange
+
+#### SchemaChange
+
+#### Search
+
+#### SecurityChange
+
+#### Undelete
+
+#### Update
+
+#### View
+
+#### Workflow
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.Security
+            
+
+        
+### Properties
+
+#### AdditionalAdministrators
+
+#### AdditionalOwners
+
+#### AdditionalMembers
+
+#### AdditionalVisitors
+
+#### SiteGroups
+
+#### Permissions
+
+#### BreakRoleInheritance
+
+#### CopyRoleAssignments
+
+#### ClearSubscopes
+
+#### 
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.SiteGroup
+            
+
+        
+### Properties
+
+#### Members
+
+#### Title
+
+#### Description
+
+#### Owner
+
+#### AllowMembersEditMembership
+
+#### AllowMembersEditMembershipSpecified
+
+#### AllowRequestToJoinLeave
+
+#### AllowRequestToJoinLeaveSpecified
+
+#### AutoAcceptRequestToJoinLeave
+
+#### AutoAcceptRequestToJoinLeaveSpecified
+
+#### OnlyAllowMembersViewMembership
+
+#### OnlyAllowMembersViewMembershipSpecified
+
+#### RequestToJoinLeaveEmailSetting
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.SecurityPermissions
+            
+
+        
+### Properties
+
+#### RoleDefinitions
+
+#### RoleAssignments
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.RoleDefinition
+            
+
+        
+### Fields
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+### Properties
+
+#### Permissions
+
+#### Name
+
+#### Description
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.RoleDefinitionPermission
+            
+
+        
+### Fields
+
+#### EmptyMask
+
+#### ViewListItems
+
+#### AddListItems
+
+#### EditListItems
+
+#### DeleteListItems
+
+#### ApproveItems
+
+#### OpenItems
+
+#### ViewVersions
+
+#### DeleteVersions
+
+#### CancelCheckout
+
+#### ManagePersonalViews
+
+#### ManageLists
+
+#### ViewFormPages
+
+#### AnonymousSearchAccessList
+
+#### Open
+
+#### ViewPages
+
+#### AddAndCustomizePages
+
+#### ApplyThemeAndBorder
+
+#### ApplyStyleSheets
+
+#### ViewUsageData
+
+#### CreateSSCSite
+
+#### ManageSubwebs
+
+#### CreateGroups
+
+#### ManagePermissions
+
+#### BrowseDirectories
+
+#### BrowseUserInfo
+
+#### AddDelPrivateWebParts
+
+#### UpdatePersonalWebParts
+
+#### ManageWeb
+
+#### AnonymousSearchAccessWebLists
+
+#### UseClientIntegration
+
+#### UseRemoteAPIs
+
+#### ManageAlerts
+
+#### CreateAlerts
+
+#### EditMyUserInfo
+
+#### EnumeratePermissions
+
+#### FullMask
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.RoleAssignment
+            
+
+        
+### Properties
+
+#### Principal
+
+#### RoleDefinition
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.Navigation
+            
+
+        
+### Fields
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+### Properties
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### GlobalNavigation
+
+#### CurrentNavigation
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.NavigationGlobalNavigation
+            
+
+        
+### Fields
+
+#### 
+
+#### 
+
+#### 
+
+### Properties
+
+#### StructuralNavigation
+
+#### ManagedNavigation
+
+#### NavigationType
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.StructuralNavigation
+            
+
+        
+### Properties
+
+#### NavigationNode
+
+#### RemoveExistingNodes
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ManagedNavigation
+            
+
+        
+### Properties
+
+#### TermStoreId
+
+#### TermSetId
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.NavigationGlobalNavigationNavigationType
+            
+
+        
+### Fields
+
+#### Inherit
+
+#### Structural
+
+#### Managed
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.NavigationCurrentNavigation
+            
+
+        
+### Fields
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+### Properties
+
+#### StructuralNavigation
+
+#### ManagedNavigation
+
+#### NavigationType
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.NavigationCurrentNavigationNavigationType
+            
+
+        
+### Fields
+
+#### Inherit
+
+#### Structural
+
+#### StructuralLocal
+
+#### Managed
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ProvisioningTemplateSiteFields
+            
+
+        
+### Properties
+
+#### Any
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ContentType
+            
+
+        
+### Properties
+
+#### FieldRefs
+
+#### DocumentTemplate
+
+#### DocumentSetTemplate
+
+#### ID
+
+#### Name
+
+#### Description
+
+#### Group
+
+#### Hidden
+
+#### Sealed
+
+#### ReadOnly
+
+#### Overwrite
+
+#### NewFormUrl
+
+#### EditFormUrl
+
+#### DisplayFormUrl
+
+#### AnyAttr
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ContentTypeFieldRef
+            
+
+        
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.FieldRefFull
+            
+
+        
+### Properties
+
+#### Name
+
+#### Required
+
+#### Hidden
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.FieldRefBase
+            
+
+        
+### Properties
+
+#### ID
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.DocumentSetFieldRef
+            
+
+        
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ListInstanceFieldRef
+            
+
+        
+### Properties
+
+#### DisplayName
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ContentTypeDocumentTemplate
+            
+
+        
+### Properties
+
+#### TargetName
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.DocumentSetTemplate
+            
+
+        
+### Properties
+
+#### AllowedContentTypes
+
+#### DefaultDocuments
+
+#### SharedFields
+
+#### WelcomePageFields
+
+#### WelcomePage
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.DocumentSetTemplateAllowedContentType
+            
+
+        
+### Properties
+
+#### ContentTypeID
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.DocumentSetTemplateDefaultDocument
+            
+
+        
+### Properties
+
+#### Name
+
+#### ContentTypeID
+
+#### FileSourcePath
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ListInstance
+            
+
+        
+### Properties
+
+#### 
+
+#### ContentTypeBindings
+
+#### Views
+
+#### Fields
+
+#### FieldRefs
+
+#### DataRows
+
+#### Folders
+
+#### FieldDefaults
+
+#### Security
+
+#### UserCustomActions
+
+#### Title
+
+#### Description
+
+#### DocumentTemplate
+
+#### OnQuickLaunch
+
+#### TemplateType
+
+#### Url
+
+#### ForceCheckout
+
+#### EnableVersioning
+
+#### EnableMinorVersions
+
+#### EnableModeration
+
+#### MinorVersionLimit
+
+#### MinorVersionLimitSpecified
+
+#### MaxVersionLimit
+
+#### MaxVersionLimitSpecified
+
+#### DraftVersionVisibility
+
+#### DraftVersionVisibilitySpecified
+
+#### RemoveExistingContentTypes
+
+#### TemplateFeatureID
+
+#### ContentTypesEnabled
+
+#### Hidden
+
+#### EnableAttachments
+
+#### EnableFolderCreation
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ContentTypeBinding
+            
+
+        
+### Properties
+
+#### ContentTypeID
+
+#### Default
+
+#### Remove
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ListInstanceViews
+            
+
+        
+### Properties
+
+#### Any
+
+#### RemoveExistingViews
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ListInstanceFields
+            
+
+        
+### Properties
+
+#### Any
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ListInstanceDataRow
+            
+
+        
+### Properties
+
+#### DataValue
+
+#### Security
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.DataValue
+            
+
+        
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.FieldDefault
+            
+
+        
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ObjectSecurity
+            
+
+        
+### Properties
+
+#### BreakRoleInheritance
+
+#### 
+
+#### 
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ObjectSecurityBreakRoleInheritance
+            
+
+        
+### Properties
+
+#### RoleAssignment
+
+#### CopyRoleAssignments
+
+#### ClearSubscopes
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.Folder
+            
+
+        
+### Properties
+
+#### Folder1
+
+#### Security
+
+#### Name
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.CustomAction
+            
+
+        
+### Properties
+
+#### CommandUIExtension
+
+#### Name
+
+#### Description
+
+#### Group
+
+#### Location
+
+#### Title
+
+#### Sequence
+
+#### SequenceSpecified
+
+#### Rights
+
+#### Url
+
+#### Enabled
+
+#### Remove
+
+#### ScriptBlock
+
+#### ImageUrl
+
+#### ScriptSrc
+
+#### RegistrationId
+
+#### RegistrationType
+
+#### RegistrationTypeSpecified
+
+#### 
+
+#### 
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.CustomActionCommandUIExtension
+            
+
+        
+### Properties
+
+#### Any
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.RegistrationType
+            
+
+        
+### Fields
+
+#### None
+
+#### List
+
+#### ContentType
+
+#### ProgId
+
+#### FileType
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.Features
+            
+
+        
+### Properties
+
+#### SiteFeatures
+
+#### WebFeatures
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.Feature
+            
+
+        
+### Properties
+
+#### 
+
+#### 
+
+#### ID
+
+#### Deactivate
+
+#### Description
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.CustomActions
+            
+
+        
+### Properties
+
+#### SiteCustomActions
+
+#### WebCustomActions
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ProvisioningTemplateFiles
+            
+
+        
+### Properties
+
+#### File
+
+#### Directory
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.File
+            
+
+        
+### Fields
+
+#### 
+
+#### 
+
+#### 
+
+### Properties
+
+#### Properties
+
+#### WebParts
+
+#### Security
+
+#### Src
+
+#### Folder
+
+#### Overwrite
+
+#### Level
+
+#### LevelSpecified
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.FileLevel
+            
+
+        
+### Fields
+
+#### Published
+
+#### Draft
+
+#### Checkout
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.Directory
+            
+
+        
+### Properties
+
+#### Security
+
+#### Src
+
+#### Folder
+
+#### Overwrite
+
+#### Level
+
+#### LevelSpecified
+
+#### Recursive
+
+#### IncludedExtensions
+
+#### ExcludedExtensions
+
+#### MetadataMappingFile
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.Page
+            
+
+        
+### Properties
+
+#### WebParts
+
+#### Fields
+
+#### Security
+
+#### Url
+
+#### Overwrite
+
+#### Layout
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.WikiPageLayout
+            
+
+        
+### Fields
+
+#### OneColumn
+
+#### OneColumnSidebar
+
+#### TwoColumns
+
+#### TwoColumnsHeader
+
+#### TwoColumnsHeaderFooter
+
+#### ThreeColumns
+
+#### ThreeColumnsHeader
+
+#### ThreeColumnsHeaderFooter
+
+#### Custom
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ComposedLook
+            
+
+        
+### Properties
+
+#### Name
+
+#### ColorFile
+
+#### FontFile
+
+#### BackgroundFile
+
+#### Version
+
+#### VersionSpecified
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.Workflows
+            
+
+        
+### Fields
+
+#### 
+
+#### 
+
+#### 
+
+### Properties
+
+#### WorkflowDefinitions
+
+#### WorkflowSubscriptions
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.WorkflowsWorkflowDefinition
+            
+
+        
+### Fields
+
+#### 
+
+#### 
+
+#### 
+
+### Properties
+
+#### Properties
+
+#### FormField
+
+#### Id
+
+#### AssociationUrl
+
+#### Description
+
+#### DisplayName
+
+#### DraftVersion
+
+#### InitiationUrl
+
+#### Published
+
+#### PublishedSpecified
+
+#### RequiresAssociationForm
+
+#### RequiresAssociationFormSpecified
+
+#### RequiresInitiationForm
+
+#### RequiresInitiationFormSpecified
+
+#### RestrictToScope
+
+#### RestrictToType
+
+#### RestrictToTypeSpecified
+
+#### XamlPath
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.WorkflowsWorkflowDefinitionRestrictToType
+            
+
+        
+### Fields
+
+#### Universal
+
+#### List
+
+#### Site
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.WorkflowsWorkflowSubscription
+            
+
+        
+### Properties
+
+#### PropertyDefinitions
+
+#### DefinitionId
+
+#### ListId
+
+#### Enabled
+
+#### EventSourceId
+
+#### WorkflowStartEvent
+
+#### ItemAddedEvent
+
+#### ItemUpdatedEvent
+
+#### ManualStartBypassesActivationLimit
+
+#### ManualStartBypassesActivationLimitSpecified
+
+#### Name
+
+#### ParentContentTypeId
+
+#### StatusFieldName
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.ProvisioningTemplateSearchSettings
+            
+
+        
+### Properties
+
+#### SiteSearchSettings
+
+#### WebSearchSettings
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.Publishing
+            
+
+        
+### Fields
+
+#### 
+
+#### 
+
+#### 
+
+### Properties
+
+#### DesignPackage
+
+#### AvailableWebTemplates
+
+#### PageLayouts
+
+#### AutoCheckRequirements
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.PublishingDesignPackage
+            
+
+        
+### Properties
+
+#### DesignPackagePath
+
+#### MajorVersion
+
+#### MajorVersionSpecified
+
+#### MinorVersion
+
+#### MinorVersionSpecified
+
+#### PackageGuid
+
+#### PackageName
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.PublishingWebTemplate
+            
+
+        
+### Properties
+
+#### LanguageCode
+
+#### LanguageCodeSpecified
+
+#### TemplateName
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.PublishingPageLayouts
+            
+
+        
+### Properties
+
+#### PageLayout
+
+#### Default
+
+#### 
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.PublishingPageLayoutsPageLayout
+            
+
+        
+### Properties
+
+#### Path
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.PublishingAutoCheckRequirements
+            
+
+        
+### Fields
+
+#### MakeCompliant
+
+#### SkipIfNotCompliant
+
+#### FailIfNotCompliant
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.AddInsAddin
+            
+
+        
+### Fields
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+### Properties
+
+#### PackagePath
+
+#### Source
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.AddInsAddinSource
+            
+
+        
+### Fields
+
+#### CorporateCatalog
+
+#### DeveloperSite
+
+#### InvalidSource
+
+#### Marketplace
+
+#### ObjectModel
+
+#### RemoteObjectModel
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.Provider
+            
+
+        
+### Properties
+
+#### Configuration
+
+#### Enabled
+
+#### HandlerType
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.SiteCollection
+            
+
+        
+### Properties
+
+#### Templates
+
+#### StorageMaximumLevel
+
+#### StorageWarningLevel
+
+#### UserCodeMaximumLevel
+
+#### UserCodeWarningLevel
+
+#### PrimarySiteCollectionAdmin
+
+#### SecondarySiteCollectionAdmin
+
+#### Title
+
+#### SiteTemplate
+
+#### CustomJSUrl
+
+#### QuickLaunchEnabled
+
+#### QuickLaunchEnabledSpecified
+
+#### AlternateCssUrl
+
+#### Language
+
+#### AllowDesigner
+
+#### AllowDesignerSpecified
+
+#### MembersCanShare
+
+#### MembersCanShareSpecified
+
+#### TimeZone
+
+#### Url
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.Sequence
+            
+
+        
+### Fields
+
+#### 
+
+#### 
+
+### Properties
+
+#### SiteCollection
+
+#### Site
+
+#### TermStore
+
+#### Extensions
+
+#### SequenceType
+
+#### ID
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.SequenceSequenceType
+            
+
+        
+### Fields
+
+#### Synchronous
+
+#### Asynchronous
+
+
+## Core.Framework.Provisioning.Providers.Xml.V201605.LocalizationsLocalization
+            
+
+        
+### Properties
+
+#### LCID
+
+#### Name
+
+#### ResourceFile
+
+
 ## Core.Framework.Provisioning.Providers.Xml.XMLPnPSchemaFormatter
             
 Helper class that abstracts from any specific version of XMLPnPSchemaFormatter
@@ -14017,6 +16839,61 @@ Static method to retrieve a specific XMLPnPSchemaFormatter instance
             
 Provider for xml based configurations
         
+
+## Core.Framework.Provisioning.Providers.ITemplateProviderExtension
+            
+Interface for extending the XMLTemplateProvider while retrieving a template
+        
+### Properties
+
+#### SupportsGetTemplatePreProcessing
+Declares whether the object supports pre-processing during GetTemplate
+#### SupportsGetTemplatePostProcessing
+Declares whether the object supports post-processing during GetTemplate
+#### SupportsSaveTemplatePreProcessing
+Declares whether the object supports pre-processing during SaveTemplate
+#### SupportsSaveTemplatePostProcessing
+Declares whether the object supports post-processing during SaveTemplate
+### Methods
+
+
+#### Initialize(System.Object)
+Initialization method to setup the extension object
+> ##### Parameters
+> **settings:** 
+
+
+#### PreProcessGetTemplate(System.IO.Stream)
+Method invoked before deserializing the template from the source repository
+> ##### Parameters
+> **stream:** The source stream
+
+> ##### Return value
+> The resulting stream, after pre-processing
+
+#### PostProcessGetTemplate(OfficeDevPnP.Core.Framework.Provisioning.Model.ProvisioningTemplate)
+Method invoked after deserializing the template from the source repository
+> ##### Parameters
+> **template:** The just deserialized template
+
+> ##### Return value
+> The resulting template, after post-processing
+
+#### PreProcessSaveTemplate(OfficeDevPnP.Core.Framework.Provisioning.Model.ProvisioningTemplate)
+Method invoked before serializing the template and before it is saved onto the target repository
+> ##### Parameters
+> **template:** The template that is going to be serialized
+
+> ##### Return value
+> The resulting template, after pre-processing
+
+#### PostProcessSaveTemplate(System.IO.Stream)
+Method invoked after serializing the template and before it is saved onto the target repository
+> ##### Parameters
+> **stream:** The source stream
+
+> ##### Return value
+> The resulting stream, after pre-processing
 
 ## Core.Framework.TimerJobs.Enums.AuthenticationType
             
@@ -14687,6 +17564,152 @@ Returns cookie contents as a string
 
 > ##### Return value
 > 
+
+## Core.Utilities.WebParts.Processors.PassThroughProcessor
+            
+Default processor when others are not resolved
+        
+
+## Core.Utilities.WebParts.Processors.XsltWebPartPostProcessor
+            
+Updates view for XsltListViewWebPart using schema definition provided Instead of using default view for XsltListViewWebPart, it tries to resolve view from schema and updates hidden view created by XsltListViewWebPart
+        
+
+## Core.Utilities.WebParts.Schema.WebParts
+            
+
+        
+### Properties
+
+#### WebPart
+
+
+## Core.Utilities.WebParts.Schema.WebPart
+            
+
+        
+### Properties
+
+#### 
+
+#### MetaData
+
+#### Data
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+#### 
+
+
+## Core.Utilities.WebParts.Schema.WebPartMetaData
+            
+
+        
+### Properties
+
+#### Type
+
+#### ImportErrorMessage
+
+#### 
+
+#### 
+
+
+## Core.Utilities.WebParts.Schema.WebPartMetaDataType
+            
+
+        
+### Properties
+
+#### Name
+
+#### Src
+
+
+## Core.Utilities.WebParts.Schema.WebPartData
+            
+
+        
+### Properties
+
+#### Properties
+
+#### GenericWebPartProperties
+
+
+## Core.Utilities.WebParts.Schema.PropertyContainerType
+            
+
+        
+### Properties
+
+#### Property
+
+#### PropertySpecified
+Gets a value indicating whether the Property collection is empty.
+#### Ipersonalizable
+
+#### IpersonalizableSpecified
+Gets a value indicating whether the Ipersonalizable collection is empty.
+#### 
+
+#### 
+Gets a value indicating whether the Property collection is empty.
+### Methods
+
+
+#### Constructor
+Initializes a new instance of the class.
+
+#### Constructor
+Initializes a new instance of the class.
+
+## Core.Utilities.WebParts.Schema.PropertyType
+            
+
+        
+### Properties
+
+#### Value
+Gets or sets the text value.
+#### Name
+
+#### Type
+
+#### Null
+
+#### NullSpecified
+Gets or sets a value indicating whether the Null property is specified.
+
+## Core.Utilities.WebParts.Schema.PropertyContainerTypeIpersonalizable
+            
+
+        
+### Properties
+
+#### Property
+
+#### PropertySpecified
+Gets a value indicating whether the Property collection is empty.
+### Methods
+
+
+#### Constructor
+Initializes a new instance of the class.
+
+## Core.Utilities.WebParts.WebPartPostProcessorFactory
+            
+Creates by parsing web part schema xml
+        
 
 ## Core.Utilities.CAML
             
