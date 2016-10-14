@@ -72,7 +72,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                 }
                                 group = termStore.CreateGroup(parsedGroupName, modelTermGroup.Id);
 
-                                group.Description = modelTermGroup.Description;
+                                group.Description = parser.ParseString(modelTermGroup.Description);
 
 #if !ONPREMISES
 
@@ -130,7 +130,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                 modelTermSet.Language ?? termStore.DefaultLanguage);
                             parser.AddToken(new TermSetIdToken(web, group.Name, modelTermSet.Name, modelTermSet.Id));
                             newTermSet = true;
-                            set.Description = modelTermSet.Description;
+                            set.Description = parser.ParseString(modelTermSet.Description);
                             set.IsOpenForTermCreation = modelTermSet.IsOpenForTermCreation;
                             set.IsAvailableForTagging = modelTermSet.IsAvailableForTagging;
                             foreach (var property in modelTermSet.Properties)
@@ -268,7 +268,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
             if (!string.IsNullOrEmpty(modelTerm.Description))
             {
-                term.SetDescription(modelTerm.Description, modelTerm.Language ?? termStore.DefaultLanguage);
+                term.SetDescription(parser.ParseString(modelTerm.Description), modelTerm.Language ?? termStore.DefaultLanguage);
             }
             if (!string.IsNullOrEmpty(modelTerm.Owner))
             {
