@@ -266,11 +266,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 {
                     foreach (var user in members)
                     {
-                        var parsedUserName = parser.ParseString(user.Name);
-                        scope.LogDebug("Adding user {0}", parsedUserName);
-                        var existingUser = web.EnsureUser(parsedUserName);
-                        group.Users.AddUser(existingUser);
-
+                        if (!user.Name.Contains("#ext#")) // external users not supported
+                        {
+                            var parsedUserName = parser.ParseString(user.Name);
+                            scope.LogDebug("Adding user {0}", parsedUserName);
+                            var existingUser = web.EnsureUser(parsedUserName);
+                            group.Users.AddUser(existingUser);
+                        }
                     }
                     web.Context.ExecuteQueryRetry();
                 }
