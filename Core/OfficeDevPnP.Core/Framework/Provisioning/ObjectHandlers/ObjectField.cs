@@ -203,9 +203,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 web.Context.Load(field, f => f.TypeAsString, f => f.DefaultValue, f => f.InternalName, f => f.Title);
                 web.Context.ExecuteQueryRetry();
 
-                // Add newly created field to token set, this allows to create a field + use it in a formula in the same provisioning template
-                parser.AddToken(new FieldTitleToken(web, field.InternalName, field.Title));
-
                 bool isDirty = false;
 #if !SP2013
                 if (originalFieldXml.ContainsResourceToken())
@@ -236,7 +233,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     var taxField = web.Context.CastTo<TaxonomyField>(field);
                     ValidateTaxonomyFieldDefaultValue(taxField);
                 }
-
             }
             else
             {
@@ -246,8 +242,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 throw new Exception(string.Format("The field was found invalid: {0}", tokenString));
             }
         }
-
-       
 
         private static void ValidateTaxonomyFieldDefaultValue(TaxonomyField field)
         {
@@ -347,8 +341,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 web.Context.Load(web.Lists, ls => ls.Include(l => l.Id, l => l.Title));
                 web.Context.ExecuteQueryRetry();
 
-                var taxTextFieldsToMoveUp = new List<Guid>();
-
                 foreach (var field in existingFields)
                 {
                     if (!BuiltInFieldId.Contains(field.Id))
@@ -382,11 +374,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         // Check if the field is of type TaxonomyField
                         if (field.TypeAsString.StartsWith("TaxonomyField"))
                         {
-                            var taxField = (TaxonomyField)field;
-                            web.Context.Load(taxField, tf => tf.TextField, tf => tf.Id);
-                            web.Context.ExecuteQueryRetry();
-                            taxTextFieldsToMoveUp.Add(taxField.TextField);
-
                             fieldXml = TokenizeTaxonomyField(web, element);
                         }
 
@@ -437,13 +424,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         template.SiteFields.Add(new Field() { SchemaXml = fieldXml });
                     }
                 }
-                // move hidden taxonomy text fields to the top of the list
-                foreach (var textFieldId in taxTextFieldsToMoveUp)
-                {
-                    var field = template.SiteFields.First(f => Guid.Parse(f.SchemaXml.ElementAttributeValue("ID")).Equals(textFieldId));
-                    template.SiteFields.RemoveAll(f => Guid.Parse(f.SchemaXml.ElementAttributeValue("ID")).Equals(textFieldId));
-                    template.SiteFields.Insert(0, field);
-                }
+                
                 // If a base template is specified then use that one to "cleanup" the generated template model
                 if (creationInfo.BaseTemplate != null)
                 {
