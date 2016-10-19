@@ -44,7 +44,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     var newGroup = false;
 
                     TermGroup group = termStore.Groups.FirstOrDefault(
-                        g => g.Id == modelTermGroup.Id || g.Name == modelTermGroup.Name);
+                        g => g.Id == modelTermGroup.Id || g.Name == parser.ParseString(modelTermGroup.Name));
                     if (group == null)
                     {
                         if (modelTermGroup.Name == "Site Collection" ||
@@ -118,7 +118,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         {
                             set =
                                 group.TermSets.FirstOrDefault(
-                                    ts => ts.Id == modelTermSet.Id || ts.Name == modelTermSet.Name);
+                                    ts => ts.Id == modelTermSet.Id || ts.Name == parser.ParseString(modelTermSet.Name));
                         }
                         if (set == null)
                         {
@@ -159,7 +159,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                     var term = terms.FirstOrDefault(t => t.Id == modelTerm.Id);
                                     if (term == null)
                                     {
-                                        term = terms.FirstOrDefault(t => t.Name == modelTerm.Name);
+                                        term = terms.FirstOrDefault(t => t.Name == parser.ParseString(modelTerm.Name));
                                         if (term == null)
                                         {
                                             var returnTuple = CreateTerm<TermSet>(web, modelTerm, set, termStore, parser,
