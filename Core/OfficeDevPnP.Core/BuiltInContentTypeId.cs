@@ -79,6 +79,7 @@ namespace OfficeDevPnP.Core
         public const string ReusableText = "0x01004D5A79BAFA4A4576B79C56FF3D0D662D";
         public const string PageOutputCache = "0x010087D89D279834C94E98E5E1B4A913C67E";
         public const string DeviceChannel = "0x01009AF87C5C1DF34CA38277FEABCB5018F6";
+        public const string DeviceChannelMappings = "0x010100FDA260FD09A244B183A666F2AE2475A6";
         public const string SystemPageLayout = "0x01010007FF3E057FA8AB4AA42FCB67B453FFC1";
         public const string PageLayout = "0x01010007FF3E057FA8AB4AA42FCB67B453FFC100E214EEE741181F4E9F7ACC43278EE811";
         public const string SystemMasterPage = "0x0101000F1C8B9E0EB4BE489F09807B2C53288F";
@@ -157,6 +158,7 @@ namespace OfficeDevPnP.Core
                 s_dict.Add(ReusableText, true);
                 s_dict.Add(PageOutputCache, true);
                 s_dict.Add(DeviceChannel, true);
+                s_dict.Add(DeviceChannelMappings, true);
                 s_dict.Add(SystemPageLayout, true);
                 s_dict.Add(PageLayout, true);
                 s_dict.Add(SystemMasterPage, true);
