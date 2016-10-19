@@ -654,7 +654,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 {
                     foreach (var label in term.Labels)
                     {
-                        if ((label.Language == defaultLanguage && label.Value != term.Name) || label.Language != defaultLanguage)
+                        if (label.Language == defaultLanguage && label.IsDefaultForLanguage) // set model term name to default language label
+                            modelTerm.Name = label.Value;
+                        else if ((label.Language == defaultLanguage && label.Value != modelTerm.Name) || label.Language != defaultLanguage)
                         {
                             var modelLabel = new Model.TermLabel();
                             modelLabel.IsDefaultForLanguage = label.IsDefaultForLanguage;
