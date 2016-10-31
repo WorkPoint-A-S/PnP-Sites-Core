@@ -146,7 +146,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             web.Context.ExecuteQueryRetry();
                         }
 
-                        web.Context.Load(set, s => s.Terms.Include(t => t.Id, t => t.Name));
+                        web.Context.Load(set, s => s.Terms.Include(t => t.Id, t => t.Name, t => t.Labels.Include(l => l.Value, l => l.Language, l => l.IsDefaultForLanguage)));
                         web.Context.ExecuteQueryRetry();
                         var terms = set.Terms;
 
@@ -159,7 +159,15 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                     var term = terms.FirstOrDefault(t => t.Id == modelTerm.Id);
                                     if (term == null)
                                     {
-                                        term = terms.FirstOrDefault(t => t.Name == parser.ParseString(modelTerm.Name));
+                                        web.EnsureProperty(w => w.Language);
+                                        string modelTermName = parser.ParseString(modelTerm.Name);
+                                        if (modelTerm.Language != null && web.Language != modelTerm.Language)
+                                        {
+                                            term = terms.FirstOrDefault(t => t.Labels.Any(l => l.Language == modelTerm.Language && l.IsDefaultForLanguage == true && l.Value == modelTermName));
+                                        }
+                                        else
+                                            term = terms.FirstOrDefault(t => t.Name == modelTermName);
+
                                         if (term == null)
                                         {
                                             var returnTuple = CreateTerm<TermSet>(web, modelTerm, set, termStore, parser,
@@ -649,6 +657,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 modelTerm.IsSourceTerm = term.IsSourceTerm;
                 modelTerm.SourceTermId = (term.SourceTerm != null) ? term.SourceTerm.Id : Guid.Empty;
                 modelTerm.IsDeprecated = term.IsDeprecated;
+                modelTerm.Language = defaultLanguage;
 
                 if (term.Labels.Any())
                 {
