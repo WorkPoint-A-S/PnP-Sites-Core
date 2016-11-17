@@ -384,7 +384,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     existingView = existingViews.FirstOrDefault(v => v.ServerRelativeUrl == urlAttribute.Value);
                 }
                 else
-                    existingView = existingViews.FirstOrDefault(v => v.Title == displayNameElement.Value);
+                    existingView = existingViews.FirstOrDefault(v => v.Title == parser.ParseString(displayNameElement.Value));
 
                 if (existingView != null)
                 {
@@ -407,7 +407,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     web.Context.ExecuteQueryRetry();
                 }
 
-                var viewTitle = displayNameElement.Value;
+                var viewTitle = parser.ParseString(displayNameElement.Value);
 
                 // Type
                 var viewTypeString = viewElement.Attribute("Type") != null ? viewElement.Attribute("Type").Value : "None";
