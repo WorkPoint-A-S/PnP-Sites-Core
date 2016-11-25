@@ -97,22 +97,16 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                             );
                                         web.Context.ExecuteQueryRetry();
 
-                                        var webPartResult = limitedWPManager.ExportWebPart(webPart.Id);
-                                        web.Context.ExecuteQueryRetry();
+                                        var webPartxml = TokenizeWebPartXml(web, web.GetWebPartXml(webPart.Id, welcomePageUrl));
 
-                                        if (webPartResult != null)
+                                        page.WebParts.Add(new Model.WebPart()
                                         {
-                                            var webPartxml = TokenizeWebPartXml(web, webPartResult.Value);
-
-                                            page.WebParts.Add(new Model.WebPart()
-                                            {
-                                                Title = webPart.WebPart.Title,
-                                                Contents = webPartxml,
-                                                Order = (uint)webPart.WebPart.ZoneIndex,
-                                                Row = 1, // By default we will create a onecolumn layout, add the webpart to it, and later replace the wikifield on the page to position the webparts correctly.
-                                                Column = 1 // By default we will create a onecolumn layout, add the webpart to it, and later replace the wikifield on the page to position the webparts correctly.
-                                            });
-                                        }
+                                            Title = webPart.WebPart.Title,
+                                            Contents = webPartxml,
+                                            Order = (uint)webPart.WebPart.ZoneIndex,
+                                            Row = 1, // By default we will create a onecolumn layout, add the webpart to it, and later replace the wikifield on the page to position the webparts correctly.
+                                            Column = 1 // By default we will create a onecolumn layout, add the webpart to it, and later replace the wikifield on the page to position the webparts correctly.
+                                        });
 
                                         pageContents = Regex.Replace(pageContents, serverSideControlId, string.Format("{{webpartid:{0}}}", webPart.WebPart.Title), RegexOptions.IgnoreCase);
                                     }
@@ -221,27 +215,23 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             // Add WebParts to file
             foreach (var webPart in webParts)
             {
-                var webPartxml = GetWebPartXml(file, webPart.Id);
+                var webPartxml = TokenizeWebPartXml(web, web.GetWebPartXml(webPart.Id, welcomePageUrl));
 
-                if (!string.IsNullOrEmpty(webPartxml))
+                Model.WebPart newWp = new Model.WebPart()
                 {
-                    webPartxml = TokenizeWebPartXml(web, webPartxml);
-                    Model.WebPart newWp = new Model.WebPart()
-                    {
-                        Title = webPart.WebPart.Title,
-                        Row = (uint)webPart.WebPart.ZoneIndex,
-                        Order = (uint)webPart.WebPart.ZoneIndex,
-                        Contents = webPartxml
-                    };
-#if !ONPREMISES
-                    // As long as we've no CSOM library that has the ZoneID we can't use the version check as things don't compile...
-                    if (web.Context.HasMinimalServerLibraryVersion(Constants.MINIMUMZONEIDREQUIREDSERVERVERSION))
-                    {
-                        newWp.Zone = webPart.ZoneId;
-                    }
-#endif
-                    homeFile.WebParts.Add(newWp);
+                    Title = webPart.WebPart.Title,
+                    Row = (uint)webPart.WebPart.ZoneIndex,
+                    Order = (uint)webPart.WebPart.ZoneIndex,
+                    Contents = webPartxml
+                };
+#if !SP2016
+                // As long as we've no CSOM library that has the ZoneID we can't use the version check as things don't compile...
+                if (web.Context.HasMinimalServerLibraryVersion(Constants.MINIMUMZONEIDREQUIREDSERVERVERSION))
+                {
+                    newWp.Zone = webPart.ZoneId;
                 }
+#endif
+                homeFile.WebParts.Add(newWp);
             }
             template.Files.Add(homeFile);
 
@@ -264,22 +254,17 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 xml = Regex.Replace(xml, list.Id.ToString(), string.Format("{{listid:{0}}}", list.Title), RegexOptions.IgnoreCase);
             }
+
+            //some webparts already contains the site URL using ~sitecollection token (i.e: CQWP)
+            xml = Regex.Replace(xml, "\"~sitecollection/(.)*\"", "\"{site}\"", RegexOptions.IgnoreCase);
+            xml = Regex.Replace(xml, "'~sitecollection/(.)*'", "'{site}'", RegexOptions.IgnoreCase);
+            xml = Regex.Replace(xml, ">~sitecollection/(.)*<", ">{site}<", RegexOptions.IgnoreCase);
+
             xml = Regex.Replace(xml, web.Id.ToString(), "{siteid}", RegexOptions.IgnoreCase);
             xml = Regex.Replace(xml, "(\"" + web.ServerRelativeUrl + ")(?!&)", "\"{site}", RegexOptions.IgnoreCase);
             xml = Regex.Replace(xml, "'" + web.ServerRelativeUrl, "'{site}", RegexOptions.IgnoreCase);
             xml = Regex.Replace(xml, ">" + web.ServerRelativeUrl, ">{site}", RegexOptions.IgnoreCase);
             return xml;
-        }
-
-        private string GetWebPartXml(File file, Guid webPartId)
-        {
-            LimitedWebPartManager limitedWebPartManager = file.GetLimitedWebPartManager(PersonalizationScope.Shared);
-            file.Context.Load(limitedWebPartManager);
-
-            var webPartResult = limitedWebPartManager.ExportWebPart(webPartId);
-            file.Context.ExecuteQuery();
-
-            return webPartResult != null ? webPartResult.Value : string.Empty;
         }
 
         private ProvisioningTemplate CleanupEntities(ProvisioningTemplate template, ProvisioningTemplate baseTemplate)
@@ -300,11 +285,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         {
             if (!_willExtract.HasValue)
             {
-                _willExtract = true;
+                _willExtract = web.Context.Credentials != null ? true : false;
             }
             return _willExtract.Value;
         }
 
     }
 }
-

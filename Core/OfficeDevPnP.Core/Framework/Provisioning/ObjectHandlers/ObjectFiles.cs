@@ -8,11 +8,7 @@ using OfficeDevPnP.Core.Diagnostics;
 using OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions;
 using System;
 using System.Text.RegularExpressions;
-using Microsoft.SharePoint.Client.WebParts;
-using System.Xml.Linq;
 using System.Net;
-using System.Text;
-using System.Web;
 using System.IO;
 using Newtonsoft.Json;
 using OfficeDevPnP.Core.Utilities;
@@ -24,6 +20,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
     {
         private readonly string[] WriteableReadOnlyFields = new string[] { "publishingpagelayout", "contenttypeid" };
 
+        // See https://support.office.com/en-us/article/Turn-scripting-capabilities-on-or-off-1f2c515f-5d7e-448a-9fd7-835da935584f?ui=en-US&rs=en-US&ad=US
+        public static readonly string[] BlockedExtensionsInNoScript = new string[] { ".asmx", ".ascx", ".aspx", ".htc", ".jar", ".master", ".swf", ".xap", ".xsf" };
+        public static readonly string[] BlockedLibrariesInNoScript = new string[] { "_catalogs/theme", "style library", "_catalogs/lt", "_catalogs/wp" };
+
         public override string Name
         {
             get { return "Files"; }
@@ -33,6 +33,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         {
             using (var scope = new PnPMonitoredScope(this.Name))
             {
+                // Check if this is not a noscript site as we're not allowed to write to the web property bag is that one
+                bool isNoScriptSite = web.IsNoScriptSite();
+
                 var context = web.Context as ClientContext;
 
                 web.EnsureProperties(w => w.ServerRelativeUrl, w => w.Url);
@@ -54,13 +57,18 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         folderName = folderName.Substring(web.ServerRelativeUrl.Length);
                     }
 
-                    var folder = web.EnsureFolderPath(folderName);
+                    if (SkipFile(isNoScriptSite, file.Src, folderName))
+                    {
+                        // add log message
+                        scope.LogWarning(CoreResources.Provisioning_ObjectHandlers_Files_SkipFileUpload, file.Src, folderName);
+                        continue;
+                    }
 
-                    File targetFile = null;
+                    var folder = web.EnsureFolderPath(folderName);
 
                     var checkedOut = false;
 
-                    targetFile = folder.GetFile(template.Connector.GetFilenamePart(file.Src));
+                    var targetFile = folder.GetFile(template.Connector.GetFilenamePart(file.Src));
 
                     if (targetFile != null)
                     {
@@ -98,31 +106,72 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             SetFileProperties(targetFile, transformedProperties, false);
                         }
 
+#if !SP2013
+                        bool webPartsNeedLocalization = false;
+#endif
                         if (file.WebParts != null && file.WebParts.Any())
                         {
                             targetFile.EnsureProperties(f => f.ServerRelativeUrl);
 
-                            var existingWebParts = web.GetWebParts(targetFile.ServerRelativeUrl);
-                            foreach (var webpart in file.WebParts)
+                            var existingWebParts = web.GetWebParts(targetFile.ServerRelativeUrl).ToList();
+                            foreach (var webPart in file.WebParts)
                             {
                                 // check if the webpart is already set on the page
-                                if (existingWebParts.FirstOrDefault(w => w.WebPart.Title == webpart.Title) == null)
+                                if (existingWebParts.FirstOrDefault(w => w.WebPart.Title == parser.ParseString(webPart.Title)) == null)
                                 {
-                                    scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_Files_Adding_webpart___0___to_page, webpart.Title);
+                                    scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_Files_Adding_webpart___0___to_page, webPart.Title);
                                     var wpEntity = new WebPartEntity();
-                                    wpEntity.WebPartTitle = webpart.Title;
-                                    wpEntity.WebPartXml = parser.ParseString(webpart.Contents).Trim(new[] { '\n', ' ' });
-                                    wpEntity.WebPartZone = webpart.Zone;
-                                    wpEntity.WebPartIndex = (int)webpart.Order;
-                                    web.AddWebPartToWebPartPage(targetFile.ServerRelativeUrl, wpEntity);
-                                }
+                                    wpEntity.WebPartTitle = parser.ParseString(webPart.Title);
+                                    wpEntity.WebPartXml = parser.ParseString(webPart.Contents).Trim(new[] { '\n', ' ' });
+                                    wpEntity.WebPartZone = webPart.Zone;
+                                    wpEntity.WebPartIndex = (int)webPart.Order;
+                                    var wpd = web.AddWebPartToWebPartPage(targetFile.ServerRelativeUrl, wpEntity);
+#if !SP2013
+                                    if (webPart.Title.ContainsResourceToken())
+                                    {
+                                        // update data based on where it was added - needed in order to localize wp title
+#if !SP2016
+                                        wpd.EnsureProperties(w => w.ZoneId, w => w.WebPart, w => w.WebPart.Properties);
+                                        webPart.Zone = wpd.ZoneId;
+#else
+                                        wpd.EnsureProperties(w => w.WebPart, w => w.WebPart.Properties);
+#endif
+                                        webPart.Order = (uint)wpd.WebPart.ZoneIndex;
+                                        webPartsNeedLocalization = true;
+                                    }
+#endif
+                                    }
                             }
                         }
 
-                        if (checkedOut)
+#if !SP2013
+                        if (webPartsNeedLocalization)
                         {
-                            targetFile.CheckIn("", CheckinType.MajorCheckIn);
-                            web.Context.ExecuteQueryRetry();
+                            file.LocalizeWebParts(web, parser, targetFile, scope);
+                        }
+#endif
+
+                        switch (file.Level)
+                        {
+                            case Model.FileLevel.Published:
+                                {
+                                    targetFile.PublishFileToLevel(Microsoft.SharePoint.Client.FileLevel.Published);
+                                    break;
+                                }
+                            case Model.FileLevel.Draft:
+                                {
+                                    targetFile.PublishFileToLevel(Microsoft.SharePoint.Client.FileLevel.Draft);
+                                    break;
+                                }
+                            default:
+                                {
+                                    if (checkedOut)
+                                    {
+                                        targetFile.CheckIn("", CheckinType.MajorCheckIn);
+                                        web.Context.ExecuteQueryRetry();
+                                    }
+                                    break;
+                                }
                         }
 
                         // Don't set security when nothing is defined. This otherwise breaks on files set outside of a list
@@ -203,14 +252,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 {
                     var propertyName = kvp.Key;
                     var propertyValue = kvp.Value;
-                    
+
                     var targetField = parentList.Fields.GetByInternalNameOrTitle(propertyName);
                     targetField.EnsureProperties(f => f.TypeAsString, f => f.ReadOnlyField);
 
                     // Changed by PaoloPia because there are fields like PublishingPageLayout
                     // which are marked as read-only, but have to be overwritten while uploading
                     // a publishing page file and which in reality can still be written
-                    if (!targetField.ReadOnlyField || WriteableReadOnlyFields.Contains(propertyName.ToLower())) 
+                    if (!targetField.ReadOnlyField || WriteableReadOnlyFields.Contains(propertyName.ToLower()))
                     {
                         switch (propertyName.ToUpperInvariant())
                         {
@@ -292,6 +341,40 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
         }
 
+        /// <summary>
+        /// Checks if a given file can be uploaded. Sites using NoScript can't handle all uploads
+        /// </summary>
+        /// <param name="isNoScriptSite">Is this a noscript site?</param>
+        /// <param name="fileName">Filename to verify</param>
+        /// <param name="folderName">Folder (library) to verify</param>
+        /// <returns>True is the file will not be uploaded, false otherwise</returns>
+        public static bool SkipFile(bool isNoScriptSite, string fileName, string folderName)
+        {
+            string fileExtionsion = System.IO.Path.GetExtension(fileName).ToLower();
+            if (isNoScriptSite)
+            {
+                if (!String.IsNullOrEmpty(fileExtionsion) && BlockedExtensionsInNoScript.Contains(fileExtionsion))
+                {
+                    // We need to skip this file
+                    return true;
+                }
+
+                if (!String.IsNullOrEmpty(folderName))
+                {
+                    foreach (string blockedlibrary in BlockedLibrariesInNoScript)
+                    {
+                        if (folderName.ToLower().StartsWith(blockedlibrary))
+                        {
+                            // Can't write to this library, let's skip
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
         private string Tokenize(Web web, string xml)
         {
             var lists = web.Lists;
@@ -366,14 +449,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 container = fileName.Substring(0, tempFileName.LastIndexOf(@"\"));
                 fileName = fileName.Substring(tempFileName.LastIndexOf(@"\") + 1);
             }
-            
+
             // add the default provided container (if any)
             if (!String.IsNullOrEmpty(container))
             {
                 if (!String.IsNullOrEmpty(template.Connector.GetContainer()))
                 {
                     container = String.Format(@"{0}\{1}", template.Connector.GetContainer(), container);
-                }               
+                }
             }
             else
             {
@@ -414,7 +497,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return (result);
         }
 
-        internal static List<Model.File> GetDirectoryFiles(this Model.Directory directory, 
+        internal static List<Model.File> GetDirectoryFiles(this Model.Directory directory,
             Dictionary<String, Dictionary<String, String>> metadataProperties = null)
         {
             var result = new List<Model.File>();

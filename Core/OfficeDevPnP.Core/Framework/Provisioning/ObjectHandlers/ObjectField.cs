@@ -118,6 +118,15 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             existingFieldElement.Add(element);
                         }
 
+                        if (string.Equals(templateFieldElement.Attribute("Type").Value, "Calculated", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var fieldRefsElement = existingFieldElement.Descendants("FieldRefs").FirstOrDefault();
+                            if (fieldRefsElement != null)
+                            {
+                                fieldRefsElement.Remove();
+                            }
+                        }
+
                         if (existingFieldElement.Attribute("Version") != null)
                         {
                             existingFieldElement.Attributes("Version").Remove();
@@ -175,6 +184,43 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
         }
 
+        /// <summary>
+        /// Tokenizes calculated fieldXml to use tokens for field references
+        /// </summary>
+        /// <param name="fields">the field collection that the field is contained within</param>
+        /// <param name="field">the field to tokenize</param>
+        /// <param name="fieldXml">the xml to tokenize</param>
+        /// <returns></returns>
+        internal static string TokenizeFieldFormula(Microsoft.SharePoint.Client.FieldCollection fields, FieldCalculated field, string fieldXml)
+        {
+            var schemaElement = XElement.Parse(fieldXml);
+
+            var formulaElement = schemaElement.Descendants("Formula").FirstOrDefault();
+
+            if (formulaElement != null)
+            {
+                field.EnsureProperty(f => f.Formula);
+
+                var formulastring = field.Formula;
+
+                if (formulastring != null)
+                {
+                    var fieldRefs = schemaElement.Descendants("FieldRef");
+                    foreach (var fieldRef in fieldRefs)
+                    {
+                        var fieldInternalName = fieldRef.Attribute("Name").Value;
+                        var referencedField = fields.GetFieldByInternalName(fieldInternalName);
+                        formulastring = formulastring.Replace(string.Format("[{0}]", referencedField.Title), string.Format("[{{fieldtitle:{0}}}]", fieldInternalName));
+                    }
+                    var fieldRefParent = schemaElement.Descendants("FieldRefs");
+                    fieldRefParent.Remove();
+
+                    formulaElement.Value = formulastring;
+                }
+            }
+            return schemaElement.ToString();
+        }
+
         private string ParseFieldSchema(string schemaXml, ListCollection lists)
         {
             foreach (var list in lists)
@@ -202,6 +248,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 var field = web.Fields.AddFieldAsXml(fieldXml, false, AddFieldOptions.AddFieldInternalNameHint);
                 web.Context.Load(field, f => f.TypeAsString, f => f.DefaultValue, f => f.InternalName, f => f.Title);
                 web.Context.ExecuteQueryRetry();
+
+                // Add newly created field to token set, this allows to create a field + use it in a formula in the same provisioning template
+                parser.AddToken(new FieldTitleToken(web, field.InternalName, field.Title));
 
                 bool isDirty = false;
 #if !SP2013
@@ -233,6 +282,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     var taxField = web.Context.CastTo<TaxonomyField>(field);
                     ValidateTaxonomyFieldDefaultValue(taxField);
                 }
+
             }
             else
             {
@@ -242,6 +292,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 throw new Exception(string.Format("The field was found invalid: {0}", tokenString));
             }
         }
+
+       
 
         private static void ValidateTaxonomyFieldDefaultValue(TaxonomyField field)
         {
@@ -341,7 +393,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 web.Context.Load(web.Lists, ls => ls.Include(l => l.Id, l => l.Title));
                 web.Context.ExecuteQueryRetry();
 
-                List<Guid> taxTextFieldsToRemove = new List<Guid>();
+                var taxTextFieldsToMoveUp = new List<Guid>();
+                var calculatedFieldsToMoveDown = new List<Guid>();
 
                 foreach (var field in existingFields)
                 {
@@ -377,9 +430,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         if (field.TypeAsString.StartsWith("TaxonomyField"))
                         {
                             var taxField = (TaxonomyField)field;
-                            web.Context.Load(taxField, tf => tf.TextField);
+                            web.Context.Load(taxField, tf => tf.TextField, tf => tf.Id);
                             web.Context.ExecuteQueryRetry();
-                            taxTextFieldsToRemove.Add(taxField.TextField);
+                            taxTextFieldsToMoveUp.Add(taxField.TextField);
 
                             fieldXml = TokenizeTaxonomyField(web, element);
                         }
@@ -392,7 +445,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         }
                         if (element.Attribute("Type").Value == "Calculated")
                         {
-                            fieldXml = TokenizeFieldFormula(fieldXml);
+                            fieldXml = TokenizeFieldFormula(web.Fields, (FieldCalculated)field, fieldXml);
+                            calculatedFieldsToMoveDown.Add(field.Id);
                         }
                         if (creationInfo.PersistMultiLanguageResources)
                         {
@@ -431,12 +485,21 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         template.SiteFields.Add(new Field() { SchemaXml = fieldXml });
                     }
                 }
-
-                foreach (var textFieldId in taxTextFieldsToRemove)
+                // move hidden taxonomy text fields to the top of the list
+                foreach (var textFieldId in taxTextFieldsToMoveUp)
                 {
+                    var field = template.SiteFields.First(f => Guid.Parse(f.SchemaXml.ElementAttributeValue("ID")).Equals(textFieldId));
                     template.SiteFields.RemoveAll(f => Guid.Parse(f.SchemaXml.ElementAttributeValue("ID")).Equals(textFieldId));
+                    template.SiteFields.Insert(0, field);
                 }
-
+                // move calculated fields to the bottom of the list
+                // this will not be sufficient in the case of a calculated field is referencing another calculated field
+                foreach (var calculatedFieldId in calculatedFieldsToMoveDown)
+                {
+                    var field = template.SiteFields.First(f => Guid.Parse(f.SchemaXml.ElementAttributeValue("ID")).Equals(calculatedFieldId));
+                    template.SiteFields.RemoveAll(f => Guid.Parse(f.SchemaXml.ElementAttributeValue("ID")).Equals(calculatedFieldId));
+                    template.SiteFields.Add(field);
+                }
                 // If a base template is specified then use that one to "cleanup" the generated template model
                 if (creationInfo.BaseTemplate != null)
                 {

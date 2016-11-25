@@ -2,8 +2,8 @@
 using Microsoft.SharePoint.Client.Taxonomy;
 using OfficeDevPnP.Core.Framework.Provisioning.Model;
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -49,22 +49,26 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         /// </summary>
         /// <param name="fieldXml">the xml to tokenize</param>
         /// <returns></returns>
+        [Obsolete("Use ObjectField.TokenizeFieldFormula instead. This method produces incorrect tokenization results.")]
         protected string TokenizeFieldFormula(string fieldXml)
         {
             var schemaElement = XElement.Parse(fieldXml);
             var formula = schemaElement.Descendants("Formula").FirstOrDefault();
-
+            var processedFields = new List<string>();
             if (formula != null)
             {
                 var formulaString = formula.Value;
                 if (formulaString != null)
                 {
-                    // Remove duplicate FieldRefs
-                    var fieldRefs = schemaElement.Descendants("FieldRef").GroupBy(f => f.Attribute("Name").Value, (key, group) => group.FirstOrDefault());
+                    var fieldRefs = schemaElement.Descendants("FieldRef");
                     foreach (var fieldRef in fieldRefs)
                     {
                         var fieldInternalName = fieldRef.Attribute("Name").Value;
-                        formulaString = Regex.Replace(formulaString, $@"\b{fieldInternalName}\b", $"[{{fieldtitle:{fieldInternalName}}}]"); 
+                        if (!processedFields.Contains(fieldInternalName))
+                        {
+                            formulaString = formulaString.Replace(fieldInternalName, $"[{{fieldtitle:{fieldInternalName}}}]");
+                            processedFields.Add(fieldInternalName);
+                        }
                     }
                     var fieldRefParent = schemaElement.Descendants("FieldRefs");
                     fieldRefParent.Remove();
@@ -76,7 +80,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return schemaElement.ToString();
         }
 
-         /// <summary>
+        /// <summary>
         /// Tokenizes the taxonomy field.
         /// </summary>
         /// <param name="web">The web.</param>
@@ -84,7 +88,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         /// <returns></returns>
         protected string TokenizeTaxonomyField(Web web, XElement element)
         {
-             // Replace Taxonomy field references to SspId, TermSetId with tokens
+            // Replace Taxonomy field references to SspId, TermSetId with tokens
             TaxonomySession session = TaxonomySession.GetTaxonomySession(web.Context);
             TermStore store = session.GetDefaultSiteCollectionTermStore();
 
@@ -185,6 +189,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         /// </summary>
         /// <param name="url">the url to tokenize as String</param>
         /// <param name="webUrl">web url of the actual web as String</param>
+        /// <param name="web">Web being used</param>
         /// <returns>tokenized url as String</returns>
         protected string Tokenize(string url, string webUrl, Web web = null)
         {
@@ -232,7 +237,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         result = url.Substring(url.IndexOf("/_catalogs/masterpage", StringComparison.InvariantCultureIgnoreCase)).Replace("/_catalogs/masterpage", "{masterpagecatalog}");
                     }
                 }
-             
+
                 // Try with site URL
                 if(result != null)
                 {
@@ -242,7 +247,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 if (Uri.TryCreate(webUrl, UriKind.Absolute, out uri))
                 {
                     string webUrlPathAndQuery = System.Web.HttpUtility.UrlDecode(uri.PathAndQuery);
-                    if (url.IndexOf(webUrlPathAndQuery, StringComparison.InvariantCultureIgnoreCase) > -1)
+                    // Don't do additional replacement when masterpagecatalog and themecatalog (see #675)
+                    if (url.IndexOf(webUrlPathAndQuery, StringComparison.InvariantCultureIgnoreCase) > -1 && (url.IndexOf("{masterpagecatalog}") == -1 ) && (url.IndexOf("{themecatalog}") ==-1))
                     {
                         result = (uri.PathAndQuery.Equals("/") && url.StartsWith(uri.PathAndQuery))
                             ? "{site}" + url // we need this for DocumentTemplate attribute of pnp:ListInstance also on a root site ("/") without managed path
@@ -258,6 +264,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
 
             return (result);
-        }
+        }        
     }
 }

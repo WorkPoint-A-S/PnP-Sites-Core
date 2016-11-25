@@ -22,6 +22,7 @@ namespace Microsoft.SharePoint.Client.Tests
         private Guid contentOrganizerWebFeatureId = new Guid("7ad5272a-2694-4349-953e-ea5ef290e97c");
         private Guid publishingSiteFeatureId = new Guid("f6924d36-2fa8-4f0b-b16d-06b7250180fa");
         private Guid publishingWebFeatureId = new Guid("94c94ca6-b32f-4da9-a9e3-1f3d343d7ecb");
+        private Guid FakeFeatureId = new Guid("b475e106-9088-4342-ad9a-fa0a1863502d");
 
         private static string sitecollectionNamePrefix = "TestPnPSC_123456789_";
         private string sitecollectionName = "";
@@ -90,7 +91,7 @@ namespace Microsoft.SharePoint.Client.Tests
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Console.WriteLine(ex.ToDetailedString());
                 throw;
             }
         }
@@ -129,7 +130,7 @@ namespace Microsoft.SharePoint.Client.Tests
                     catch (Exception ex)
                     {
                         // eat all exceptions
-                        Console.WriteLine(ex.ToString());
+                        Console.WriteLine(ex.ToDetailedString());
                     }
                 }
             }
@@ -268,6 +269,23 @@ namespace Microsoft.SharePoint.Client.Tests
             clientContext.Site.DeactivateFeature(sp2007WorkflowSiteFeatureId);
             
             Assert.IsFalse(clientContext.Site.IsFeatureActive(sp2007WorkflowSiteFeatureId));
+        }
+
+        [TestMethod()]
+        public void ActivateFakeFeatureTest()
+        {
+            try
+            {
+                // Test
+                clientContext.Site.ActivateFeature(FakeFeatureId);
+                // We should not get here since we expect an error to be thrown
+                Assert.IsFalse(true);
+            }
+            catch
+            {
+                Assert.IsFalse(false);
+            }
+
         }
 
         [TestMethod()]
