@@ -20,8 +20,6 @@ namespace Microsoft.SharePoint.Client.Tests
         private ClientContext clientContext;
         private Guid sp2007WorkflowSiteFeatureId = new Guid("c845ed8d-9ce5-448c-bd3e-ea71350ce45b");
         private Guid contentOrganizerWebFeatureId = new Guid("7ad5272a-2694-4349-953e-ea5ef290e97c");
-        private Guid publishingSiteFeatureId = new Guid("f6924d36-2fa8-4f0b-b16d-06b7250180fa");
-        private Guid publishingWebFeatureId = new Guid("94c94ca6-b32f-4da9-a9e3-1f3d343d7ecb");
         private Guid FakeFeatureId = new Guid("b475e106-9088-4342-ad9a-fa0a1863502d");
 
         private static string sitecollectionNamePrefix = "TestPnPSC_123456789_";
@@ -91,7 +89,7 @@ namespace Microsoft.SharePoint.Client.Tests
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToDetailedString());
+                Console.WriteLine(ex.ToDetailedString(tenant.Context));
                 throw;
             }
         }
@@ -100,39 +98,48 @@ namespace Microsoft.SharePoint.Client.Tests
         {
             var tenant = new Tenant(tenantContext);
 
-            var siteCols = tenant.GetSiteCollections();
-
-            foreach (var siteCol in siteCols)
+            try
             {
-                if (siteCol.Url.Contains(sitecollectionNamePrefix))
-                {
-                    try
-                    {
-                        // Drop the site collection from the recycle bin
-                        if (tenant.CheckIfSiteExists(siteCol.Url, "Recycled"))
-                        {
-                            tenant.DeleteSiteCollectionFromRecycleBin(siteCol.Url, false);
-                        }
-                        else
-                        {
-                            // Eat the exceptions: would occur if the site collection is already in the recycle bin.
-                            try
-                            {
-                                // ensure the site collection in unlocked state before deleting
-                                tenant.SetSiteLockState(siteCol.Url, SiteLockState.Unlock);
-                            }
-                            catch { }
+                var siteCols = tenant.GetSiteCollections();
 
-                            // delete the site collection, do not use the recyle bin
-                            tenant.DeleteSiteCollection(siteCol.Url, false);
-                        }
-                    }
-                    catch (Exception ex)
+                foreach (var siteCol in siteCols)
+                {
+                    if (siteCol.Url.Contains(sitecollectionNamePrefix))
                     {
-                        // eat all exceptions
-                        Console.WriteLine(ex.ToDetailedString());
+                        try
+                        {
+                            // Drop the site collection from the recycle bin
+                            if (tenant.CheckIfSiteExists(siteCol.Url, "Recycled"))
+                            {
+                                tenant.DeleteSiteCollectionFromRecycleBin(siteCol.Url, false);
+                            }
+                            else
+                            {
+                                // Eat the exceptions: would occur if the site collection is already in the recycle bin.
+                                try
+                                {
+                                    // ensure the site collection in unlocked state before deleting
+                                    tenant.SetSiteLockState(siteCol.Url, SiteLockState.Unlock);
+                                }
+                                catch { }
+
+                                // delete the site collection, do not use the recyle bin
+                                tenant.DeleteSiteCollection(siteCol.Url, false);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // eat all exceptions
+                            Console.WriteLine(ex.ToDetailedString(tenant.Context));
+                        }
                     }
                 }
+            }
+            // catch exceptions with the GetSiteCollections call and log them so we can grab the corelation ID
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToDetailedString(tenant.Context));
+                throw;
             }
         }
 
@@ -238,21 +245,21 @@ namespace Microsoft.SharePoint.Client.Tests
                 using (var clientContext = TestCommon.CreateClientContext(siteToCreateUrl))
                 {
                     // Activate
-                    clientContext.Site.ActivateFeature(publishingSiteFeatureId);
-                    Assert.IsTrue(clientContext.Site.IsFeatureActive(publishingSiteFeatureId));
+                    clientContext.Site.ActivateFeature(Constants.FeatureId_Site_Publishing);
+                    Assert.IsTrue(clientContext.Site.IsFeatureActive(Constants.FeatureId_Site_Publishing));
                     Console.WriteLine("2.1 Site publishing feature activated");
 
-                    clientContext.Web.ActivateFeature(publishingWebFeatureId);
-                    Assert.IsTrue(clientContext.Web.IsFeatureActive(publishingWebFeatureId));
+                    clientContext.Web.ActivateFeature(Constants.FeatureId_Web_Publishing);
+                    Assert.IsTrue(clientContext.Web.IsFeatureActive(Constants.FeatureId_Web_Publishing));
                     Console.WriteLine("2.2 Web publishing feature activated");
 
                     // Finally deactivate again
-                    clientContext.Web.DeactivateFeature(publishingWebFeatureId);
-                    Assert.IsFalse(clientContext.Web.IsFeatureActive(publishingWebFeatureId));
+                    clientContext.Web.DeactivateFeature(Constants.FeatureId_Web_Publishing);
+                    Assert.IsFalse(clientContext.Web.IsFeatureActive(Constants.FeatureId_Web_Publishing));
                     Console.WriteLine("2.3 Web publishing feature deactivated");
 
-                    clientContext.Site.DeactivateFeature(publishingSiteFeatureId);
-                    Assert.IsFalse(clientContext.Site.IsFeatureActive(publishingSiteFeatureId));
+                    clientContext.Site.DeactivateFeature(Constants.FeatureId_Site_Publishing);
+                    Assert.IsFalse(clientContext.Site.IsFeatureActive(Constants.FeatureId_Site_Publishing));
                     Console.WriteLine("2.4 Site publishing feature deactivated");
                 }
             }
