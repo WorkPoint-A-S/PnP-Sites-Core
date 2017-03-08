@@ -94,6 +94,12 @@ namespace OfficeDevPnP.Core
         public const string ErrorPage = "0x010100C568DB52D9D0A14D9B2FDCC96666E9F2007948130EC3DB064584E219954237AF3900796F542FC5E446758C697981E370458C";
         public const string RedirectPage = "0x010100C568DB52D9D0A14D9B2FDCC96666E9F2007948130EC3DB064584E219954237AF3900FD0E870BA06948879DBD5F9813CD8799";
 
+        /// <summary>
+        /// Contains the content identifier (ID) for content types used in the modern page infrastructure
+        /// </summary>
+        public const string ModernArticlePage = "0x0101009D1CB255DA76424F860D91F20E6C4118";
+
+
         private static Dictionary<string, bool> s_dict = (Dictionary<string, bool>) null;
 
         public static bool Contains(string id)
@@ -172,6 +178,7 @@ namespace OfficeDevPnP.Core
                 s_dict.Add(WelcomePage, true);
                 s_dict.Add(ErrorPage, true);
                 s_dict.Add(RedirectPage, true);
+                s_dict.Add(ModernArticlePage, true);
             }
             bool flag = false;
             s_dict.TryGetValue(id, out flag);

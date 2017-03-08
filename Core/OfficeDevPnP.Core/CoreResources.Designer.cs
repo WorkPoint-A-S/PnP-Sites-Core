@@ -507,6 +507,15 @@ namespace OfficeDevPnP.Core {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Graph call returned the following error: {0}..
+        /// </summary>
+        internal static string GraphExtensions_ErrorOccured {
+            get {
+                return ResourceManager.GetString("GraphExtensions_ErrorOccured", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The group logo file does not exist..
         /// </summary>
         internal static string GraphExtensions_GroupLogoFileDoesNotExist {
@@ -548,6 +557,15 @@ namespace OfficeDevPnP.Core {
         internal static string ListExtensions_GetWebRelativeUrl {
             get {
                 return ResourceManager.GetString("ListExtensions_GetWebRelativeUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value should be in the format of &lt;id&gt;;#&lt;value&gt; (Example 1: 1;#Foo Bar   Example 2: 1;#Foo Bar;#2;#Bar Foo).
+        /// </summary>
+        internal static string ListExtensions_IncorrectValueFormat {
+            get {
+                return ResourceManager.GetString("ListExtensions_IncorrectValueFormat", resourceCulture);
             }
         }
         
@@ -1154,6 +1172,15 @@ namespace OfficeDevPnP.Core {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Existing content type with Id {0} and name {1} will not be updated because it&apos;s marked as sealed and the template is not changing the sealed value..
+        /// </summary>
+        internal static string Provisioning_ObjectHandlers_ContentTypes_Updating_existing_Content_Type_Sealed {
+            get {
+                return ResourceManager.GetString("Provisioning_ObjectHandlers_ContentTypes_Updating_existing_Content_Type_Sealed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adding custom action &apos;{0}&apos; to scope Site.
         /// </summary>
         internal static string Provisioning_ObjectHandlers_CustomActions_Adding_custom_action___0___to_scope_Site {
@@ -1490,6 +1517,15 @@ namespace OfficeDevPnP.Core {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Updating list {0} with FieldRef {1}.
+        /// </summary>
+        internal static string Provisioning_ObjectHandlers_ListInstances_FieldRef_Updating_list__0_ {
+            get {
+                return ResourceManager.GetString("Provisioning_ObjectHandlers_ListInstances_FieldRef_Updating_list__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Folder &apos;{0}&apos; already exists in parent folder &apos;{1}&apos;..
         /// </summary>
         internal static string Provisioning_ObjectHandlers_ListInstances_FolderAlreadyExists {
@@ -1822,7 +1858,7 @@ namespace OfficeDevPnP.Core {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skipping label {0}, label is to set to default for language {1} while the default termstore language is also {1}.
+        ///   Looks up a localized string similar to Skipping label {0}, label is to set to default for language {1} while the default termstore language is also {1} or language {1} is not defined for the termstore.
         /// </summary>
         internal static string Provisioning_ObjectHandlers_TermGroups_Skipping_label__0___label_is_to_set_to_default_for_language__1__while_the_default_termstore_language_is_also__1_ {
             get {
@@ -2076,22 +2112,27 @@ namespace OfficeDevPnP.Core {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to /* PnP SharePoint - Responsiveness */
+        ///   Looks up a localized string similar to /**
+        /// * PnP SharePoint - Responsiveness
+        /// * @see {@link https://github.com/SharePoint/PnP-Guidance/blob/master/articles/Embedding-JavaScript-into-SharePoint.md|PnP Guidance}
+        /// * @see {@link http://usejsdoc.org/|JSDoc}
+        /// */
         ///
-        ///var PnPResponsiveApp = PnPResponsiveApp || {};
+        ////*
+        /// * PnPResponsiveApp
+        /// * @namespace
+        /// */
+        ///if (window.hasOwnProperty(&apos;Type&apos;)) {
+        ///    Type.registerNamespace(&apos;PnPResponsiveApp&apos;);
+        ///} else {
+        ///    window.PnPResponsiveApp = window.PnPResponsiveApp || {};
+        ///}
         ///
-        ///PnPResponsiveApp.responsivizeSettings = function () {
-        ///    // return if no longer on Settings page
-        ///    if (window.location.href.indexOf(&apos;/settings.aspx&apos;) &lt; 0) return;
-        ///
-        ///    // find the Settings root element, or wait if not available yet
-        ///    var settingsRoot = $(&quot;.ms-siteSettings-root&quot;);
-        ///    if (!settingsRoot.length) {
-        ///        setTimeout(PnPResponsiveApp.responsivizeSettings, 100);
-        ///        return;
-        ///    }
-        ///
-        ///    $ [rest of string was truncated]&quot;;.
+        ////**
+        /// * PnP Responsive
+        /// * @class
+        /// */
+        ///PnPResponsiveApp.Main = (function ()  [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string SP_Responsive_UI {
             get {
@@ -2113,7 +2154,7 @@ namespace OfficeDevPnP.Core {
         ///}
         ///
         ///#contentBox {
-        ///	min-width: auto;
+        ///    min-width: auto;
         ///}
         ///
         ////* Make sure dialog windows don&apos;t break */
@@ -2127,7 +2168,7 @@ namespace OfficeDevPnP.Core {
         ///
         ///.ms-dialog #s4-bodyContainer {
         ///    min-width: 0;
-        ///    f [rest of string was truncated]&quot;;.
+        ///   [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string SP_Responsive_UI_CSS {
             get {
