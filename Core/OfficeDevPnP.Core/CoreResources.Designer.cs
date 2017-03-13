@@ -233,6 +233,15 @@ namespace OfficeDevPnP.Core {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The server version could not be detected. Note that the check does assume the process at least has read access to SharePoint. Error: {0}..
+        /// </summary>
+        internal static string ClientContextExtensions_HasMinimalServerLibraryVersion_Error {
+            get {
+                return ResourceManager.GetString("ClientContextExtensions_HasMinimalServerLibraryVersion_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The passed argument is a zero-length string or contains only whitespace..
         /// </summary>
         internal static string Exception_Message_EmptyString_Arg {
@@ -1714,6 +1723,15 @@ namespace OfficeDevPnP.Core {
         internal static string Provisioning_ObjectHandlers_Navigation_missing_global_structural_navigation {
             get {
                 return ResourceManager.GetString("Provisioning_ObjectHandlers_Navigation_missing_global_structural_navigation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skip applying of navigation settings on NoScript sites..
+        /// </summary>
+        internal static string Provisioning_ObjectHandlers_Navigation_SkipProvisioning {
+            get {
+                return ResourceManager.GetString("Provisioning_ObjectHandlers_Navigation_SkipProvisioning", resourceCulture);
             }
         }
         
