@@ -103,7 +103,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
             _fieldRefs = new FieldRefCollection(this.ParentTemplate);
         }
 
-        public ContentType(string id, string name, string description, string group, bool contenttypeSealed, bool hidden, bool readyonly, string documentTemplate, bool overwrite, IEnumerable<FieldRef> fieldRefs):
+        public ContentType(string id, string name, string description, string group, bool contenttypeSealed, bool hidden, bool readyonly, string documentTemplate, bool overwrite, IEnumerable<FieldRef> fieldRefs) :
             this()
         {
             this.Id = id;
@@ -173,3 +173,4 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         #endregion
     }
 }
+

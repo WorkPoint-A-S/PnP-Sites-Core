@@ -969,7 +969,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
             // Translate Providers, if any
 #pragma warning disable 618
             if ((template.Providers != null && template.Providers.Count > 0) || (template.ExtensibilityHandlers != null && template.ExtensibilityHandlers.Count > 0))
-             {
+            {
                 var extensibilityHandlers = template.ExtensibilityHandlers.Union(template.Providers);
                 result.Providers =
                     (from provider in extensibilityHandlers
@@ -2172,4 +2172,3 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml
         }
     }
 }
-

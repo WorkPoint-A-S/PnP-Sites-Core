@@ -67,8 +67,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             {
                                 try
                                 {
-                                    site.ActivateFeature(feature.Id);
-                                }
+                                site.ActivateFeature(feature.Id);
+                            }
                                 catch (ServerException ex)
                                 {
                                     scope.LogError("Error activating feature {0}: {1}", feature.Id, ex.Message);                                       
@@ -78,13 +78,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             {
                                 try
                                 {
-                                    web.ActivateFeature(feature.Id);
-                                }
+                                web.ActivateFeature(feature.Id);
+                            }
                                 catch (ServerException ex)
                                 {
                                     scope.LogError("Error activating feature {0}: {1}", feature.Id, ex.Message);
                                 }
-                            }
+                        }
                         }
 
                     }
@@ -97,8 +97,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             {
                                 try
                                 {
-                                    site.DeactivateFeature(feature.Id);
-                                }
+                                site.DeactivateFeature(feature.Id);
+                            }
                                 catch (ServerException ex)
                                 {
                                     scope.LogError("Error deactivating feature {0}: {1}", feature.Id, ex.Message);
@@ -108,8 +108,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             {
                                 try
                                 {
-                                    web.DeactivateFeature(feature.Id);
-                                }
+                                web.DeactivateFeature(feature.Id);
+                            }
                                 catch (ServerException ex)
                                 {
                                     scope.LogError("Error deactivating feature {0}: {1}", feature.Id, ex.Message);
