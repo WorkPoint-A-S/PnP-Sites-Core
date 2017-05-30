@@ -591,7 +591,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             // find the field in the list
             var listField = siteList.Fields.GetById(fieldId);
 
-            siteList.Context.Load(listField, f => f.Id, f => f.Title, f => f.Hidden, f => f.Required);
+            siteList.Context.Load(listField, f => f.Id, f => f.Title, f => f.Hidden, f => f.Required, f => f.StaticName);
             siteList.Context.ExecuteQueryRetry();
 
             var isDirty = false;
@@ -630,6 +630,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 }
             }
 
+            if(fieldRef.Name != listField.StaticName)
+            {
+                listField.StaticName = fieldRef.Name;
+                isDirty = true;
+            }
+
             if (fieldRef.Required != listField.Required)
             {
                 listField.Required = fieldRef.Required;
@@ -651,6 +657,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             XElement element = XElement.Parse(field.SchemaXmlWithResourceTokens);
 
             element.SetAttributeValue("AllowDeletion", "TRUE");
+            element.SetAttributeValue("StaticName", fieldRef.Name);
 
             var calculatedField = field as FieldCalculated;
             if (calculatedField != null)
@@ -660,7 +667,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     element.Element("Formula").Value = calculatedField.Formula;
                 }
             }
-
+            
             field.SchemaXml = element.ToString();
 
             //Field has column Validation
