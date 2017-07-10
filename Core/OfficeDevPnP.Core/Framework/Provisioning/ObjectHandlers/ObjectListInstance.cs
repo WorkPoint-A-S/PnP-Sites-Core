@@ -1450,7 +1450,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 foreach (var ct in contentTypesToRemove)
                 {
                     var shouldDelete = true;
-                    shouldDelete &= (createdList.BaseTemplate != (int)ListTemplateType.DocumentLibrary || !ct.StringId.StartsWith(BuiltInContentTypeId.Folder + "00"));
+                    shouldDelete &= ((createdList.BaseTemplate != (int)ListTemplateType.DocumentLibrary
+                        && createdList.BaseTemplate != 851)
+                        || !ct.StringId.StartsWith(BuiltInContentTypeId.Folder + "00"));
 
                     if (shouldDelete)
                     {
@@ -2006,7 +2008,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         {
             foreach (var list in lists)
             {
-                schemaXml = Regex.Replace(schemaXml, list.Id.ToString(), $"{{listid:{list.Title}}}", RegexOptions.IgnoreCase);
+                schemaXml = Regex.Replace(schemaXml, list.Id.ToString(), $"{{listid:{System.Security.SecurityElement.Escape(list.Title)}}}", RegexOptions.IgnoreCase);
             }
             schemaXml = Regex.Replace(schemaXml, web.Id.ToString("B"), "{{siteid}}", RegexOptions.IgnoreCase);
             schemaXml = Regex.Replace(schemaXml, web.Id.ToString("D"), "{siteid}", RegexOptions.IgnoreCase);
