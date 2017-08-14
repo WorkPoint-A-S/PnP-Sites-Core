@@ -355,7 +355,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         /// <returns>Returns parsed string</returns>
         public string ParseString(string input, params string[] tokensToSkip)
         {
-            if (string.IsNullOrEmpty(input) || input.IndexOfAny(new []{'{','~'}) == -1) return input;
+            var origInput = input;
+            if (string.IsNullOrEmpty(input) || input.IndexOfAny(new[] { '{', '~' }) == -1) return input;
 
             var tokensToSkipList = tokensToSkip?.ToList() ?? new List<string>();
 
@@ -367,6 +368,25 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     if (regex.IsMatch(input))
                     {
                         input = regex.Replace(input, ParseString(token.GetReplaceValue(), tokensToSkipList.Concat(new[] { filteredToken }).ToArray()));
+                    }
+                }
+            }
+
+            while (origInput != input)
+            {
+                foreach (var token in _tokens)
+                {
+                    origInput = input;
+                    
+                    var filteredTokens = token.GetTokens().Except(tokensToSkipList, StringComparer.InvariantCultureIgnoreCase);
+                       
+                    foreach (var filteredToken in filteredTokens)
+                    {
+                        var regex = token.GetRegexForToken(filteredToken);
+                        if (regex.IsMatch(input))
+                        {
+                            input = regex.Replace(input, ParseString(token.GetReplaceValue(), tokensToSkipList.Concat(new[] { filteredToken }).ToArray()));
+                        }
                     }
                 }
             }
