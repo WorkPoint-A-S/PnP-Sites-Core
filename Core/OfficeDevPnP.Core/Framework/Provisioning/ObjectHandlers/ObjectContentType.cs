@@ -31,7 +31,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 // Check if this is not a noscript site as we're not allowed to update some properties
                 bool isNoScriptSite = web.IsNoScriptSite();
 
-                web.Context.Load(web.ContentTypes, ct => ct.IncludeWithDefaultProperties(c => c.StringId, c => c.FieldLinks,
+                web.Context.Load(web.ContentTypes, ct => ct.IncludeWithDefaultProperties(c => c.StringId, c => c.ReadOnly, c => c.FieldLinks,
                                                                                          c => c.FieldLinks.Include(fl => fl.Id, fl => fl.Required, fl => fl.Hidden)));
                 web.Context.Load(web.Fields, fld => fld.IncludeWithDefaultProperties(f => f.Id));
 
@@ -54,8 +54,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         currentCtIndex++;
                         WriteMessage($"Content Type|{ct.Name}|{currentCtIndex}|{template.ContentTypes.Count}", ProvisioningMessageType.Progress);
                         var existingCT = existingCTs.FirstOrDefault(c => c.StringId.Equals(ct.Id, StringComparison.OrdinalIgnoreCase));
+                        var existingCTByName = existingCTs.FirstOrDefault(c => c.Name.Equals(parser.ParseString(ct.Name)));
+
                         if (existingCT == null)
                         {
+                            if (existingCTByName != null)
+                            {
+                                continue;
+                            }
                             scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_ContentTypes_Creating_new_Content_Type___0_____1_, ct.Id, ct.Name);
                             var newCT = CreateContentType(web, ct, parser, template.Connector ?? null, scope, existingCTs, existingFields, isNoScriptSite);
                             if (newCT != null)
@@ -80,7 +86,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             else
                             {
                                 // We can't update a sealed content type unless we change sealed to false
-                                if (!existingCT.Sealed || !ct.Sealed)
+                                if (!existingCT.Sealed || !ct.Sealed || !existingCT.ReadOnly )
                                 {
                                     scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_ContentTypes_Updating_existing_Content_Type___0_____1_, ct.Id, ct.Name);
                                     UpdateContentType(web, existingCT, ct, parser, scope);
