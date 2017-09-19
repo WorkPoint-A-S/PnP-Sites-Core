@@ -34,6 +34,10 @@ namespace OfficeDevPnP.Core.Tests.Framework.ObjectHandlers
                 var themesCatalog = ctx.Web.GetCatalog((int)ListTemplateType.ThemeCatalog);
                 ctx.Load(themesCatalog, t => t.RootFolder.ServerRelativeUrl);
 
+                var expectedRoleDefinitionId = 1073741826;
+                var roleDefinition = ctx.Web.RoleDefinitions.GetById(expectedRoleDefinitionId);
+                ctx.Load(roleDefinition);
+
                 ctx.ExecuteQueryRetry();
 
                 var currentUser = ctx.Web.EnsureProperty(w => w.CurrentUser);
@@ -70,6 +74,7 @@ namespace OfficeDevPnP.Core.Tests.Framework.ObjectHandlers
                 var associatedVisitorGroupId = parser.ParseString("{groupid:associatedvisitorgroup}");
                 var groupId = parser.ParseString($"{{groupid:{ownerGroupName}}}");
                 var siteOwner = parser.ParseString("{siteowner}");
+                var roleDefinitionId = parser.ParseString($"{{roledefinitionid:{roleDefinition.Name}}}");
 
                 Assert.IsTrue(site1 == $"{ctx.Web.ServerRelativeUrl}/test");
                 Assert.IsTrue(site2 == $"{ctx.Web.ServerRelativeUrl}/test");
@@ -96,7 +101,8 @@ namespace OfficeDevPnP.Core.Tests.Framework.ObjectHandlers
                 Assert.IsTrue(int.Parse(associatedVisitorGroupId) == ctx.Web.AssociatedVisitorGroup.Id);
                 Assert.IsTrue(associatedOwnerGroupId == groupId);
                 Assert.IsTrue(siteOwner == ctx.Site.Owner.LoginName);
-
+                
+                Assert.IsTrue(roleDefinitionId == expectedRoleDefinitionId.ToString(), $"Role Definition Id was not parsed correctly (expected:{expectedRoleDefinitionId};returned:{roleDefinitionId})");
             }
         }
 
@@ -132,6 +138,7 @@ namespace OfficeDevPnP.Core.Tests.Framework.ObjectHandlers
                 var termSetId = Guid.NewGuid();
                 var termStoreId = Guid.NewGuid();
 
+                var resolvedTermGroupName = parser.ParseString("{sitecollectiontermgroupname}");
 
                 // Use fake data
                 parser.AddToken(new ContentTypeIdToken(web, contentTypeName, contentTypeId));
@@ -139,6 +146,7 @@ namespace OfficeDevPnP.Core.Tests.Framework.ObjectHandlers
                 parser.AddToken(new ListUrlToken(web, listTitle, listUrl));
                 parser.AddToken(new WebPartIdToken(web, webPartTitle, webPartId));
                 parser.AddToken(new TermSetIdToken(web, termGroupName, termSetName, termSetId));
+                parser.AddToken(new TermSetIdToken(web, resolvedTermGroupName, termSetName, termSetId));
                 parser.AddToken(new TermStoreIdToken(web, termStoreName, termStoreId));
 
                 var resolvedContentTypeId = parser.ParseString($"{{contenttypeid:{contentTypeName}}}");
@@ -150,6 +158,7 @@ namespace OfficeDevPnP.Core.Tests.Framework.ObjectHandlers
                 var parameterTest2 = parser.ParseString("abc{$test(T)}/test");
                 var resolvedWebpartId = parser.ParseString($"{{webpartid:{webPartTitle}}}");
                 var resolvedTermSetId = parser.ParseString($"{{termsetid:{termGroupName}:{termSetName}}}");
+                var resolvedTermSetId2 = parser.ParseString($"{{termsetid:{{sitecollectiontermgroupname}}:{termSetName}}}");
                 var resolvedTermStoreId = parser.ParseString($"{{termstoreid:{termStoreName}}}");
 
 
@@ -161,6 +170,7 @@ namespace OfficeDevPnP.Core.Tests.Framework.ObjectHandlers
                 Assert.IsTrue(parameterTest2 == parameterExpectedResult);
                 Assert.IsTrue(Guid.TryParse(resolvedWebpartId, out outGuid));
                 Assert.IsTrue(Guid.TryParse(resolvedTermSetId, out outGuid));
+                Assert.IsTrue(Guid.TryParse(resolvedTermSetId2, out outGuid));
                 Assert.IsTrue(Guid.TryParse(resolvedTermStoreId, out outGuid));
 
             }
