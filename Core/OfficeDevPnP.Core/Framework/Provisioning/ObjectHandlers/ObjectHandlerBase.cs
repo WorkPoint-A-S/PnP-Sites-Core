@@ -115,6 +115,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 }
             }
 
+            var webIdElement = element.Attribute("WebId");
+            if (webIdElement != null)
+            {
+                webIdElement.Value = "{siteid}";
+            }
+
             return element.ToString();
         }
 
