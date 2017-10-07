@@ -562,7 +562,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         }
                     }
                 }
-                
+
 
                 createdList.Update();
                 web.Context.ExecuteQueryRetry();
@@ -630,7 +630,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 }
             }
 
-            if(fieldRef.Name != listField.StaticName)
+            if (fieldRef.Name != listField.StaticName)
             {
                 listField.StaticName = fieldRef.Name;
                 isDirty = true;
@@ -667,7 +667,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     element.Element("Formula").Value = calculatedField.Formula;
                 }
             }
-            
+
             field.SchemaXml = element.ToString();
 
             //Field has column Validation
@@ -1094,7 +1094,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     isDirty = false;
                 }
 
-#region UserCustomActions
+                #region UserCustomActions
                 if (!isNoScriptSite)
                 {
                     // Add any UserCustomActions
@@ -1149,7 +1149,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 {
                     scope.LogWarning(CoreResources.Provisioning_ObjectHandlers_ListInstances_SkipAddingOrUpdatingCustomActions);
                 }
-#endregion
+                #endregion
 
                 if (existingList.ContentTypesEnabled)
                 {
@@ -1893,6 +1893,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     if (creationInfo.PersistMultiLanguageResources)
                     {
 #if !SP2013
+                        fieldElement = XElement.Parse(schemaXml);
                         var escapedFieldTitle = field.Title.Replace(" ", "_");
                         if (UserResourceExtensions.PersistResourceValue(field.TitleResource, $"Field_{escapedFieldTitle}_DisplayName", template, creationInfo))
                         {
