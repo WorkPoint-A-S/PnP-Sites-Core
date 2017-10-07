@@ -29,6 +29,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         private List<ExtensibilityHandler> extensibilityHandlers = new List<ExtensibilityHandler>();
         private Handlers handlersToProcess = Handlers.All;
         private bool includeContentTypesFromSyndication = true;
+        private bool includeFieldsNotInContenTypesOnList = false;
 
         /// <summary>
         /// Provisioning Progress Delegate
@@ -241,6 +242,21 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             set
             {
                 this.includeSearchConfiguration = value;
+            }
+        }
+
+        /// <summary>
+        /// if true, includes fields not contained in any content types on the list
+        /// </summary>
+        public bool IncludeFieldsNotInContenTypesOnList
+        {
+            get
+            {
+                return this.includeFieldsNotInContenTypesOnList;
+            }
+            set
+            {
+                this.includeFieldsNotInContenTypesOnList = value;
             }
         }
 

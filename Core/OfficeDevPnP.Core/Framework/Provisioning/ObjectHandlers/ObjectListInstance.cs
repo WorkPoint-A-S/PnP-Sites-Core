@@ -2227,13 +2227,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 if (siteColumn != null)
                 {
                     var addField = true;
-                    //if (siteList.ContentTypesEnabled && contentTypeFields.FirstOrDefault(c => c.Id == field.Id) == null)
-                    //{
-                    //    if (contentTypeFields.FirstOrDefault(c => c.Id == field.Id) == null)
-                    //    {
-                    //        addField = false;
-                    //    }
-                    //}
+
+                    if (!creationInfo.IncludeFieldsNotInContenTypesOnList && siteList.ContentTypesEnabled && contentTypeFields.FirstOrDefault(c => c.Id == field.Id) == null)
+                    {
+                        if (contentTypeFields.FirstOrDefault(c => c.Id == field.Id) == null)
+                        {
+                            addField = false;
+                        }
+                    }
 
                     if (siteColumn.DefaultValue != field.DefaultValue)
                     {
