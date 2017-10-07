@@ -244,10 +244,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
 
             // OOTB Roledefs
-            web.EnsureProperty(w => w.RoleDefinitions.Include(r => r.RoleTypeKind));
+            web.EnsureProperty(w => w.RoleDefinitions.Include(r => r.RoleTypeKind,r => r.Name,r => r.Id));
             foreach (var roleDef in web.RoleDefinitions.AsEnumerable().Where(r => r.RoleTypeKind != RoleType.None))
             {
                 _tokens.Add(new RoleDefinitionToken(web, roleDef));
+            }
+            foreach(var roleDef in web.RoleDefinitions)
+            {
+                _tokens.Add(new RoleDefinitionIdToken(web, roleDef.Name, roleDef.Id));
             }
 
             // Groups
@@ -272,6 +276,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 _tokens.Add(new GroupIdToken(web, "associatedownergroup", web.AssociatedOwnerGroup.Id));
             }
+
             var sortedTokens = from t in _tokens
                                orderby t.GetTokenLength() descending
                                select t;
@@ -355,32 +360,18 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         /// <returns>Returns parsed string</returns>
         public string ParseString(string input, params string[] tokensToSkip)
         {
-            var origInput = input;
-            if (string.IsNullOrEmpty(input) || input.IndexOfAny(new[] { '{', '~' }) == -1) return input;
+            var tokenChars = new[] { '{', '~' };
+            if (string.IsNullOrEmpty(input) || input.IndexOfAny(tokenChars) == -1) return input;
 
             var tokensToSkipList = tokensToSkip?.ToList() ?? new List<string>();
+            string origInput;
 
-            foreach (var token in _tokens)
+            do
             {
-                foreach (var filteredToken in token.GetTokens().Except(tokensToSkipList, StringComparer.InvariantCultureIgnoreCase))
-                {
-                    var regex = token.GetRegexForToken(filteredToken);
-                    if (regex.IsMatch(input))
-                    {
-                        input = regex.Replace(input, ParseString(token.GetReplaceValue(), tokensToSkipList.Concat(new[] { filteredToken }).ToArray()));
-                    }
-                }
-            }
-
-            while (origInput != input)
-            {
+                origInput = input;
                 foreach (var token in _tokens)
                 {
-                    origInput = input;
-                    
-                    var filteredTokens = token.GetTokens().Except(tokensToSkipList, StringComparer.InvariantCultureIgnoreCase);
-                       
-                    foreach (var filteredToken in filteredTokens)
+                    foreach (var filteredToken in token.GetTokens().Except(tokensToSkipList, StringComparer.InvariantCultureIgnoreCase))
                     {
                         var regex = token.GetRegexForToken(filteredToken);
                         if (regex.IsMatch(input))
@@ -389,7 +380,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         }
                     }
                 }
-            }
+            } while (origInput != input && input.IndexOfAny(tokenChars) >= 0);
 
             return input;
         }
