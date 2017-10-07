@@ -60,6 +60,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         public bool ProvisionContentTypesToSubWebs { get; set; }
 
         /// <summary>
+        /// If true, a field is updated if the type is deffirent from the existing field 
+        /// </summary>
+        public bool UpdateFieldsIfTypeChanged { get; set; }
+
+        /// <summary>
         /// Lists of Handlers to process
         /// </summary>
         public Handlers HandlersToProcess

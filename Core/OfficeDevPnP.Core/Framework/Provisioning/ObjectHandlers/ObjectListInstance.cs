@@ -263,7 +263,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                         try
                                         {
                                             scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_ListInstances_Updating_field__0_, fieldGuid);
-                                            var updatedField = UpdateField(web, listInfo, fieldGuid, fieldElement, fieldFromList, scope, parser, field.SchemaXml);
+                                            var updatedField = UpdateField(web, listInfo, fieldGuid, fieldElement, fieldFromList, scope, parser, field.SchemaXml, applyingInformation.UpdateFieldsIfTypeChanged);
                                             if (updatedField != null)
                                             {
                                                 updatedField.EnsureProperties(f => f.InternalName, f => f.Title);
@@ -833,7 +833,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return field;
         }
 
-        private Field UpdateField(ClientObject web, ListInfo listInfo, Guid fieldId, XElement templateFieldElement, Field existingField, PnPMonitoredScope scope, TokenParser parser, string originalFieldXml)
+        private Field UpdateField(ClientObject web, ListInfo listInfo, Guid fieldId, XElement templateFieldElement, Field existingField, PnPMonitoredScope scope, TokenParser parser, string originalFieldXml, bool updateFieldIfTypeChanged)
         {
             Field field = null;
             web.Context.Load(existingField, f => f.SchemaXmlWithResourceTokens);
@@ -847,7 +847,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             if (equalityComparer.GetHashCode(existingFieldElement) != equalityComparer.GetHashCode(templateFieldElement))
             {
                 // Is existing field of the same type?
-                if (existingFieldElement.Attribute("Type").Value == templateFieldElement.Attribute("Type").Value)
+                if (updateFieldIfTypeChanged || existingFieldElement.Attribute("Type").Value == templateFieldElement.Attribute("Type").Value)
                 {
                     templateFieldElement = PrepareField(templateFieldElement);
                     if (IsFieldXmlValid(parser.ParseXmlString(templateFieldElement.ToString()), parser, web.Context))

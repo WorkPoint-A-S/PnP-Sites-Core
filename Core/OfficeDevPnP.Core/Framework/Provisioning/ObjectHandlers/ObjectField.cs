@@ -66,7 +66,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         try
                         {
                             scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_Fields_Updating_field__0__in_site, fieldId);
-                            UpdateField(web, fieldId, templateFieldElement, scope, parser, field.SchemaXml);
+                            UpdateField(web, fieldId, templateFieldElement, scope, parser, field.SchemaXml, applyingInformation.UpdateFieldsIfTypeChanged);
                         }
                         catch (Exception ex)
                         {
@@ -79,7 +79,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return parser;
         }
 
-        private void UpdateField(Web web, string fieldId, XElement templateFieldElement, PnPMonitoredScope scope, TokenParser parser, string originalFieldXml)
+        private void UpdateField(Web web, string fieldId, XElement templateFieldElement, PnPMonitoredScope scope, TokenParser parser, string originalFieldXml, bool updateFieldIfTypeChanged)
         {
             var existingField = web.Fields.GetById(Guid.Parse(fieldId));
             web.Context.Load(existingField, f => f.SchemaXml);
@@ -91,7 +91,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
             if (equalityComparer.GetHashCode(existingFieldElement) != equalityComparer.GetHashCode(templateFieldElement)) // Is field different in template?
             {
-                if (existingFieldElement.Attribute("Type").Value == templateFieldElement.Attribute("Type").Value) // Is existing field of the same type?
+                if (updateFieldIfTypeChanged || existingFieldElement.Attribute("Type").Value == templateFieldElement.Attribute("Type").Value) // Is existing field of the same type?
                 {
                     var listIdentifier = templateFieldElement.Attribute("List") != null ? templateFieldElement.Attribute("List").Value : null;
 
