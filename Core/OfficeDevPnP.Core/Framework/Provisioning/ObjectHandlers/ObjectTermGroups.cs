@@ -159,7 +159,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             }
 
                             set = group.CreateTermSet(parser.ParseString(modelTermSet.Name), modelTermSet.Id,
-                                modelTermSet.Language ?? termStore.DefaultLanguage);
+                                modelTermSet.Language == null || modelTermSet.Language == 0 ? termStore.DefaultLanguage : modelTermSet.Language.Value);
                             parser.AddToken(new TermSetIdToken(web, group.Name, modelTermSet.Name, modelTermSet.Id));
                             if (!siteCollectionTermGroup.ServerObjectIsNull.Value)
                             {
