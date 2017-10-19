@@ -268,15 +268,19 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             else
                             {
                                 var principal = GetPrincipal(web, parser, scope, groups, roleAssignment);
-                                var assignmentsForPrincipal = webRoleAssignments.Where(t => t.PrincipalId == principal.Id);
-                                foreach (var assignmentForPrincipal in assignmentsForPrincipal)
+
+                                if (principal != null)
                                 {
-                                    var binding = assignmentForPrincipal.EnsureProperty(r => r.RoleDefinitionBindings).FirstOrDefault(b => b.Name == roleAssignment.RoleDefinition);
-                                    if (binding != null)
+                                    var assignmentsForPrincipal = webRoleAssignments.Where(t => t.PrincipalId == principal.Id);
+                                    foreach (var assignmentForPrincipal in assignmentsForPrincipal)
                                     {
-                                        assignmentForPrincipal.DeleteObject();
-                                        web.Context.ExecuteQueryRetry();
-                                        break;
+                                        var binding = assignmentForPrincipal.EnsureProperty(r => r.RoleDefinitionBindings).FirstOrDefault(b => b.Name == roleAssignment.RoleDefinition);
+                                        if (binding != null)
+                                        {
+                                            assignmentForPrincipal.DeleteObject();
+                                            web.Context.ExecuteQueryRetry();
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -316,7 +320,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     }
                 }
             }
-            principal.EnsureProperty(p => p.Id);
+
+            if (principal != null)
+                principal.EnsureProperty(p => p.Id);
+
             return principal;
         }
 
