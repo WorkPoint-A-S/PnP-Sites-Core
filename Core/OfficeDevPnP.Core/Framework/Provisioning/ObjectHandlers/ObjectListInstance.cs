@@ -2080,7 +2080,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     list = ExtractUserCustomActions(web, siteList, list, creationInfo, template);
 
 #if !ONPREMISES
-                    list = ExtractWebhooks(siteList, list);
+                  //  list = ExtractWebhooks(siteList, list); hangs for hours at this point
 #endif
 
                     list.Security = siteList.GetSecurity();
