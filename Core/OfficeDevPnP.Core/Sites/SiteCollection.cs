@@ -3,6 +3,7 @@ using Microsoft.SharePoint.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OfficeDevPnP.Core.Utilities;
+using OfficeDevPnP.Core.Utilities.Async;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +28,8 @@ namespace OfficeDevPnP.Core.Sites
         /// <returns>ClientContext object for the created site collection</returns>
         public static async Task<ClientContext> CreateAsync(ClientContext clientContext, CommunicationSiteCollectionCreationInformation siteCollectionCreationInformation)
         {
+            await new SynchronizationContextRemover();
+
             ClientContext responseContext = null;
 
             var accessToken = clientContext.GetAccessToken();
@@ -125,11 +128,18 @@ namespace OfficeDevPnP.Core.Sites
         /// <returns>ClientContext object for the created site collection</returns>
         public static async Task<ClientContext> CreateAsync(ClientContext clientContext, TeamSiteCollectionCreationInformation siteCollectionCreationInformation)
         {
-            ClientContext responseContext = null;
+            if (siteCollectionCreationInformation.Alias.Contains(" "))
+            {
+                throw new ArgumentException("Alias cannot contain spaces", "Alias");
+            }
 
+            await new SynchronizationContextRemover();
+
+            ClientContext responseContext = null;
+            
             var accessToken = clientContext.GetAccessToken();
 
-            if (!string.IsNullOrEmpty(accessToken))
+            if (clientContext.IsAppOnly())
             {
                 throw new Exception("App-Only is currently not supported.");
             }
@@ -205,6 +215,125 @@ namespace OfficeDevPnP.Core.Sites
             }
         }
 
+        /// <summary>
+        /// Groupifies a classic team site by creating a group for it and connecting the site with the newly created group
+        /// </summary>
+        /// <param name="clientContext">ClientContext object of a regular site</param>
+        /// <param name="siteCollectionGroupifyInformation">information about the site to create</param>
+        /// <returns>ClientContext object for the created site collection</returns>
+        public static async Task<ClientContext> GroupifyAsync(ClientContext clientContext, TeamSiteCollectionGroupifyInformation siteCollectionGroupifyInformation)
+        {
+            if (siteCollectionGroupifyInformation == null)
+            {
+                throw new ArgumentException("Missing value for siteCollectionGroupifyInformation", "sitecollectionGroupifyInformation");
+            }
+
+            if (!string.IsNullOrEmpty(siteCollectionGroupifyInformation.Alias) && siteCollectionGroupifyInformation.Alias.Contains(" "))
+            {
+                throw new ArgumentException("Alias cannot contain spaces", "Alias");
+            }
+
+            if(string.IsNullOrEmpty(siteCollectionGroupifyInformation.DisplayName))
+            {
+                throw new ArgumentException("DisplayName is required", "DisplayName");
+            }
+
+            await new SynchronizationContextRemover();
+
+            ClientContext responseContext = null;
+
+            var accessToken = clientContext.GetAccessToken();
+
+            if (clientContext.IsAppOnly())
+            {
+                throw new Exception("App-Only is currently not supported.");
+            }
+            using (var handler = new HttpClientHandler())
+            {
+                clientContext.Web.EnsureProperty(w => w.Url);
+                // we're not in app-only or user + app context, so let's fall back to cookie based auth
+                if (String.IsNullOrEmpty(accessToken))
+                {
+                    handler.SetAuthenticationCookies(clientContext);
+                }
+
+                using (var httpClient = new PnPHttpProvider(handler))
+                {
+                    string requestUrl = String.Format("{0}/_api/GroupSiteManager/CreateGroupForSite", clientContext.Web.Url);
+
+                    Dictionary<string, object> payload = new Dictionary<string, object>();
+                    payload.Add("displayName", siteCollectionGroupifyInformation.DisplayName);
+                    payload.Add("alias", siteCollectionGroupifyInformation.Alias);
+                    payload.Add("isPublic", siteCollectionGroupifyInformation.IsPublic);
+
+                    var optionalParams = new Dictionary<string, object>();                    
+                    optionalParams.Add("Description", siteCollectionGroupifyInformation.Description != null ? siteCollectionGroupifyInformation.Description : "");
+
+                    // Handle groupify options
+                    var creationOptionsValues = new List<string>();
+                    if (siteCollectionGroupifyInformation.KeepOldHomePage)
+                    {
+                        creationOptionsValues.Add("SharePointKeepOldHomepage");
+                    }
+                    var creationOptions = new Dictionary<string, object>();
+                    creationOptions.Add("results", creationOptionsValues.ToArray());
+                    optionalParams.Add("CreationOptions", creationOptions);
+
+                    optionalParams.Add("Classification", siteCollectionGroupifyInformation.Classification != null ? siteCollectionGroupifyInformation.Classification : "");
+
+                    payload.Add("optionalParams", optionalParams);
+
+                    var body = payload;
+
+                    // Serialize request object to JSON
+                    var jsonBody = JsonConvert.SerializeObject(body);
+                    var requestBody = new StringContent(jsonBody);
+
+                    // Build Http request
+                    HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
+                    request.Content = requestBody;
+                    request.Headers.Add("accept", "application/json;odata=verbose");
+                    MediaTypeHeaderValue sharePointJsonMediaType = null;
+                    MediaTypeHeaderValue.TryParse("application/json;odata=verbose;charset=utf-8", out sharePointJsonMediaType);
+                    requestBody.Headers.ContentType = sharePointJsonMediaType;
+
+                    if (!string.IsNullOrEmpty(accessToken))
+                    {
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                    }
+
+                    requestBody.Headers.Add("X-RequestDigest", await clientContext.GetRequestDigest());
+
+                    // Perform actual post operation
+                    HttpResponseMessage response = await httpClient.SendAsync(request, new System.Threading.CancellationToken());
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        // If value empty, URL is taken
+                        var responseString = await response.Content.ReadAsStringAsync();
+                        var responseJson = JObject.Parse(responseString);
+
+                        // SiteStatus 1 = Provisioning, SiteStatus 2 = Ready
+                        if (Convert.ToInt32(responseJson["d"]["CreateGroupForSite"]["SiteStatus"]) == 2 || Convert.ToInt32(responseJson["d"]["CreateGroupForSite"]["SiteStatus"]) == 1)
+                        {
+                            responseContext = clientContext;
+                        }
+                        else
+                        {
+                            throw new Exception(responseString);
+                        }
+                    }
+                    else
+                    {
+                        // Something went wrong...
+                        throw new Exception(await response.Content.ReadAsStringAsync());
+                    }
+                }
+                return await Task.Run(() => responseContext);
+            }
+        }
+
+
         private static Guid GetSiteDesignId(CommunicationSiteCollectionCreationInformation siteCollectionCreationInformation)
         {
             if (siteCollectionCreationInformation.SiteDesignId != Guid.Empty)
@@ -231,6 +360,64 @@ namespace OfficeDevPnP.Core.Sites
             }
 
             return Guid.Empty;
+        }
+
+        /// <summary>
+        /// Checks if a given alias is already in use or not
+        /// </summary>
+        /// <param name="context">Context to operate against</param>
+        /// <param name="alias">Alias to check</param>
+        /// <returns>True if in use, false otherwise</returns>
+        public static async Task<bool> AliasExistsAsync(ClientContext context, string alias)
+        {
+            await new SynchronizationContextRemover();
+
+            bool aliasExists = true;
+
+            var accessToken = context.GetAccessToken();
+
+            using (var handler = new HttpClientHandler())
+            {
+                context.Web.EnsureProperty(w => w.Url);
+
+                if (String.IsNullOrEmpty(accessToken))
+                {
+                    handler.SetAuthenticationCookies(context);
+                }
+
+                using (var httpClient = new HttpClient(handler))
+                {
+                    string requestUrl = String.Format("{0}/_api/SP.Directory.DirectorySession/Group(alias='{1}')", context.Web.Url, alias);
+                    HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+                    request.Headers.Add("accept", "application/json;odata.metadata=minimal");
+                    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    request.Headers.Add("odata-version", "4.0");
+
+                    if (!string.IsNullOrEmpty(accessToken))
+                    {
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                    }
+
+                    // Perform actual GET request
+                    HttpResponseMessage response = await httpClient.SendAsync(request);
+
+                    if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        aliasExists = false;
+                        // If value empty, URL is taken
+                    }
+                    else if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        aliasExists = true;
+                    }
+                    else
+                    {
+                        // Something went wrong...
+                        throw new Exception(await response.Content.ReadAsStringAsync());
+                    }
+                }
+                return await Task.Run(() => aliasExists);
+            }
         }
 
 

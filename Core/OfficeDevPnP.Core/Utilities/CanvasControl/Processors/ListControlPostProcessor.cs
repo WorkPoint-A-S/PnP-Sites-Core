@@ -7,7 +7,7 @@ namespace OfficeDevPnP.Core.Utilities.CanvasControl.Processors
 {
 #if !ONPREMISES
     /// <summary>
-    /// Updates list id for List web part, to allow provision based on url in a dynamic provisioning scenario
+    /// Updates list id for List web part, to allow provision based on URL in a dynamic provisioning scenario
     /// </summary>
     public class ListControlPostProcessor : ICanvasControlPostProcessor
     {
@@ -38,21 +38,29 @@ namespace OfficeDevPnP.Core.Utilities.CanvasControl.Processors
                 return;
             }
 
-            list.EnsureProperties(l => l.Id, l => l.RootFolder, l => l.RootFolder.Name);
+            list.EnsureProperties(l => l.Id, l => l.RootFolder, l => l.RootFolder.Name, l => l.RootFolder.ServerRelativeUrl);
 
             SetProperty("selectedListId", list.Id);
-            SetProperty("selectedListUrl", list.RootFolder.Name);
+            SetProperty("selectedListUrl", list.RootFolder.ServerRelativeUrl);
 
             canvasControl.JsonControlData = JsonUtility.Serialize(_properties);
         }
 
         private List GetList(Web web)
         {
-            // grab list based on url
+            // grab list based on URL
             var listUrlProperty = GetProperty("selectedListUrl") as string;
             if (!string.IsNullOrWhiteSpace(listUrlProperty))
             {
-                return web.GetList(listUrlProperty);
+                if (!listUrlProperty.StartsWith("/"))
+                {
+                    return web.GetListByUrl(listUrlProperty);
+                }
+
+                var list = web.GetList(listUrlProperty);
+                web.Context.Load(list);
+                web.Context.ExecuteQueryRetry();
+                return list;
             }
 
             // grab list based on list id
@@ -60,7 +68,10 @@ namespace OfficeDevPnP.Core.Utilities.CanvasControl.Processors
             Guid listId;
             if (TryParseGuidProperty(listIdProperty, out listId))
             {
-                return web.Lists.GetById(listId);
+                var list = web.Lists.GetById(listId);
+                web.Context.Load(list);
+                web.Context.ExecuteQueryRetry();
+                return list;
             }
 
             // grab list based on list title

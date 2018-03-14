@@ -20,6 +20,11 @@ namespace OfficeDevPnP.Core.Tests.Sites
         [TestInitialize]
         public void Initialize()
         {
+            if (TestCommon.AppOnlyTesting())
+            {
+                Assert.Inconclusive("Test that require modern site collection creation are not supported in app-only.");
+            }
+
             using (var clientContext = TestCommon.CreateClientContext())
             {
                 communicationSiteGuid = Guid.NewGuid().ToString("N");
@@ -73,8 +78,29 @@ namespace OfficeDevPnP.Core.Tests.Sites
         //        });
         //        Assert.IsNotNull(teamResults);
         //    }
-
         //}
+
+        //[TestMethod]
+        //public async Task GroupifyTeamSiteTestAsync()
+        //{
+        //    using (var clientContext = TestCommon.CreateClientContext("https://contoso.sharepoint.com/sites/groupify_me_2"))
+        //    {
+
+        //        clientContext.Load(clientContext.Web, p => p.Title, p => p.Description);
+        //        clientContext.ExecuteQueryRetry();
+
+        //        var teamResults = await clientContext.GroupifySiteAsync(new Core.Sites.TeamSiteCollectionGroupifyInformation()
+        //        {
+        //            Alias = $"groupify_me_2",
+        //            DisplayName = clientContext.Web.Title,
+        //            IsPublic = false,
+        //            Description = clientContext.Web.Description,
+        //        });
+
+        //        Assert.IsNotNull(teamResults);
+        //    }
+        //}
+
     }
 #endif
 }
