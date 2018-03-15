@@ -144,7 +144,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             var templateFile = new Model.File()
             {
                 Folder = Tokenize(folderPath, web.Url),
-                Src = !string.IsNullOrEmpty(folderPath) ? $"{folderPath}/{fileName}" : fileName,
+                Src = fileName,
                 Overwrite = true,
             };
 
@@ -187,9 +187,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         
                         // Configure the filename to use 
                         fileName = HttpUtility.UrlDecode(fullUri.Segments[fullUri.Segments.Count() - 1]);
-                        
+
                         // Build up a site relative container URL...might end up empty as well
-                        String container = HttpUtility.UrlDecode(folderPath.Replace(web.ServerRelativeUrl, "")).Trim('/').Replace("/", "\\");
+                        //String container = HttpUtility.UrlDecode(folderPath.Replace(web.ServerRelativeUrl, "")).Trim('/').Replace("/", "\\");
+                        string container = null;
 
                         using (Stream memStream = new MemoryStream())
                         {
