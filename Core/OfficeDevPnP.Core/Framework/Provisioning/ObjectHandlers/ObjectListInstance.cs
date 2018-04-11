@@ -128,7 +128,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                     foreach (var listInfo in processedLists)
                     {
-                        ProcessFields(web, parser, scope, listInfo);
+                        ProcessFields(web, parser, scope, listInfo, applyingInformation.UpdateFieldsIfTypeChanged);
                     }
 
                     #endregion Fields
@@ -274,7 +274,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
         }
 
-        private void ProcessFields(Web web, TokenParser parser, PnPMonitoredScope scope, ListInfo listInfo)
+        private void ProcessFields(Web web, TokenParser parser, PnPMonitoredScope scope, ListInfo listInfo, bool updateFieldIfTypeChanged)
         {
             if (listInfo.TemplateList.Fields.Any())
             {
@@ -326,7 +326,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             try
                             {
                                 scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_ListInstances_Updating_field__0_, fieldGuid);
-                                var updatedField = UpdateField(web, listInfo, fieldGuid, fieldElement, fieldFromList, scope, parser, field.SchemaXml);
+                                var updatedField = UpdateField(web, listInfo, fieldGuid, fieldElement, fieldFromList, scope, parser, field.SchemaXml, updateFieldIfTypeChanged);
                                 if (updatedField != null)
                                 {
                                     updatedField.EnsureProperties(f => f.InternalName, f => f.Title);
