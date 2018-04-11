@@ -5,16 +5,32 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
-
-## [2.25.1804.0 - Unreleased]
+## [2.26.1805.0 - Unreleased]
 
 ### Added
 
 ### Changed
 
+### Deprecated
+
+## [2.25.1804.0 - April 2018 release]
+
+### Added
+
+- Added async external sharing extension methods [baywet]
+- Added ProvisionFieldsToSubWebs option to ProvisioningTemplateApplyingInformation class [jensotto]
+- Addition of PnPCore.Tests project for testing of the PnPCore .Net Standard 2.0 library
+- Added Scope parameter to ALM Manager methods allowing you to perform application lifecycle management tasks to the site collection scoped app catalog.
+
+### Changed
+
+- Added support for CDN Elements in Provisioning Engine
+- Support for FullBleed configuration for adding web parts in "Full Width column" section [OliverZeiser]
+- Improvements to ExecuteQueryRetryAsync [OliverZeiser, biste5]
 - Improvements to support provisioning engine to be called from non console applications
 - Better support for async methods, avoiding deadlocks
 - Updated spelling across various files [fowl2]
+- Refactored ObjectListHandler [stevebeauge]
 
 ### Deprecated
 

@@ -65,6 +65,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         public bool UpdateFieldsIfTypeChanged { get; set; }
 
         /// <summary>
+        /// If true then any fields in the template will be provisioned to subwebs
+        /// </summary>
+        public bool ProvisionFieldsToSubWebs { get; set; }
+
+        /// <summary>
         /// Lists of Handlers to process
         /// </summary>
         public Handlers HandlersToProcess
