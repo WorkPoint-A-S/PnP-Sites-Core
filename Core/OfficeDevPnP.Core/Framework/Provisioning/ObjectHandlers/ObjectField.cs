@@ -86,7 +86,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         try
                         {
                             scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_Fields_Updating_field__0__in_site, fieldId);
-                            UpdateField(web, fieldId, templateFieldElement, scope, parser, field.SchemaXml, applyingInformation.UpdateFieldsIfTypeChanged);
+                            UpdateField(web, fieldId, fieldSchemaElement, scope, parser, field.SchemaXml, applyingInformation.UpdateFieldsIfTypeChanged);
                         }
                         catch (Exception ex)
                         {
