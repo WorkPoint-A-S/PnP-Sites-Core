@@ -52,7 +52,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Utilities
                         Publish = true,
                         Layout = pageToExtract.LayoutType.ToString(),
                         EnableComments = !pageToExtract.CommentsDisabled,
-                        Title = pageToExtract.PageTitle,
+                        Title = pageToExtract.PageTitle
                     };
 
                     if(pageToExtract.PageHeader != null)
