@@ -22,19 +22,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 {
     internal class ObjectListInstance : ObjectHandlerBase
     {
-        private readonly FieldAndListProvisioningStepHelper.Step step;
         public override string Name
         {
-#if DEBUG
-            get { return $"List instances ({step})"; }
-#else
-            get { return $"List instances"; }
-#endif
-        }
-
-        public ObjectListInstance(FieldAndListProvisioningStepHelper.Step stage)
-        {
-            this.step = stage;
+            get { return "List instances"; }
         }
 
         public override TokenParser ProvisionObjects(Web web, ProvisioningTemplate template, TokenParser parser, ProvisioningTemplateApplyingInformation applyingInformation)
@@ -144,56 +134,52 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                     #endregion Fields
 
-                    // We stop here unless we reached the last provisioning stop of the list
-                    if (step == FieldAndListProvisioningStepHelper.Step.ListSettings)
+                    #region Default Field Values
+
+                    foreach (var listInfo in processedLists)
                     {
-
-                        #region Default Field Values
-
-                        foreach (var listInfo in processedLists)
-                        {
-                            ProcessFieldDefaults(web, listInfo);
-                        }
-
-                        #endregion Default Field Values
-
-                        #region Views
-
-                        foreach (var listInfo in processedLists)
-                        {
-                            ProcessViews(web, parser, scope, listInfo);
-                        }
-
-                        #endregion Views
-
-                        #region Folders
-
-                        // Folders are supported for document libraries and generic lists only
-                        foreach (var list in processedLists)
-                        {
-                            ProcessFolders(web, parser, scope, list);
-                        }
-
-                        #endregion Folders
-
-                        #region IRM Settings
-
-                        // Configure IRM Settings
-                        foreach (var list in processedLists)
-                        {
-                            ProcessIRMSettings(web, list);
-                        }
-
-                        #endregion IRM Settings
-
-                        // If an existing view is updated, and the list is to be listed on the QuickLaunch, it is removed because the existing view will be deleted and recreated from scratch.
-                        foreach (var listInfo in processedLists)
-                        {
-                            listInfo.SiteList.OnQuickLaunch = listInfo.TemplateList.OnQuickLaunch;
-                            listInfo.SiteList.Update();
-                        }
-                        web.Context.ExecuteQueryRetry();
+                        ProcessFieldDefaults(web, listInfo);
                     }
+
+                    #endregion Default Field Values
+
+                    #region Views
+
+                    foreach (var listInfo in processedLists)
+                    {
+                        ProcessViews(web, parser, scope, listInfo);
+                    }
+
+                    #endregion Views
+
+                    #region Folders
+
+                    // Folders are supported for document libraries and generic lists only
+                    foreach (var list in processedLists)
+                    {
+                        ProcessFolders(web, parser, scope, list);
+                    }
+
+                    #endregion Folders
+
+                    #region IRM Settings
+
+                    // Configure IRM Settings
+                    foreach (var list in processedLists)
+                    {
+                        ProcessIRMSettings(web, list);
+                    }
+
+                    #endregion IRM Settings
+
+                    // If an existing view is updated, and the list is to be listed on the QuickLaunch, it is removed because the existing view will be deleted and recreated from scratch.
+                    foreach (var listInfo in processedLists)
+                    {
+                        listInfo.SiteList.OnQuickLaunch = listInfo.TemplateList.OnQuickLaunch;
+                        listInfo.SiteList.Update();
+                    }
+                    web.Context.ExecuteQueryRetry();
+
                     WriteMessage("Done processing lists", ProvisioningMessageType.Completed);
                 }
             }
@@ -294,19 +280,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             if (listInfo.TemplateList.Fields.Any())
             {
                 var currentFieldIndex = 0;
-                var fieldsToProcess = listInfo.TemplateList.Fields
-                    .Select(fld => new
-                    {
-                        Field = fld,
-                        FieldRef = (string)XElement.Parse(parser.ParseString(fld.SchemaXml)).Attribute("FieldRef"), // FieldRef means this is a dependent lookup
-                        Step = fld.GetFieldProvisioningStep(parser)
-                    })
-                    .Where(fldData => fldData.Step == step) // Only include fields related to the current step
-                    .OrderBy(fldData => fldData.FieldRef) // Ensure fields having fieldRef are handled after. This ensure lookups are created before dependent lookups
-                    .Select(fldData => fldData.Field)
-                    .ToArray();
-
-                foreach (var field in fieldsToProcess)
+                var total = listInfo.TemplateList.Fields.Count;
+                foreach (var field in listInfo.TemplateList.Fields)
                 {
                     var fieldElement = XElement.Parse(parser.ParseXmlString(field.SchemaXml, "~sitecollection", "~site"));
                     if (fieldElement.Attribute("ID") == null)
@@ -318,7 +293,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     var internalName = fieldElement.Attribute("InternalName")?.Value;
 
                     currentFieldIndex++;
-                    WriteMessage($"List Columns for list {listInfo.TemplateList.Title}|{internalName ?? id}|{currentFieldIndex}|{fieldsToProcess.Length}", ProvisioningMessageType.Progress);
+                    WriteMessage($"List Columns for list {listInfo.TemplateList.Title}|{internalName ?? id}|{currentFieldIndex}|{total}", ProvisioningMessageType.Progress);
                     Guid fieldGuid;
                     if (!Guid.TryParse(id, out fieldGuid))
                     {
@@ -376,24 +351,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         {
             if (listInfo.TemplateList.FieldRefs.Any())
             {
-                var fieldsRefsToProcess = listInfo.TemplateList.FieldRefs.Select(fr => new
-                {
-                    FieldRef = fr,
-                    TemplateField = template.SiteFields.FirstOrDefault(tf => (Guid)XElement.Parse(parser.ParseString(tf.SchemaXml)).Attribute("ID") == fr.Id)
-                }).Where(frData =>
-                    frData.TemplateField == null // Process fields refs if the target is not defined in the current template
-                    || frData.TemplateField.GetFieldProvisioningStep(parser) == step // or process field ref only if the current step is matching
-                ).Select(fr => fr.FieldRef).ToArray();
-
-                var total = fieldsRefsToProcess.Length;
-
+                var total = listInfo.TemplateList.FieldRefs.Count;
                 var currentListIndex = 0;
-                foreach (var fieldRef in fieldsRefsToProcess)
+                foreach (var fieldRef in listInfo.TemplateList.FieldRefs)
                 {
                     scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_ListInstances_FieldRef_Updating_list__0_, listInfo.TemplateList.Title, fieldRef.Name);
 
                     currentListIndex++;
-
                     WriteMessage($"Site Columns for list {listInfo.TemplateList.Title}|{fieldRef.Name}|{currentListIndex}|{total}", ProvisioningMessageType.Progress);
                     var field = rootWeb.GetFieldById(fieldRef.Id);
                     if (field == null)
@@ -604,7 +568,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                 // Default for content type
                 bool parsedDefaultViewForContentType;
-                var defaultViewForContentType = (string)viewElement.Attribute("DefaultViewForContentType");
+                var defaultViewForContentType = (string) viewElement.Attribute("DefaultViewForContentType");
                 if (!string.IsNullOrEmpty(defaultViewForContentType) && bool.TryParse(defaultViewForContentType, out parsedDefaultViewForContentType))
                 {
                     createdView.DefaultViewForContentType = parsedDefaultViewForContentType;
@@ -954,8 +918,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         existingField.SchemaXml = parser.ParseXmlString(existingFieldElement.ToString(), "~sitecollection", "~site");
                         existingField.UpdateAndPushChanges(true);
                         web.Context.ExecuteQueryRetry();
-#if !SP2013
                         bool isDirty = false;
+#if !SP2013
                         if (originalFieldXml.ContainsResourceToken())
                         {
                             var originalFieldElement = XElement.Parse(originalFieldXml);
@@ -974,13 +938,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                 isDirty = true;
                             }
                         }
+#endif
                         if (isDirty)
                         {
                             existingField.Update();
                             web.Context.ExecuteQueryRetry();
                             field = existingField;
                         }
-#endif
                     }
                     else
                     {
@@ -1007,6 +971,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
             if (listIdentifier != null)
             {
+                // Temporary remove list attribute from fieldElement
+                fieldElement.Attribute("List").Remove();
+
                 if (fieldElement.Attribute("RelationshipDeleteBehavior") != null)
                 {
                     if (fieldElement.Attribute("RelationshipDeleteBehavior").Value.Equals("Restrict")
@@ -1976,7 +1943,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 foreach (var siteList in listsToProcess)
                 {
                     listCount++;
-                    WriteMessage($"List|{siteList.Title}|{listCount}|{listsToProcess.Length}", ProvisioningMessageType.Progress);
+                    WriteMessage($"List|{siteList.Title}|{listCount}|{listsToProcess.Count()}", ProvisioningMessageType.Progress);
                     ListInstance baseTemplateList = null;
                     if (creationInfo.BaseTemplate != null)
                     {
@@ -2007,7 +1974,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         DefaultDisplayFormUrl = Tokenize(siteList.DefaultDisplayFormUrl, web.Url),
                         DefaultEditFormUrl = Tokenize(siteList.DefaultEditFormUrl, web.Url),
                         DefaultNewFormUrl = Tokenize(siteList.DefaultNewFormUrl, web.Url),
-                        Direction = string.Equals(siteList.Direction, "none", StringComparison.OrdinalIgnoreCase) ? ListReadingDirection.None : string.Equals(siteList.Direction, "rtl", StringComparison.OrdinalIgnoreCase) ? ListReadingDirection.RTL : ListReadingDirection.LTR,
+                        Direction = siteList.Direction.ToLower() == "none" ? ListReadingDirection.None : siteList.Direction.ToLower() == "rtl" ? ListReadingDirection.RTL : ListReadingDirection.LTR,
                         ImageUrl = Tokenize(siteList.ImageUrl, web.Url),
                         IrmExpire = siteList.IrmExpire,
                         IrmReject = siteList.IrmReject,

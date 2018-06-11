@@ -206,13 +206,13 @@ alert(""Hello!"");
             using (var ctx = TestCommon.CreateClientContext())
             {
                 var parser = new TokenParser(ctx.Web, template);
-                new ObjectField(FieldAndListProvisioningStepHelper.Step.ListAndStandardFields).ProvisionObjects(ctx.Web, template, parser,
+                new ObjectField().ProvisionObjects(ctx.Web, template, parser,
                     new ProvisioningTemplateApplyingInformation());
-                new ObjectContentType(FieldAndListProvisioningStepHelper.Step.ListAndStandardFields).ProvisionObjects(ctx.Web, template, parser,
+                new ObjectContentType().ProvisionObjects(ctx.Web, template, parser,
                     new ProvisioningTemplateApplyingInformation());
-                new ObjectListInstance(FieldAndListProvisioningStepHelper.Step.ListAndStandardFields).ProvisionObjects(ctx.Web, template, parser,
+                new ObjectListInstance().ProvisionObjects(ctx.Web, template, parser,
                     new ProvisioningTemplateApplyingInformation());
-                new ObjectListInstance(FieldAndListProvisioningStepHelper.Step.ListSettings).ProvisionObjects(ctx.Web, template, parser,
+                new ObjectListInstance().ProvisionObjects(ctx.Web, template, parser,
                     new ProvisioningTemplateApplyingInformation());
 
                 new ObjectFiles().ProvisionObjects(ctx.Web, template, parser, new ProvisioningTemplateApplyingInformation());
