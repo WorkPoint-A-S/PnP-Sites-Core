@@ -39,8 +39,8 @@ namespace OfficeDevPnP.Core.Pages
         }
 
         /// <summary>
-        /// Server relative link to page header image, set to null for default header image. 
-        /// Note: image needs to reside in the current site 
+        /// Server relative link to page header image, set to null for default header image.
+        /// Note: image needs to reside in the current site
         /// </summary>
         public string ImageServerRelativeUrl
         {
@@ -95,7 +95,7 @@ namespace OfficeDevPnP.Core.Pages
 #endregion
 
         /// <summary>
-        /// Returns the header value to set a "no header" 
+        /// Returns the header value to set a "no header"
         /// </summary>
         /// <param name="pageTitle">Title of the page</param>
         /// <returns>Header html value that indicates "no header"</returns>
@@ -145,15 +145,15 @@ namespace OfficeDevPnP.Core.Pages
                             if (wpJObject["properties"] != null)
                             {
                                 Guid result = new Guid();
-                                if (Guid.TryParse(wpJObject["properties"]["siteId"].ToString(), out result))
+                                if (wpJObject["properties"]["siteId"] != null && Guid.TryParse(wpJObject["properties"]["siteId"].ToString(), out result))
                                 {
                                     this.siteId = result;
                                 }
-                                if (Guid.TryParse(wpJObject["properties"]["webId"].ToString(), out result))
+                                if (wpJObject["properties"]["webId"] != null && Guid.TryParse(wpJObject["properties"]["webId"].ToString(), out result))
                                 {
                                     this.webId = result;
                                 }
-                                if (Guid.TryParse(wpJObject["properties"]["listId"].ToString(), out result))
+                                if (wpJObject["properties"]["listId"] != null && Guid.TryParse(wpJObject["properties"]["listId"].ToString(), out result))
                                 {
                                     this.listId = result;
                                 }
@@ -196,7 +196,7 @@ namespace OfficeDevPnP.Core.Pages
                                     {
                                         if (imageSourceType == 0)
                                         {
-                                            this.pageHeaderType = ClientSidePageHeaderType.None;                                            
+                                            this.pageHeaderType = ClientSidePageHeaderType.None;
                                         }
                                         else if (imageSourceType == 4)
                                         {
