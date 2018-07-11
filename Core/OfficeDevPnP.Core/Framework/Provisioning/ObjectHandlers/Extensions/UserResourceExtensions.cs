@@ -41,7 +41,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions
                         foreach (DictionaryEntry entry in resxReader)
                         {
                             // find if token is already there
-                            var existingToken = ResourceTokens.FirstOrDefault(t => t.Item1 == entry.Key.ToString() && t.Item2 == language);
+                            var existingToken = ResourceTokens.ToArray().FirstOrDefault(t => t.Item1 == entry.Key.ToString() && t.Item2 == language);
                             if (existingToken == null)
                             {
                                 ResourceTokens.Add(new Tuple<string, int, string>(entry.Key.ToString(), language, entry.Value as string));
