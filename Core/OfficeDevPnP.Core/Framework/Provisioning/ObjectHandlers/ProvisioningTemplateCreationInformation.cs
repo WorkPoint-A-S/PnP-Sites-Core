@@ -30,6 +30,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         private Handlers handlersToProcess = Handlers.All;
         private bool includeContentTypesFromSyndication = true;
         private bool includeFieldsNotInContenTypesOnList = false;
+        internal Dictionary<Tuple<string, int>, string> ResourceTokens = new Dictionary<Tuple<string, int>, string>();
 
         /// <summary>
         /// Provisioning Progress Delegate

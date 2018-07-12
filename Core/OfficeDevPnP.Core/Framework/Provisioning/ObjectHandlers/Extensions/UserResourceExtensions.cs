@@ -17,13 +17,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions
 #if !SP2013
     internal static class UserResourceExtensions
     {
-        private static List<Tuple<string, int, string>> ResourceTokens = new List<Tuple<string, int, string>>();
 
         public static ProvisioningTemplate SaveResourceValues(ProvisioningTemplate template, ProvisioningTemplateCreationInformation creationInfo)
         {
             var tempFolder = System.IO.Path.GetTempPath();
 
-            var languages = new List<int>(ResourceTokens.Select(t => t.Item2).Distinct());
+            var languages = new List<int>(creationInfo.ResourceTokens.Keys.Select(t => t.Item2).Distinct());
             foreach (int language in languages)
             {
                 var culture = new CultureInfo(language);
@@ -41,10 +40,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions
                         foreach (DictionaryEntry entry in resxReader)
                         {
                             // find if token is already there
-                            var existingToken = ResourceTokens.ToArray().FirstOrDefault(t => t.Item1 == entry.Key.ToString() && t.Item2 == language);
-                            if (existingToken == null)
+                            if (!creationInfo.ResourceTokens.ContainsKey(new Tuple<string, int>(entry.Key.ToString(), language)))
                             {
-                                ResourceTokens.Add(new Tuple<string, int, string>(entry.Key.ToString(), language, entry.Value as string));
+                                creationInfo.ResourceTokens.Add(new Tuple<string, int>(entry.Key.ToString(), language), entry.Value as string);
                             }
                         }
                     }
@@ -57,10 +55,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions
                 using (ResourceWriter resx = new ResourceWriter(resourceFileName))
 #endif
                 {
-                    foreach (var token in ResourceTokens.Where(t => t.Item2 == language))
+                    foreach (var token in creationInfo.ResourceTokens.Where(t => t.Key.Item2 == language))
                     {
 
-                        resx.AddResource(token.Item1, token.Item3);
+                        resx.AddResource(token.Key.Item1, token.Value);
                     }
                 }
 
@@ -118,7 +116,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions
                 if (!string.IsNullOrEmpty(value.Value))
                 {
                     returnValue = true;
-                    ResourceTokens.Add(new Tuple<string, int, string>(token, language.LCID, value.Value));
+                    creationInfo.ResourceTokens.Add(new Tuple<string, int>(token, language.LCID), value.Value);
                 }
             }
 
@@ -126,4 +124,4 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions
         }
     }
 #endif
-            }
+}
