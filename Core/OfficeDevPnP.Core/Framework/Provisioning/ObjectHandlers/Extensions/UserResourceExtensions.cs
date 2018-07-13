@@ -41,9 +41,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions
                         {
                             // find if token is already there
                             if (!creationInfo.ResourceTokens.ContainsKey(new Tuple<string, int>(entry.Key.ToString(), language)))
-                            {
                                 creationInfo.ResourceTokens.Add(new Tuple<string, int>(entry.Key.ToString(), language), entry.Value as string);
-                            }
+                            
                         }
                     }
                 }
@@ -116,7 +115,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions
                 if (!string.IsNullOrEmpty(value.Value))
                 {
                     returnValue = true;
-                    creationInfo.ResourceTokens.Add(new Tuple<string, int>(token, language.LCID), value.Value);
+                    if (!creationInfo.ResourceTokens.ContainsKey(new Tuple<string, int>(token, language.LCID)))
+                        creationInfo.ResourceTokens.Add(new Tuple<string, int>(token, language.LCID), value.Value);
                 }
             }
 
