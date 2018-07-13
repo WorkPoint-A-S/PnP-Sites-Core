@@ -138,7 +138,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                     foreach (var listInfo in processedLists)
                     {
-                        ProcessFieldDefaults(web, listInfo);
+                        ProcessFieldDefaults(web, parser, listInfo);
                     }
 
                     #endregion Default Field Values
@@ -261,14 +261,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
         }
 
-        private static void ProcessFieldDefaults(Web web, ListInfo listInfo)
+        private static void ProcessFieldDefaults(Web web, TokenParser parser, ListInfo listInfo)
         {
             if (listInfo.TemplateList.FieldDefaults.Count > 0)
             {
                 foreach (var fieldDefault in listInfo.TemplateList.FieldDefaults)
                 {
                     var field = listInfo.SiteList.Fields.GetByInternalNameOrTitle(fieldDefault.Key);
-                    field.DefaultValue = fieldDefault.Value;
+                    field.DefaultValue = parser.ParseString(fieldDefault.Value);
                     field.Update();
                     web.Context.ExecuteQueryRetry();
                 }
