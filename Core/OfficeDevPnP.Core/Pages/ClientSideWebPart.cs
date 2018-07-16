@@ -520,6 +520,9 @@ namespace OfficeDevPnP.Core.Pages
 
 
             var wpDiv = element.GetElementsByTagName("div").Where(a => a.HasAttribute(ClientSideWebPart.WebPartDataAttribute)).FirstOrDefault();
+            if (wpDiv == null)
+                return;
+            
             this.webPartData = wpDiv.GetAttribute(ClientSideWebPart.WebPartAttribute);
 
             // Decode the html encoded string
