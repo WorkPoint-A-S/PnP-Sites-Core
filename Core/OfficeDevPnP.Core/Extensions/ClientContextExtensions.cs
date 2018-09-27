@@ -155,13 +155,28 @@ namespace Microsoft.SharePoint.Client
 
                     return;
                 }
-                catch (WebException wex)
+                catch (Exception ex)
                 {
-                    var response = wex.Response as HttpWebResponse;
-                    // Check if request was throttled - http status code 429
-                    // Check is request failed due to server unavailable - http status code 503
-                    if (response != null && (response.StatusCode == (HttpStatusCode)429 || response.StatusCode == (HttpStatusCode)503))
+                    bool backOff = false;
+                    if (ex is WebException)
                     {
+                        var response = (ex as WebException).Response as HttpWebResponse;
+                        // Check if request was throttled - http status code 429
+                        // Check is request failed due to server unavailable - http status code 503
+                        if (response != null && (response.StatusCode == (HttpStatusCode) 429 || response.StatusCode == (HttpStatusCode) 503))
+                            backOff = true;
+                    }
+                    else if (ex is ServerException)
+                    {
+                        var se = (ex as ServerException);
+                        // Check if request failed due to timeout exception 
+                        // Check if request failed due to server too busy exception 
+                        if (se.ServerErrorTypeName == "System.ServiceModel.ServerTooBusyException" || se.ServerErrorTypeName == "System.TimeoutException")
+                            backOff = true;
+                    }
+
+                    if (backOff)
+                    { 
                         Log.Warning(Constants.LOGGING_SOURCE, CoreResources.ClientContextExtensions_ExecuteQueryRetry, backoffInterval);
                         //Add delay for retry
 #if !ONPREMISES
@@ -176,7 +191,7 @@ namespace Microsoft.SharePoint.Client
                     }
                     else
                     {
-                        Log.Error(Constants.LOGGING_SOURCE, CoreResources.ClientContextExtensions_ExecuteQueryRetryException, wex.ToString());
+                        Log.Error(Constants.LOGGING_SOURCE, CoreResources.ClientContextExtensions_ExecuteQueryRetryException, ex.ToString());
                         throw;
                     }
                 }
