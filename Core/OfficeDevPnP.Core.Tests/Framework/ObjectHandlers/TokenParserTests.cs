@@ -16,13 +16,13 @@ namespace OfficeDevPnP.Core.Tests.Framework.ObjectHandlers
         {
             using (var ctx = TestCommon.CreateClientContext())
             {
-                ctx.Load(ctx.Web, 
-                    w => w.Id, 
-                    w => w.ServerRelativeUrl, 
+                ctx.Load(ctx.Web,
+                    w => w.Id,
+                    w => w.ServerRelativeUrl,
                     w => w.Title,
-                    w => w.AssociatedOwnerGroup.Title, 
-                    w => w.AssociatedMemberGroup.Title, 
-                    w => w.AssociatedVisitorGroup.Title, 
+                    w => w.AssociatedOwnerGroup.Title,
+                    w => w.AssociatedMemberGroup.Title,
+                    w => w.AssociatedVisitorGroup.Title,
                     w => w.AssociatedOwnerGroup.Id,
                     w => w.AssociatedMemberGroup.Id,
                     w => w.AssociatedVisitorGroup.Id);
@@ -93,7 +93,7 @@ namespace OfficeDevPnP.Core.Tests.Framework.ObjectHandlers
                 Assert.IsTrue(siteId == ctx.Web.Id.ToString());
                 Assert.IsTrue(currentUserId == currentUser.Id.ToString());
                 Assert.IsTrue(currentUserFullName == currentUser.Title);
-                Assert.IsTrue(currentUserLoginName == currentUser.LoginName);
+                Assert.IsTrue(currentUserLoginName.Equals(currentUser.LoginName, StringComparison.OrdinalIgnoreCase));
                 Guid outGuid;
                 Assert.IsTrue(Guid.TryParse(guid, out outGuid));
                 Assert.IsTrue(int.Parse(associatedOwnerGroupId) == ctx.Web.AssociatedOwnerGroup.Id);
@@ -101,7 +101,7 @@ namespace OfficeDevPnP.Core.Tests.Framework.ObjectHandlers
                 Assert.IsTrue(int.Parse(associatedVisitorGroupId) == ctx.Web.AssociatedVisitorGroup.Id);
                 Assert.IsTrue(associatedOwnerGroupId == groupId);
                 Assert.IsTrue(siteOwner == ctx.Site.Owner.LoginName);
-                
+
                 Assert.IsTrue(roleDefinitionId == expectedRoleDefinitionId.ToString(), $"Role Definition Id was not parsed correctly (expected:{expectedRoleDefinitionId};returned:{roleDefinitionId})");
             }
         }
@@ -177,6 +177,7 @@ namespace OfficeDevPnP.Core.Tests.Framework.ObjectHandlers
         }
 
         [TestMethod]
+        [Timeout(1 * 60 * 1000)]
         public void NestedTokenTests()
         {
             using (var ctx = TestCommon.CreateClientContext())
@@ -196,7 +197,7 @@ namespace OfficeDevPnP.Core.Tests.Framework.ObjectHandlers
                 template.Parameters.Add("chain3", "{parameter:chain2}");
 
                 var parser = new TokenParser(ctx.Web, template);
-               
+
                 var parameterTest1 = parser.ParseString("parameterTest:{parameter:test1}");
                 var parameterTest2 = parser.ParseString("parameterTest:{parameter:test2}");
                 var parameterTest3 = parser.ParseString("parameterTest:{parameter:test3}");
@@ -207,9 +208,35 @@ namespace OfficeDevPnP.Core.Tests.Framework.ObjectHandlers
                 var chainTest1 = parser.ParseString("parameterTest:{parameter:chain1}");
 
                 // Parser should stop processing parent tokens when processing nested tokens,
-                // so we should end up with the value of the last param (chain2) in our param chain, 
+                // so we should end up with the value of the last param (chain2) in our param chain,
                 // which will not get detokenized.
                 Assert.IsTrue(chainTest1 == "parameterTest:{parameter:chain1}");
+            }
+        }
+
+        [TestMethod]
+        public void WebPartTests()
+        {
+            using (var ctx = TestCommon.CreateClientContext())
+            {
+                ctx.Load(ctx.Web, w => w.Id, w => w.ServerRelativeUrl, w => w.Title, w => w.AssociatedOwnerGroup.Title, w => w.AssociatedMemberGroup.Title, w => w.AssociatedVisitorGroup.Title);
+                ctx.Load(ctx.Site, s => s.ServerRelativeUrl);
+                ctx.ExecuteQueryRetry();
+
+                var listGuid = Guid.NewGuid();
+                var listTitle = "MyList";
+                var web = ctx.Web;
+
+                ProvisioningTemplate template = new ProvisioningTemplate();
+                template.Parameters.Add("test", "test");
+                var parser = new TokenParser(ctx.Web, template);
+                parser.AddToken(new ListIdToken(web, listTitle, listGuid));
+                parser.ParseString($"{{listid:{listTitle}}}");
+                var listId = parser.ParseStringWebPart($"{{listid:{listTitle}}}", web, null);
+                Assert.IsTrue(listGuid.ToString() == listId);
+
+                var parameterValue = parser.ParseStringWebPart("{parameter:test}", web, null);
+                Assert.IsTrue("test" == parameterValue);
             }
         }
     }

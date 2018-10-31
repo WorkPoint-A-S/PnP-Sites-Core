@@ -1,11 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using Microsoft.Online.SharePoint.TenantAdministration;
 using Microsoft.SharePoint.Client;
-using OfficeDevPnP.Core.Framework.Provisioning.Model;
 using OfficeDevPnP.Core.Diagnostics;
-using OfficeDevPnP.Core.Framework.Provisioning.Extensibility;
-using OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions;
+using OfficeDevPnP.Core.Framework.Provisioning.Model;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 {
@@ -75,9 +74,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 if (creationInfo.HandlersToProcess.HasFlag(Handlers.SitePolicy)) objectHandlers.Add(new ObjectSitePolicy());
                 if (creationInfo.HandlersToProcess.HasFlag(Handlers.SiteSecurity)) objectHandlers.Add(new ObjectSiteSecurity());
                 if (creationInfo.HandlersToProcess.HasFlag(Handlers.TermGroups)) objectHandlers.Add(new ObjectTermGroups());
-                if (creationInfo.HandlersToProcess.HasFlag(Handlers.Fields)) objectHandlers.Add(new ObjectField());
-                if (creationInfo.HandlersToProcess.HasFlag(Handlers.ContentTypes)) objectHandlers.Add(new ObjectContentType());
-                if (creationInfo.HandlersToProcess.HasFlag(Handlers.Lists)) objectHandlers.Add(new ObjectListInstance());
+                if (creationInfo.HandlersToProcess.HasFlag(Handlers.Fields)) objectHandlers.Add(new ObjectField(FieldAndListProvisioningStepHelper.Step.Export));
+                if (creationInfo.HandlersToProcess.HasFlag(Handlers.ContentTypes)) objectHandlers.Add(new ObjectContentType(FieldAndListProvisioningStepHelper.Step.Export));
+                if (creationInfo.HandlersToProcess.HasFlag(Handlers.Lists)) objectHandlers.Add(new ObjectListInstance(FieldAndListProvisioningStepHelper.Step.Export));
                 if (creationInfo.HandlersToProcess.HasFlag(Handlers.CustomActions)) objectHandlers.Add(new ObjectCustomActions());
                 if (creationInfo.HandlersToProcess.HasFlag(Handlers.Features)) objectHandlers.Add(new ObjectFeatures());
                 if (creationInfo.HandlersToProcess.HasFlag(Handlers.ComposedLook)) objectHandlers.Add(new ObjectComposedLook());
@@ -134,13 +133,82 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
         }
 
+#if !ONPREMISES
+        internal void ApplyProvisioningHierarchy(Tenant tenant, OfficeDevPnP.Core.Framework.Provisioning.Model.ProvisioningHierarchy hierarchy, string sequenceId, ProvisioningTemplateApplyingInformation provisioningInfo)
+        {
+            using (var scope = new PnPMonitoredScope(CoreResources.Provisioning_ObjectHandlers_Provisioning))
+            {
+                ProvisioningProgressDelegate progressDelegate = null;
+                ProvisioningMessagesDelegate messagesDelegate = null;
+                if (provisioningInfo == null)
+                {
+                    // When no provisioning info was passed then we want to execute all handlers
+                    provisioningInfo = new ProvisioningTemplateApplyingInformation();
+                    provisioningInfo.HandlersToProcess = Handlers.All;
+                }
+                else
+                {
+                    progressDelegate = provisioningInfo.ProgressDelegate;
+                    if (provisioningInfo.ProgressDelegate != null)
+                    {
+                        scope.LogInfo(CoreResources.SiteToTemplateConversion_ProgressDelegate_registered);
+                    }
+                    messagesDelegate = provisioningInfo.MessagesDelegate;
+                    if (provisioningInfo.MessagesDelegate != null)
+                    {
+                        scope.LogInfo(CoreResources.SiteToTemplateConversion_MessagesDelegate_registered);
+                    }
+                    if (provisioningInfo.HandlersToProcess == default(Handlers))
+                    {
+                        provisioningInfo.HandlersToProcess = Handlers.All;
+                    }
+
+                }
+
+                List<ObjectHierarchyHandlerBase> objectHandlers = new List<ObjectHierarchyHandlerBase>
+                {
+                    new ObjectHierarchyTenant(),
+                    new ObjectHierarchySequenceTermGroups(),
+                    new ObjectHierarchySequenceSites()
+                };
+
+                var count = objectHandlers.Count(o => o.ReportProgress && o.WillProvision(tenant, hierarchy, sequenceId, provisioningInfo)) + 1;
+
+                if (progressDelegate != null)
+                {
+                    progressDelegate("Initializing engine", 1, count); // handlers + initializing message)
+                }
+
+                int step = 2;
+
+                TokenParser sequenceTokenParser = new TokenParser(tenant, hierarchy);
+                foreach (var handler in objectHandlers)
+                {
+                    if (handler.WillProvision(tenant, hierarchy, sequenceId, provisioningInfo))
+                    {
+                        if (messagesDelegate != null)
+                        {
+                            handler.MessagesDelegate = messagesDelegate;
+                        }
+                        if (handler.ReportProgress && progressDelegate != null)
+                        {
+                            progressDelegate(handler.Name, step, count);
+                            step++;
+                        }
+                        sequenceTokenParser = handler.ProvisionObjects(tenant, hierarchy, sequenceId, sequenceTokenParser, provisioningInfo);
+                    }
+                }
+            }
+        }
+#endif
         /// <summary>
         /// Actual implementation of the apply templates
         /// </summary>
         /// <param name="web"></param>
         /// <param name="template"></param>
         /// <param name="provisioningInfo"></param>
-        internal void ApplyRemoteTemplate(Web web, ProvisioningTemplate template, ProvisioningTemplateApplyingInformation provisioningInfo)
+        /// <param name="tokenParser"></param>
+        internal void ApplyRemoteTemplate(Web web, ProvisioningTemplate template, ProvisioningTemplateApplyingInformation provisioningInfo, bool calledFromHierarchy = false, TokenParser tokenParser = null)
         {
             using (var scope = new PnPMonitoredScope(CoreResources.Provisioning_ObjectHandlers_Provisioning))
             {
@@ -208,7 +276,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     }
                 }
 
-                // Always ensure the Url property is loaded. In the tokens we need this and we don't want to call ExecuteQuery as this can 
+                // Always ensure the Url property is loaded. In the tokens we need this and we don't want to call ExecuteQuery as this can
                 // impact delta scenarions (calling ExecuteQuery before the planned update is called)
                 web.EnsureProperty(w => w.Url);
 
@@ -222,19 +290,34 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.SiteSecurity)) objectHandlers.Add(new ObjectSiteSecurity());
                 if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.Features)) objectHandlers.Add(new ObjectFeatures());
                 if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.TermGroups)) objectHandlers.Add(new ObjectTermGroups());
-                if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.Fields) || provisioningInfo.HandlersToProcess.HasFlag(Handlers.Lists)) objectHandlers.Add(new ObjectField());
-                if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.ContentTypes)) objectHandlers.Add(new ObjectContentType());
-                if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.Lists)) objectHandlers.Add(new ObjectListInstance());
-                if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.Fields) || provisioningInfo.HandlersToProcess.HasFlag(Handlers.Lists)) objectHandlers.Add(new ObjectLookupFields());
+
+                // Process 3 times these providers to handle proper ordering of artefact creation when dealing with lookup fields
+
+                // 1st. create fields, content and list without lookup fields
+                if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.Fields) || provisioningInfo.HandlersToProcess.HasFlag(Handlers.Lists)) objectHandlers.Add(new ObjectField(FieldAndListProvisioningStepHelper.Step.ListAndStandardFields));
+                if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.ContentTypes)) objectHandlers.Add(new ObjectContentType(FieldAndListProvisioningStepHelper.Step.ListAndStandardFields));
+                if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.Lists)) objectHandlers.Add(new ObjectListInstance(FieldAndListProvisioningStepHelper.Step.ListAndStandardFields));
+
+                // 2nd. create lookup fields (which requires lists to be present
+                if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.Fields) || provisioningInfo.HandlersToProcess.HasFlag(Handlers.Lists)) objectHandlers.Add(new ObjectField(FieldAndListProvisioningStepHelper.Step.LookupFields));
+                if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.ContentTypes)) objectHandlers.Add(new ObjectContentType(FieldAndListProvisioningStepHelper.Step.LookupFields));
+                if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.Lists)) objectHandlers.Add(new ObjectListInstance(FieldAndListProvisioningStepHelper.Step.LookupFields));
+
+                if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.Files)) objectHandlers.Add(new ObjectFiles());
+
+                // 3rd. Create remaining objects in lists (views, user custom actions, ...)
+                if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.Lists)) objectHandlers.Add(new ObjectListInstance(FieldAndListProvisioningStepHelper.Step.ListSettings));
+
+                //if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.Fields) || provisioningInfo.HandlersToProcess.HasFlag(Handlers.Lists)) objectHandlers.Add(new ObjectLookupFields());
+
                 if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.Fields) || provisioningInfo.HandlersToProcess.HasFlag(Handlers.Lists)) objectHandlers.Add(new ObjectListInstanceDataRows());
                 if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.Workflows)) objectHandlers.Add(new ObjectWorkflows());
-                if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.Files)) objectHandlers.Add(new ObjectFiles());
                 if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.Pages)) objectHandlers.Add(new ObjectPages());
                 if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.PageContents)) objectHandlers.Add(new ObjectPageContents());
 #if !ONPREMISES
-                if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.Tenant)) objectHandlers.Add(new ObjectTenant());
+                if (!calledFromHierarchy && provisioningInfo.HandlersToProcess.HasFlag(Handlers.Tenant)) objectHandlers.Add(new ObjectTenant());
                 if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.ApplicationLifecycleManagement)) objectHandlers.Add(new ObjectApplicationLifecycleManagement());
-                if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.WebApiPermissions)) objectHandlers.Add(new ObjectWebApiPermissions());
+                //if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.WebApiPermissions)) objectHandlers.Add(new ObjectWebApiPermissions());
                 if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.Pages)) objectHandlers.Add(new ObjectClientSidePages());
 #endif
                 if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.CustomActions)) objectHandlers.Add(new ObjectCustomActions());
@@ -248,7 +331,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 objectHandlers.Add(new ObjectLocalization()); // Always add this one, check is done in the handler
                 if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.ExtensibilityProviders)) objectHandlers.Add(new ObjectExtensibilityHandlers());
 
-                // Only persist template information in case this flag is set: this will allow the engine to 
+                // Only persist template information in case this flag is set: this will allow the engine to
                 // work with lesser permissions
                 if (provisioningInfo.PersistTemplateInfo)
                 {
@@ -260,7 +343,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 {
                     progressDelegate("Initializing engine", 1, count); // handlers + initializing message)
                 }
-                var tokenParser = new TokenParser(web, template);
+                if (tokenParser == null)
+                {
+                    tokenParser = new TokenParser(web, template);
+                }
                 if (provisioningInfo.HandlersToProcess.HasFlag(Handlers.ExtensibilityProviders))
                 {
                     var extensibilityHandler = objectHandlers.OfType<ObjectExtensibilityHandlers>().First();

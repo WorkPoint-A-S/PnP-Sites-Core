@@ -60,7 +60,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Utilities
                         var extractedHeader = new ClientSidePageHeader()
                         {
                             Type = (ClientSidePageHeaderType)Enum.Parse(typeof(Pages.ClientSidePageHeaderType),pageToExtract.PageHeader.Type.ToString()),
-                            ServerRelativeImageUrl = pageToExtract.PageHeader.ImageServerRelativeUrl,
+                            ServerRelativeImageUrl = TokenizeJsonControlData(web, pageToExtract.PageHeader.ImageServerRelativeUrl),
                             TranslateX = pageToExtract.PageHeader.TranslateX,
                             TranslateY = pageToExtract.PageHeader.TranslateY
                         };
@@ -224,11 +224,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Utilities
                                     {
                                         // If we have serverProcessedContent then also export that one, it's important as some controls depend on this information to be present
                                         string serverProcessedContent = (control as Pages.ClientSideWebPart).ServerProcessedContent.ToString(Formatting.None);
-                                        controlInstance.JsonControlData = "{ \"serverProcessedContent\": " + serverProcessedContent + ", \"properties\": " + (control as Pages.ClientSideWebPart).PropertiesJson + "}";
+                                        controlInstance.JsonControlData = "{ \"dataVersion\": \"" + (control as Pages.ClientSideWebPart).DataVersion + "\", \"serverProcessedContent\": " + serverProcessedContent + ", \"properties\": " + (control as Pages.ClientSideWebPart).PropertiesJson + "}";
                                     }
                                     else
                                     {
-                                        controlInstance.JsonControlData = (control as Pages.ClientSideWebPart).PropertiesJson;
+                                        controlInstance.JsonControlData = "{ \"dataVersion\": \"" + (control as Pages.ClientSideWebPart).DataVersion + "\", \"properties\": " + (control as Pages.ClientSideWebPart).PropertiesJson + "}";
                                     }
 
                                     // Tokenize the JsonControlData
@@ -430,6 +430,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Utilities
 
         private string TokenizeJsonControlData(Web web, string json)
         {
+            if (string.IsNullOrEmpty(json))
+            {
+                return json;
+            }
+
             var lists = web.Lists;
             var site = (web.Context as ClientContext).Site;
             web.Context.Load(site, s => s.Id, s => s.GroupId);
@@ -448,9 +453,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Utilities
             }
 
             // Some webparts might already contains the site URL using ~sitecollection token (i.e: CQWP) - shouldn't be needed for client side web parts, but just in case
-            json = Regex.Replace(json, "\"~sitecollection/(.)*\"", "\"{site}\"", RegexOptions.IgnoreCase);
-            json = Regex.Replace(json, "'~sitecollection/(.)*'", "'{site}'", RegexOptions.IgnoreCase);
-            json = Regex.Replace(json, ">~sitecollection/(.)*<", ">{site}<", RegexOptions.IgnoreCase);
+            //json = Regex.Replace(json, "\"~sitecollection/(.)*\"", "\"{site}\"", RegexOptions.IgnoreCase);
+            //json = Regex.Replace(json, "'~sitecollection/(.)*'", "'{site}'", RegexOptions.IgnoreCase);
+            //json = Regex.Replace(json, ">~sitecollection/(.)*<", ">{site}<", RegexOptions.IgnoreCase);
 
             // HostUrl token replacement
             var uri = new Uri(web.Url);

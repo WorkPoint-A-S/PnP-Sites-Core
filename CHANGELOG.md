@@ -6,10 +6,101 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [2.27.1806.0 - Unreleased]
+## [3.3.1811.0 - Unreleased]
+
+### Added
+- Added support for the `Visibility` attribute for Unified Groups (devinprejean)
+- Added support for language/lcid when creating modern sites using Sites.SiteCollection.CreateAsync method.
+- Added support for FieldIdToken to support customers while migrating across sites and keeping field internal name, but changing field Id.
+- Added support for Single Page WebPart App pages, will be part of SPFX 1.7
+
+### Changed
+- Get classification directly from Unified Group instead of a separate call (devinprejean)
+
+
+### Deprecated
+
+## [3.2.1810.0 - October 2018 release]
+
+### Added
+- Added support for provisioning a site hierarchy through the provisioning engine based upon the 2018-07 schema.
+- Added Tenant.ApplyProvisioningHierarchy extension method
+- Added various additional provisioning engine object handlers to support sitehierarchy
+- Added ability to set SiteLogo on a modern team site through Sites.SiteCollection.SetGroupImage method.
+
+### Changed
+
+- ClientSide page name now can contain a token [gautamdsheth]
+- Fix issue with AssociatedGroupToken loading [gautamdsheth]
+- LoginNames are compared case insensitive [tmeckel]
+- Allow to create a CustomAction to a ListInstance without specifying a valid XML for the CommandUIExtension [tmeckel]
+- Don't create a custom sort order for the HashTags TermSet [tmeckel]
+- Use topological sort to order groups before creating them [tmeckel]
+- Don't process web hook assignments without having a valid URL [phawrylak]
+- Refactored objectterms and objectenant handler to support provisioning hierarchies.
+- Don't export the internal _DisplayName field [phawrylak]
+- Fixed SetOpenBySitePolicy as it never worked [gautamdsheth]
+- Fixed ServerUnauthorizedAccessException when creating web (#1925) [phawrylak]
+
+### Deprecated
+- Deprecated all provisioning engine tokens that start with ~, like ~site, etc. Use {site} etc. instead. ~ tokens conflicted with a token system used by SharePoint itself.
+
+## [3.1.1809.0 - September 2018 release]
+
+### Added
+- Added support to provision hidden views
+- Added support for inviting guest users (AAD B2B) via Microsoft Graph [Vipul Kelkar]
+
+### Changed
+- Fixed issue where hidden views created by XsltListView web part where removed on a list during provisioning
+- Refactored token parsing for PnP template handling for performance
+- Support token replacement for view xml [vonis22]
+- Updated CSOM Assemblies to 8029.1200
+- Bugfix for token replacement where two tokens where next to each other like {hosturl}{siteid}
+- Bugfix and optimizatin for web part listid token replacement
+- Make preview link for banner image on modern pages link to the root site to avoid too long url's - and act like the default behaviour
+- Fix for updating Unified Groups [Gautam Sheth]
+- Extensibility handlers error handling [Jens Otto Hatlevold]
+- Fix default client side page header title alignment
+
+### Deprecated
+- Marked regex functions in TokenDefinition as obsolete, as they are not needed
+
+## [3.0.1808.0 - August 2018 release]
+
+### Added
+
+### Changed
+- Introduced support for ADAL 3.x and JWT 5.x, updated NuGet package reference accordingly
+- Client side API - Correctly handle data version: split between canvas and webpart data version + export data vesion using the provisioning engine + improved data version detection
+- Bug fix for using SetDefaultColumnValues in lists in subsites [cnesmark]
+- Fixed an issue with lookup fields in a list instance, when a template is applied to update a lookup field [antim-mironov]
+
+### Deprecated
+
+## [2.28.1807.0 - July 2018 release]
+
+### Added
+- Information management async extension methods #1843 [baywet]
+- TimerJob AppOnly authentication in High Trust context #1808 [ypcode]
+
+### Changed
+- Added PowerApps client side web part type
+- Fix NullReferenceException when parsing client side page header html #1821 [SchauDK]
+- Changed multi lookup field provisioning to also handle list url in List #1822 [cebud]
+- Don't wrap client side text in P if it already was done as part of the provided text
+- Added tokenization of client side page header image url
+- Fix #1810 ContentTypeBinding with lowercase ContentTypeID [TeodoraI]
+- Fix list attribute for lookup fields #1826 [sebastianmattar]
+
+### Deprecated
+
+## [2.27.1806.0 - June 2018 release]
 
 ### Added
 - Added optional timeout value on AppManager.Add method
+- Support version 1.4 of page header data structure
+- Feature/file folder async extension methods [baywet]
 
 ### Changed
 - ClientComponentId and ClientComponentProperties are now updated when applying a template to a site where the customaction already exists [SchauDK]
@@ -17,6 +108,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed issue where a list would not be created based on a list template (TemplateFeatureId)
 - Fixes issue with double tokens in content by search webpart provisioning [KEMiCZA]
 - Fixes issue with sitedesigns not correctly being associated to web template
+- Fixes issue where you could not specify content type in a datarow element in a provisioning template
+- Fixes issue where you tried to modify a property of a default modern home page, and all web parts disapeared
+- Fixed issue with Security Group names including HTML links [jensotto]
+- Fixed issue with UseShared property for Navigation Settings [TheJeffer]
+- Fixed issue with not existing links in Navigation Settings [gautamdsheth]
+- Updated Microsoft Graph SDK package to version 1.9.0
+- Correctly extract modern page title [SchauDK]
+- Fixes issue with using culture in page header persisting [guillaume-kizilian]
+- Fixes lookup column support by supporting list web relative urls [stevebeauge]
+- Fixed ClientSidePageHeaderType enum inconsistency [SchauDK]
+- Fixing #1770 issue. Now we are considering Publishing Images field type [luismanez]
+- #1804 Incorrect exception thrown while setting multi-valued tax field [gautamdsheth]
+- Typo fixes [stwel]
 
 ### Deprecated
 

@@ -40,8 +40,23 @@ namespace OfficeDevPnP.Core.Sites
         /// <summary>
         /// If set to true, file sharing for guest users will be allowed.
         /// </summary>
-        public bool AllowFileSharingForGuestUsers { get; set; }
+        [Obsolete("This property is obsolete, use ShareByEmailEnabled instead")]
+        public bool AllowFileSharingForGuestUsers
+        {
+            get
+            {
+                return ShareByEmailEnabled;
+            }
+            set
+            {
+                ShareByEmailEnabled = value;
+            }
+        }
 
+        /// <summary>
+        /// If set to true sharing files by email is enabled. Defaults to false.
+        /// </summary>
+        public bool ShareByEmailEnabled { get; set; }
         /// <summary>
         /// The Site classification to use. For instance 'Contoso Classified'. See https://www.youtube.com/watch?v=E-8Z2ggHcS0 for more information
         /// </summary>
@@ -156,7 +171,7 @@ namespace OfficeDevPnP.Core.Sites
         public bool IsPublic { get; set; } = true;
 
         /// <summary>
-        /// The Guid of the site design to be used. If specified will override the SiteDesign property
+        /// The description of the site to be created.
         /// </summary>
         public string Description { get; set; }
 
@@ -164,6 +179,8 @@ namespace OfficeDevPnP.Core.Sites
         /// The Site classification to use. For instance 'Contoso Classified'. See https://www.youtube.com/watch?v=E-8Z2ggHcS0 for more information
         /// </summary>
         public string Classification { get; set; }
+
+        public uint Lcid { get; set; }
 
         public SiteCreationInformation()
         {

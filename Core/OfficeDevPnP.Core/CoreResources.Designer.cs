@@ -948,6 +948,15 @@ namespace OfficeDevPnP.Core {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The extensibility handler does not implement a supported extensibility handler interface. Check if the extensibility handler references the same version of OfficeDevPnP currently in use (Version {0}). Assembly: {1}. Type: {2}.
+        /// </summary>
+        internal static string Provisioning_Extensibility_Invalid_Handler_Implementation {
+            get {
+                return ResourceManager.GetString("Provisioning_Extensibility_Invalid_Handler_Implementation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Provisioning extensibility pipeline preparing to invoke, Assembly: {0}. Type {1}.
         /// </summary>
         internal static string Provisioning_Extensibility_Pipeline_BeforeInvocation {
@@ -1787,6 +1796,24 @@ namespace OfficeDevPnP.Core {
         internal static string Provisioning_ObjectHandlers_Navigation_Context_web_is_not_publishing {
             get {
                 return ResourceManager.GetString("Provisioning_ObjectHandlers_Navigation_Context_web_is_not_publishing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Provisioning of the navigation node failed : {0}.
+        /// </summary>
+        internal static string Provisioning_ObjectHandlers_Navigation_Link_Provisioning_Failed {
+            get {
+                return ResourceManager.GetString("Provisioning_ObjectHandlers_Navigation_Link_Provisioning_Failed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Provisioning of the navigation node failed, retrying for : {0}.
+        /// </summary>
+        internal static string Provisioning_ObjectHandlers_Navigation_Link_Provisioning_Failed_Retry {
+            get {
+                return ResourceManager.GetString("Provisioning_ObjectHandlers_Navigation_Link_Provisioning_Failed_Retry", resourceCulture);
             }
         }
         
