@@ -301,6 +301,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     }
 
                     var webRoleDefinitions = web.Context.LoadQuery(web.RoleDefinitions);
+                    var webRoleAssignments = web.Context.LoadQuery(web.RoleAssignments);
                     var groups = web.Context.LoadQuery(web.SiteGroups.Include(g => g.LoginName));
                     web.Context.ExecuteQueryRetry();
 

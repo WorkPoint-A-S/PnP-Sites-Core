@@ -9,6 +9,7 @@ using OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Field = OfficeDevPnP.Core.Framework.Provisioning.Model.Field;
 using SPField = Microsoft.SharePoint.Client.Field;
@@ -17,6 +18,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 {
     internal class ObjectField : ObjectHandlerBase
     {
+        private FieldAndListProvisioningStepHelper.Step _step;
+
         public override string Name
         {
 #if DEBUG
@@ -64,15 +67,15 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 web.Context.ExecuteQueryRetry();
                 var existingFieldIds = existingFields.AsEnumerable<SPField>().Select(l => l.Id).ToList();
 
-                SortedList<string,Field> fieldDict = new SortedList<string, Field>(new DuplicateKeyComparer<string>());
+                SortedList<string, Field> fieldDict = new SortedList<string, Field>(new DuplicateKeyComparer<string>());
                 foreach (Field siteField in template.SiteFields)
-                {                    
+                {
                     var step = siteField.GetFieldProvisioningStep(parser);
 
                     if (step == _step)
                     {
                         var fieldRef = (string)XElement.Parse(parser.ParseString(siteField.SchemaXml)).Attribute("FieldRef") + "";
-                        fieldDict.Add(fieldRef,siteField);
+                        fieldDict.Add(fieldRef, siteField);
                     }
                 }
 
@@ -91,7 +94,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         try
                         {
                             scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_Fields_Adding_field__0__to_site, fieldId);
-                            CreateField(web, templateFieldElement, scope, parser, field.SchemaXml);
+                            CreateField(web, fieldSchemaElement, scope, parser, field.SchemaXml);
                         }
                         catch (Exception ex)
                         {
@@ -104,7 +107,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         try
                         {
                             scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_Fields_Updating_field__0__in_site, fieldId);
-                            UpdateField(web, fieldId, templateFieldElement, scope, parser, field.SchemaXml, applyingInformation.UpdateFieldsIfTypeChanged);
+                            UpdateField(web, fieldId, fieldSchemaElement, scope, parser, field.SchemaXml, applyingInformation.UpdateFieldsIfTypeChanged);
                         }
                         catch (Exception ex)
                         {

@@ -115,17 +115,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 }
             }
 
-            var webIdElement = element.Attribute("WebId");
-            if (webIdElement != null)
-            {
-                webIdElement.Value = "{siteid}";
-            }
-
             return element.ToString();
         }
 
         /// <summary>
-        /// Check if all tokens where replaced. If the field is a taxonomy field then we will check for the values of the referenced termstore and termset. 
+        /// Check if all tokens where replaced. If the field is a taxonomy field then we will check for the values of the referenced termstore and termset.
         /// </summary>
         /// <param name="fieldXml">The xml to parse</param>
         /// <param name="parser"></param>
@@ -207,14 +201,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 result = String.Empty;
             }
             else
-            { 
+            {
                 // Decode URL
                 url = Uri.UnescapeDataString(url);
                 // Try with theme catalog
                 if (url.IndexOf("/_catalogs/theme", StringComparison.InvariantCultureIgnoreCase) > -1)
                 {
                     var subsite = false;
-                    if(web != null)
+                    if (web != null)
                     {
                         subsite = web.IsSubSite();
                     }
@@ -222,7 +216,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     {
                         result = url.Substring(url.IndexOf("/_catalogs/theme", StringComparison.InvariantCultureIgnoreCase)).Replace("/_catalogs/theme", "{sitecollection}/_catalogs/theme");
                     }
-                    else {
+                    else
+                    {
                         result = url.Substring(url.IndexOf("/_catalogs/theme", StringComparison.InvariantCultureIgnoreCase)).Replace("/_catalogs/theme", "{themecatalog}");
                     }
                 }
@@ -231,7 +226,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 if (url.IndexOf("/_catalogs/masterpage", StringComparison.InvariantCultureIgnoreCase) > -1)
                 {
                     var subsite = false;
-                    if(web != null)
+                    if (web != null)
                     {
                         subsite = web.IsSubSite();
                     }
@@ -239,13 +234,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     {
                         result = url.Substring(url.IndexOf("/_catalogs/masterpage", StringComparison.InvariantCultureIgnoreCase)).Replace("/_catalogs/masterpage", "{sitecollection}/_catalogs/masterpage");
                     }
-                    else {
+                    else
+                    {
                         result = url.Substring(url.IndexOf("/_catalogs/masterpage", StringComparison.InvariantCultureIgnoreCase)).Replace("/_catalogs/masterpage", "{masterpagecatalog}");
                     }
                 }
 
                 // Try with site URL
-                if(result != null)
+                if (result != null)
                 {
                     url = result;
                 }
@@ -254,7 +250,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 {
                     string webUrlPathAndQuery = System.Web.HttpUtility.UrlDecode(uri.PathAndQuery);
                     // Don't do additional replacement when masterpagecatalog and themecatalog (see #675)
-                    if (url.IndexOf(webUrlPathAndQuery, StringComparison.InvariantCultureIgnoreCase) > -1 && (url.IndexOf("{masterpagecatalog}") == -1 ) && (url.IndexOf("{themecatalog}") ==-1))
+                    if (url.IndexOf(webUrlPathAndQuery, StringComparison.InvariantCultureIgnoreCase) > -1 && (url.IndexOf("{masterpagecatalog}") == -1) && (url.IndexOf("{themecatalog}") == -1))
                     {
                         result = (uri.PathAndQuery.Equals("/") && url.StartsWith(uri.PathAndQuery))
                             ? "{site}" + url // we need this for DocumentTemplate attribute of pnp:ListInstance also on a root site ("/") without managed path
@@ -270,6 +266,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
 
             return (result);
-        }        
+        }
     }
 }
