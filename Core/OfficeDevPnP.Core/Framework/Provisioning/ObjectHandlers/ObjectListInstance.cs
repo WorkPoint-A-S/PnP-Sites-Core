@@ -730,7 +730,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             // find the field in the list
             var listField = siteList.Fields.GetById(fieldId);
 
-            siteList.Context.Load(listField, f => f.Id, f => f.Title, f => f.Hidden, f => f.Required);
+            siteList.Context.Load(listField, f => f.Id, f => f.Title, f => f.Hidden, f => f.Required, f => f.StaticName);
             siteList.Context.ExecuteQueryRetry();
 
             var isDirty = false;
