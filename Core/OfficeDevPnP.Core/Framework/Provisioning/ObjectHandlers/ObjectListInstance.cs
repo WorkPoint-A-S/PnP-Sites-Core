@@ -1235,8 +1235,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     isDirty |= existingList.Set(x => x.EnableVersioning, templateList.EnableVersioning);
 
 #if !SP2013
+#if !ONPREMISES
+                    isDirty |= existingList.Set(x => x.MajorVersionLimit, templateList.MaxVersionLimit > 0 ? templateList.MaxVersionLimit : 500);
+#else
                     isDirty |= existingList.Set(x => x.MajorVersionLimit, templateList.MaxVersionLimit);
-
+#endif
 #endif
                     if (existingList.BaseType == BaseType.DocumentLibrary)
                     {
@@ -1246,8 +1249,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                         if (templateList.EnableMinorVersions)
                         {
+#if !ONPREMISES
+                            isDirty |= existingList.Set(x => x.MajorWithMinorVersionsLimit, templateList.MinorVersionLimit > 0 ? templateList.MinorVersionLimit : 500);
+#else
                             isDirty |= existingList.Set(x => x.MajorWithMinorVersionsLimit, templateList.MinorVersionLimit);
-
+#endif
                             if (DraftVisibilityType.Approver == (DraftVisibilityType)templateList.DraftVersionVisibility)
                             {
                                 if (templateList.EnableModeration)
@@ -1287,11 +1293,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 }
 #endif
 
-                #region UserCustomActions
+#region UserCustomActions
 
                 isDirty |= UpdateCustomActions(web, existingList, templateList, parser, scope, isNoScriptSite);
 
-                #endregion UserCustomActions
+#endregion UserCustomActions
 
                 if (isDirty)
                 {
@@ -1701,7 +1707,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 if (templateList.EnableVersioning)
                 {
 #if !SP2013
+#if !ONPREMISES
+                    createdList.MajorVersionLimit = templateList.MaxVersionLimit > 0 ? templateList.MaxVersionLimit : 500;
+#else
                     createdList.MajorVersionLimit = templateList.MaxVersionLimit;
+#endif
 #endif
                     // DraftVisibilityType.Approver is available only when the EnableModeration option of the list is true
                     if (DraftVisibilityType.Approver
@@ -1732,7 +1742,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                         if (templateList.EnableMinorVersions)
                         {
+#if !ONPREMISES
+                            createdList.MajorWithMinorVersionsLimit = templateList.MinorVersionLimit > 0 ? templateList.MinorVersionLimit : 500; // Set only if enabled, otherwise you'll get exception due setting value to zero.
+#else
                             createdList.MajorWithMinorVersionsLimit = templateList.MinorVersionLimit; // Set only if enabled, otherwise you'll get exception due setting value to zero.
+#endif
                         }
                     }
                 }
