@@ -74,8 +74,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                     if (step == _step)
                     {
-                        var fieldRef = (string)XElement.Parse(parser.ParseString(siteField.SchemaXml)).Attribute("FieldRef") + "";
-                        fieldDict.Add(fieldRef, siteField);
+                        var fieldRef = (string)XElement.Parse(parser.ParseXmlString(siteField.SchemaXml)).Attribute("FieldRef") + "";
+                        fieldDict.Add(fieldRef,siteField);
                     }
                 }
 
@@ -85,7 +85,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 foreach (var field in fields)
                 {
                     currentFieldIndex++;
-                    var fieldSchemaElement = XElement.Parse(parser.ParseString(field.SchemaXml));
+                    var fieldSchemaElement = XElement.Parse(parser.ParseXmlString(field.SchemaXml));
                     var fieldId = fieldSchemaElement.Attribute("ID").Value;
                     var fieldInternalName = (string)fieldSchemaElement.Attribute("InternalName") != null ? (string)fieldSchemaElement.Attribute("InternalName") : "";
                     WriteMessage($"Field|{(!string.IsNullOrWhiteSpace(fieldInternalName) ? fieldInternalName : fieldId)}|{currentFieldIndex}|{fields.Count}", ProvisioningMessageType.Progress);
