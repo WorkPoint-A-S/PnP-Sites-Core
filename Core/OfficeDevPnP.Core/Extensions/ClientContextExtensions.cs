@@ -85,7 +85,7 @@ namespace Microsoft.SharePoint.Client
         /// <param name="userAgent">UserAgent string value to insert for this request. You can define this value in your app's config file using key="SharePointPnPUserAgent" value="PnPRocks"></param>
         public static void ExecuteQueryRetry(this ClientRuntimeContext clientContext, int retryCount = 10, int delay = 500, string userAgent = null)
         {
-#if !ONPREMISES            
+#if !ONPREMISES
             Task.Run(() => ExecuteQueryImplementation(clientContext, retryCount, delay, userAgent)).GetAwaiter().GetResult();
 #else
             ExecuteQueryImplementation(clientContext, retryCount, delay, userAgent);
@@ -133,7 +133,7 @@ namespace Microsoft.SharePoint.Client
                 {
                     clientContext.ClientTag = SetClientTag(clientTag);
 
-                    // Make CSOM request more reliable by disabling the return value cache. Given we 
+                    // Make CSOM request more reliable by disabling the return value cache. Given we
                     // often clone context objects and the default value is
 #if !ONPREMISES
                     clientContext.DisableReturnValueCache = true;
@@ -175,28 +175,13 @@ namespace Microsoft.SharePoint.Client
 
                     return;
                 }
-                catch (Exception ex)
+                catch (WebException wex)
                 {
-                    bool backOff = false;
-                    if (ex is WebException)
+                    var response = wex.Response as HttpWebResponse;
+                    // Check if request was throttled - http status code 429
+                    // Check is request failed due to server unavailable - http status code 503
+                    if (response != null && (response.StatusCode == (HttpStatusCode)429 || response.StatusCode == (HttpStatusCode)503))
                     {
-                        var response = (ex as WebException).Response as HttpWebResponse;
-                        // Check if request was throttled - http status code 429
-                        // Check is request failed due to server unavailable - http status code 503
-                        if (response != null && (response.StatusCode == (HttpStatusCode) 429 || response.StatusCode == (HttpStatusCode) 503))
-                            backOff = true;
-                    }
-                    else if (ex is ServerException)
-                    {
-                        var se = (ex as ServerException);
-                        // Check if request failed due to timeout exception 
-                        // Check if request failed due to server too busy exception 
-                        if (se.ServerErrorTypeName == "System.ServiceModel.ServerTooBusyException" || se.ServerErrorTypeName == "System.TimeoutException")
-                            backOff = true;
-                    }
-
-                    if (backOff)
-                    { 
                         Log.Warning(Constants.LOGGING_SOURCE, CoreResources.ClientContextExtensions_ExecuteQueryRetry, backoffInterval);
 
 #if !ONPREMISES
@@ -229,7 +214,7 @@ namespace Microsoft.SharePoint.Client
                     }
                     else
                     {
-                        Log.Error(Constants.LOGGING_SOURCE, CoreResources.ClientContextExtensions_ExecuteQueryRetryException, ex.ToString());
+                        Log.Error(Constants.LOGGING_SOURCE, CoreResources.ClientContextExtensions_ExecuteQueryRetryException, wex.ToString());
                         throw;
                     }
                 }
@@ -324,7 +309,7 @@ namespace Microsoft.SharePoint.Client
                 if (originalUri.Host != siteUrl.Host &&
                     accessTokens != null && accessTokens.Count > 0 &&
                     accessTokens.ContainsKey(siteUrl.Authority))
-                { 
+                {
                     // Let's apply that specific Access Token
                     clonedClientContext.ExecutingWebRequest += (sender, args) =>
                     {
@@ -336,7 +321,7 @@ namespace Microsoft.SharePoint.Client
                     // In case of app only or SAML
                     clonedClientContext.ExecutingWebRequest += delegate (object oSender, WebRequestEventArgs webRequestEventArgs)
                     {
-                        // Call the ExecutingWebRequest delegate method from the original ClientContext object, but pass along the webRequestEventArgs of 
+                        // Call the ExecutingWebRequest delegate method from the original ClientContext object, but pass along the webRequestEventArgs of
                         // the new delegate method
                         MethodInfo methodInfo = clientContext.GetType().GetMethod("OnExecutingWebRequest", BindingFlags.Instance | BindingFlags.NonPublic);
                         object[] parametersArray = new object[] { webRequestEventArgs };
