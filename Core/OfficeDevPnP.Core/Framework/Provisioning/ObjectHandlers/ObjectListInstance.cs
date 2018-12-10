@@ -155,7 +155,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                         foreach (var listInfo in processedLists)
                         {
-                            ProcessFieldDefaults(web, listInfo);
+                            ProcessFieldDefaults(web, parser, listInfo);
                         }
 
                         #endregion Default Field Values
@@ -284,14 +284,15 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
         }
 
-        private static void ProcessFieldDefaults(Web web, ListInfo listInfo)
+        private static void ProcessFieldDefaults(Web web, TokenParser parser, ListInfo listInfo)
         {
             if (listInfo.TemplateList.FieldDefaults.Count > 0)
             {
                 foreach (var fieldDefault in listInfo.TemplateList.FieldDefaults)
                 {
+                    var fieldDefaultValue = parser.ParseString(fieldDefault.Value);
                     var field = listInfo.SiteList.Fields.GetByInternalNameOrTitle(fieldDefault.Key);
-                    field.DefaultValue = fieldDefault.Value;
+                    field.DefaultValue = fieldDefaultValue;
                     field.Update();
                     web.Context.ExecuteQueryRetry();
                 }
@@ -1112,6 +1113,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     existingList.Title = parser.ParseString(templateList.Title);
                     if (!oldTitle.Equals(existingList.Title, StringComparison.OrdinalIgnoreCase))
                     {
+                        parser.RemoveToken(new ListIdToken(web, oldTitle, existingList.Id));
+                        parser.RemoveToken(new ListUrlToken(web, oldTitle, existingList.RootFolder.ServerRelativeUrl.Substring(web.ServerRelativeUrl.Length + 1)));
+
                         parser.AddToken(new ListIdToken(web, existingList.Title, existingList.Id));
                         parser.AddToken(new ListUrlToken(web, existingList.Title, existingList.RootFolder.ServerRelativeUrl.Substring(web.ServerRelativeUrl.Length + 1)));
                     }
@@ -1295,11 +1299,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 }
 #endif
 
-#region UserCustomActions
+                #region UserCustomActions
 
                 isDirty |= UpdateCustomActions(web, existingList, templateList, parser, scope, isNoScriptSite);
 
-#endregion UserCustomActions
+                #endregion UserCustomActions
 
                 if (isDirty)
                 {

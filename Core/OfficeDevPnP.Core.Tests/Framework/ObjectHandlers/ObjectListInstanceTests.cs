@@ -17,8 +17,8 @@ namespace OfficeDevPnP.Core.Tests.Framework.ObjectHandlers
         private Guid fieldId = Guid.Parse("{7E5E53E4-86C2-4A64-9F2E-FDFECE6219E0}");
         private Guid termGroupId = Guid.Empty;
 
-        private const string CalculatedFieldElementSchema = @"<Field Name=""CalculatedField"" StaticName=""CalculatedField"" DisplayName=""Test Calculated Field"" Type=""Calculated"" ResultType=""Text"" ID=""{D1A33456-9FEB-4D8E-AFFA-177EACCE4B70}"" Group=""PnP"" ReadOnly=""TRUE"" ><Formula>=DemoField&amp;""DemoField""</Formula><FieldRefs><FieldRef Name=""DemoField"" ID=""{7E5E53E4-86C2-4A64-9F2E-FDFECE6219E0}"" /></FieldRefs></Field>";
-        private const string TokenizedCalculatedFieldElementSchema = @"<Field Name=""CalculatedField"" StaticName=""CalculatedField"" DisplayName=""Test Calculated Field"" Type=""Calculated"" ResultType=""Text"" ID=""{D1A33456-9FEB-4D8E-AFFA-177EACCE4B70}"" Group=""PnP"" ReadOnly=""TRUE"" ><Formula>=[{fieldtitle:DemoField}]&amp;""DemoField""</Formula></Field>";
+        private const string CalculatedFieldElementSchema = @"<Field Name=""CalculatedField"" StaticName=""CalculatedField"" DisplayName=""Test Calculated Field"" Type=""Calculated"" ResultType=""Text"" ID=""{D1A33456-9FEB-4D8E-AFFA-177EACCE4B70}"" Group=""PnP"" ReadOnly=""TRUE"" ><Formula>=DemoField&amp;""BlaBla""</Formula><FieldRefs><FieldRef Name=""DemoField"" ID=""{7E5E53E4-86C2-4A64-9F2E-FDFECE6219E0}"" /></FieldRefs></Field>";
+        private const string TokenizedCalculatedFieldElementSchema = @"<Field Name=""CalculatedField"" StaticName=""CalculatedField"" DisplayName=""Test Calculated Field"" Type=""Calculated"" ResultType=""Text"" ID=""{D1A33456-9FEB-4D8E-AFFA-177EACCE4B70}"" Group=""PnP"" ReadOnly=""TRUE"" ><Formula>=[{fieldtitle:DemoField}]&amp;""BlaBla""</Formula></Field>";
         private Guid calculatedFieldId = Guid.Parse("{D1A33456-9FEB-4D8E-AFFA-177EACCE4B70}");
 
         private List<string> listsForCleanup = new List<string>();
@@ -649,7 +649,7 @@ namespace OfficeDevPnP.Core.Tests.Framework.ObjectHandlers
                 XElement fieldElement = XElement.Parse(extractedTemplate.Lists.First(l => l.Title == listName).Fields.First(cf => Guid.Parse(XElement.Parse(cf.SchemaXml).Attribute("ID").Value).Equals(calculatedFieldId)).SchemaXml);
                 var formula = fieldElement.Descendants("Formula").FirstOrDefault();
 
-                Assert.AreEqual(@"=[{fieldtitle:DemoField}]&""DemoField""", formula.Value, true, "Calculated field formula is not extracted properly");
+                Assert.AreEqual(@"=[{fieldtitle:DemoField}]&""BlaBla""", formula.Value, true, "Calculated field formula is not extracted properly");
             }
         }
 
@@ -1031,6 +1031,49 @@ namespace OfficeDevPnP.Core.Tests.Framework.ObjectHandlers
                 var lmf = masterList.GetFieldById<FieldLookup>(lookupMultiFieldId);
                 Assert.IsInstanceOfType(lmf, typeof(FieldLookup));
                 Assert.AreEqual(lmf.Title, newLookupMultiTitle);
+            }
+        }
+
+        [TestMethod]
+        public void CanTokensBeUsedInFieldDefaults()
+        {
+            using (var ctx = TestCommon.CreateClientContext())
+            {
+                var template = new ProvisioningTemplate();
+
+                var listUrl = string.Format("lists/{0}", listName);
+                var listTitle = listName + "_Title";
+                var listDesc = listName + "_Description";
+                var fieldDefault = listName + "_Default";
+
+                template.Parameters.Add("fieldDefault", fieldDefault);
+
+                var newList = new ListInstance()
+                {
+                    Url = listUrl,
+                    Title = listTitle,
+                    Description = listDesc,
+                    TemplateType = (int)ListTemplateType.GenericList
+                };
+
+                newList.Fields.Add(new Core.Framework.Provisioning.Model.Field()
+                {
+                    SchemaXml = "<Field ID=\"{23203E97-3BFE-40CB-AFB4-07AA2B86BF45}\" Type=\"Text\" Name=\"ProjectID\" DisplayName=\"Project ID\" Group=\"My Columns\" MaxLength=\"255\" AllowDeletion=\"TRUE\" Required=\"TRUE\" />"
+                });
+                newList.FieldDefaults.Add("ProjectID", "{parameter:fieldDefault}");
+
+                template.Lists.Add(newList);
+
+                ctx.Web.ApplyProvisioningTemplate(template);
+
+                var list = ctx.Web.GetListByUrl(listUrl, l => l.Title, l => l.Description);
+
+                var existingField = list.Fields.GetByInternalNameOrTitle("ProjectID");
+                ctx.Load(existingField, f => f.SchemaXml, f => f.DefaultValue);
+                ctx.ExecuteQueryRetry();
+
+                Assert.IsNotNull(list);
+                Assert.AreEqual(fieldDefault, existingField.DefaultValue);
             }
         }
 
