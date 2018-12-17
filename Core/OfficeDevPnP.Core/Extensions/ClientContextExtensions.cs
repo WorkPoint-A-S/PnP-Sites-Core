@@ -192,10 +192,10 @@ namespace Microsoft.SharePoint.Client
                         string retryAfterHeader = response.GetResponseHeader("Retry-After");
                         if (!string.IsNullOrEmpty(retryAfterHeader))
                         {
-                            if (!Int32.TryParse(retryAfterHeader, out retryAfterInterval))
-                            {
+                            //if (!Int32.TryParse(retryAfterHeader, out retryAfterInterval))
+                            //{
                                 retryAfterInterval = backoffInterval;
-                            }
+                            //}
                         }
                         else
                         {
