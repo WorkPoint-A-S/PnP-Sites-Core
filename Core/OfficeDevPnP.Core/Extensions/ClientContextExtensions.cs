@@ -69,7 +69,7 @@ namespace Microsoft.SharePoint.Client
         /// <param name="retryCount">Number of times to retry the request</param>
         /// <param name="delay">Milliseconds to wait before retrying the request. The delay will be increased (doubled) every retry</param>
         /// <param name="userAgent">UserAgent string value to insert for this request. You can define this value in your app's config file using key="SharePointPnPUserAgent" value="PnPRocks"></param>
-        public static Task ExecuteQueryRetryAsync(this ClientRuntimeContext clientContext, int retryCount = 10, int delay = 500, string userAgent = null)
+        public static Task ExecuteQueryRetryAsync(this ClientRuntimeContext clientContext, int retryCount = 10, int delay = 1, string userAgent = null)
         {
             return ExecuteQueryImplementation(clientContext, retryCount, delay, userAgent);
         }
@@ -83,9 +83,9 @@ namespace Microsoft.SharePoint.Client
         /// <param name="retryCount">Number of times to retry the request</param>
         /// <param name="delay">Milliseconds to wait before retrying the request. The delay will be increased (doubled) every retry</param>
         /// <param name="userAgent">UserAgent string value to insert for this request. You can define this value in your app's config file using key="SharePointPnPUserAgent" value="PnPRocks"></param>
-        public static void ExecuteQueryRetry(this ClientRuntimeContext clientContext, int retryCount = 10, int delay = 500, string userAgent = null)
+        public static void ExecuteQueryRetry(this ClientRuntimeContext clientContext, int retryCount = 10, int delay = 1, string userAgent = null)
         {
-#if !ONPREMISES
+#if !ONPREMISES            
             Task.Run(() => ExecuteQueryImplementation(clientContext, retryCount, delay, userAgent)).GetAwaiter().GetResult();
 #else
             ExecuteQueryImplementation(clientContext, retryCount, delay, userAgent);
@@ -93,14 +93,17 @@ namespace Microsoft.SharePoint.Client
         }
 
 #if !ONPREMISES
-        private static async Task ExecuteQueryImplementation(ClientRuntimeContext clientContext, int retryCount = 10, int delay = 500, string userAgent = null)
+        private static async Task ExecuteQueryImplementation(ClientRuntimeContext clientContext, int retryCount = 10, int delay = 1, string userAgent = null)
 #else
-        private static void ExecuteQueryImplementation(ClientRuntimeContext clientContext, int retryCount = 10, int delay = 500, string userAgent = null)
+        private static void ExecuteQueryImplementation(ClientRuntimeContext clientContext, int retryCount = 10, int delay = 1, string userAgent = null)
 #endif
         {
 
 #if !ONPREMISES
             await new SynchronizationContextRemover();
+            
+            // Set the TLS preference. Needed on some server os's to work when Office 365 removes support for TLS 1.0
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
 #endif
 
             var clientTag = string.Empty;
@@ -133,7 +136,7 @@ namespace Microsoft.SharePoint.Client
                 {
                     clientContext.ClientTag = SetClientTag(clientTag);
 
-                    // Make CSOM request more reliable by disabling the return value cache. Given we
+                    // Make CSOM request more reliable by disabling the return value cache. Given we 
                     // often clone context objects and the default value is
 #if !ONPREMISES
                     clientContext.DisableReturnValueCache = true;
@@ -189,23 +192,25 @@ namespace Microsoft.SharePoint.Client
                         retry = true;
 
                         // Determine the retry after value - use the retry-after header when available
-                        string retryAfterHeader = response.GetResponseHeader("Retry-After");
-                        if (!string.IsNullOrEmpty(retryAfterHeader))
-                        {
-                            //if (!Int32.TryParse(retryAfterHeader, out retryAfterInterval))
-                            //{
-                                retryAfterInterval = backoffInterval;
-                            //}
-                        }
-                        else
-                        {
-                            retryAfterInterval = backoffInterval;
-                        }
+                        // Retry-After seems to default to a fixed 120 seconds in most cases, let's revert to our
+                        // previous logic
+                        //string retryAfterHeader = response.GetResponseHeader("Retry-After");
+                        //if (!string.IsNullOrEmpty(retryAfterHeader))
+                        //{
+                        //    if (!Int32.TryParse(retryAfterHeader, out retryAfterInterval))
+                        //    {
+                        //        retryAfterInterval = backoffInterval;
+                        //    }
+                        //}
+                        //else
+                        //{
+                        retryAfterInterval = backoffInterval;
+                        //}
 
-                        //Add delay for retry
-                        await Task.Delay(retryAfterInterval);
+                        //Add delay for retry, retry-after header is specified in seconds
+                        await Task.Delay(retryAfterInterval * 1000);
 #else
-                        Thread.Sleep(backoffInterval);
+                        Thread.Sleep(backoffInterval * 1000);
 #endif
 
                         //Add to retry count and increase delay.
@@ -309,7 +314,7 @@ namespace Microsoft.SharePoint.Client
                 if (originalUri.Host != siteUrl.Host &&
                     accessTokens != null && accessTokens.Count > 0 &&
                     accessTokens.ContainsKey(siteUrl.Authority))
-                {
+                { 
                     // Let's apply that specific Access Token
                     clonedClientContext.ExecutingWebRequest += (sender, args) =>
                     {
@@ -321,7 +326,7 @@ namespace Microsoft.SharePoint.Client
                     // In case of app only or SAML
                     clonedClientContext.ExecutingWebRequest += delegate (object oSender, WebRequestEventArgs webRequestEventArgs)
                     {
-                        // Call the ExecutingWebRequest delegate method from the original ClientContext object, but pass along the webRequestEventArgs of
+                        // Call the ExecutingWebRequest delegate method from the original ClientContext object, but pass along the webRequestEventArgs of 
                         // the new delegate method
                         MethodInfo methodInfo = clientContext.GetType().GetMethod("OnExecutingWebRequest", BindingFlags.Instance | BindingFlags.NonPublic);
                         object[] parametersArray = new object[] { webRequestEventArgs };

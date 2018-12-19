@@ -12,6 +12,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Fix to make the EveryoneExceptExternalUsers token resolve correctly in all circumstances
+- Fix to ensure TLS settings are correctly configured on certain OS versions (e.g. Windows Server 2012 R2)
+- Fix throttling Retry-After processing, should be in seconds, not in milliseconds
+
+### Deprecated
+
+## [3.4.1812.1 - December 2018 release]
+
+### Added
+
+- Added support for handling new page header options
+
+### Changed
+
 ### Deprecated
 
 - Deprecated Responsive UI extension methods
