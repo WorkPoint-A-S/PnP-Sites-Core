@@ -344,15 +344,19 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             else
                             {
                                 var principal = GetPrincipal(web, parser, scope, groups, roleAssignment);
-                                var assignmentsForPrincipal = webRoleAssignments.Where(t => t.PrincipalId == principal.Id);
-                                foreach (var assignmentForPrincipal in assignmentsForPrincipal)
+
+                                if (principal != null)
                                 {
-                                    var binding = assignmentForPrincipal.EnsureProperty(r => r.RoleDefinitionBindings).FirstOrDefault(b => b.Name == parsedRoleDefinition);
-                                    if (binding != null)
+                                    var assignmentsForPrincipal = webRoleAssignments.Where(t => t.PrincipalId == principal.Id);
+                                    foreach (var assignmentForPrincipal in assignmentsForPrincipal)
                                     {
-                                        assignmentForPrincipal.DeleteObject();
-                                        web.Context.ExecuteQueryRetry();
-                                        break;
+                                        var binding = assignmentForPrincipal.EnsureProperty(r => r.RoleDefinitionBindings).FirstOrDefault(b => b.Name == parsedRoleDefinition);
+                                        if (binding != null)
+                                        {
+                                            assignmentForPrincipal.DeleteObject();
+                                            web.Context.ExecuteQueryRetry();
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -365,7 +369,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
         private static Principal GetPrincipal(Web web, TokenParser parser, PnPMonitoredScope scope, IEnumerable<Group> groups, Model.RoleAssignment roleAssignment)
         {
-
             var parsedRoleDefinition = parser.ParseString(roleAssignment.Principal);
             Principal principal = groups.FirstOrDefault(g => g.LoginName.Equals(parsedRoleDefinition, StringComparison.OrdinalIgnoreCase));
 
@@ -393,7 +396,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     }
                 }
             }
-            principal.EnsureProperty(p => p.Id);
+
+            principal?.EnsureProperty(p => p.Id);
+
             return principal;
         }
 
