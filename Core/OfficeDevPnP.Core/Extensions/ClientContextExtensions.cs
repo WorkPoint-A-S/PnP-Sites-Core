@@ -69,7 +69,7 @@ namespace Microsoft.SharePoint.Client
         /// <param name="retryCount">Number of times to retry the request</param>
         /// <param name="delay">Milliseconds to wait before retrying the request. The delay will be increased (doubled) every retry</param>
         /// <param name="userAgent">UserAgent string value to insert for this request. You can define this value in your app's config file using key="SharePointPnPUserAgent" value="PnPRocks"></param>
-        public static Task ExecuteQueryRetryAsync(this ClientRuntimeContext clientContext, int retryCount = 10, int delay = 1, string userAgent = null)
+        public static Task ExecuteQueryRetryAsync(this ClientRuntimeContext clientContext, int retryCount = 10, int delay = 500, string userAgent = null)
         {
             return ExecuteQueryImplementation(clientContext, retryCount, delay, userAgent);
         }
@@ -83,7 +83,7 @@ namespace Microsoft.SharePoint.Client
         /// <param name="retryCount">Number of times to retry the request</param>
         /// <param name="delay">Milliseconds to wait before retrying the request. The delay will be increased (doubled) every retry</param>
         /// <param name="userAgent">UserAgent string value to insert for this request. You can define this value in your app's config file using key="SharePointPnPUserAgent" value="PnPRocks"></param>
-        public static void ExecuteQueryRetry(this ClientRuntimeContext clientContext, int retryCount = 10, int delay = 1, string userAgent = null)
+        public static void ExecuteQueryRetry(this ClientRuntimeContext clientContext, int retryCount = 10, int delay = 500, string userAgent = null)
         {
 #if !ONPREMISES            
             Task.Run(() => ExecuteQueryImplementation(clientContext, retryCount, delay, userAgent)).GetAwaiter().GetResult();
@@ -93,9 +93,9 @@ namespace Microsoft.SharePoint.Client
         }
 
 #if !ONPREMISES
-        private static async Task ExecuteQueryImplementation(ClientRuntimeContext clientContext, int retryCount = 10, int delay = 1, string userAgent = null)
+        private static async Task ExecuteQueryImplementation(ClientRuntimeContext clientContext, int retryCount = 10, int delay = 500, string userAgent = null)
 #else
-        private static void ExecuteQueryImplementation(ClientRuntimeContext clientContext, int retryCount = 10, int delay = 1, string userAgent = null)
+        private static void ExecuteQueryImplementation(ClientRuntimeContext clientContext, int retryCount = 10, int delay = 500, string userAgent = null)
 #endif
         {
 
@@ -138,9 +138,7 @@ namespace Microsoft.SharePoint.Client
 
                     // Make CSOM request more reliable by disabling the return value cache. Given we 
                     // often clone context objects and the default value is
-#if !ONPREMISES
-                    clientContext.DisableReturnValueCache = true;
-#elif SP2016
+#if !ONPREMISES || SP2016 || SP2019
                     clientContext.DisableReturnValueCache = true;
 #endif
                     // Add event handler to "insert" app decoration header to mark the PnP Sites Core library as a known application
@@ -208,9 +206,9 @@ namespace Microsoft.SharePoint.Client
                         //}
 
                         //Add delay for retry, retry-after header is specified in seconds
-                        await Task.Delay(retryAfterInterval * 1000);
+                        await Task.Delay(retryAfterInterval);
 #else
-                        Thread.Sleep(backoffInterval * 1000);
+                        Thread.Sleep(backoffInterval);
 #endif
 
                         //Add to retry count and increase delay.
@@ -291,9 +289,7 @@ namespace Microsoft.SharePoint.Client
             ClientContext clonedClientContext = new ClientContext(siteUrl);
             clonedClientContext.AuthenticationMode = clientContext.AuthenticationMode;
             clonedClientContext.ClientTag = clientContext.ClientTag;
-#if !ONPREMISES
-            clonedClientContext.DisableReturnValueCache = clientContext.DisableReturnValueCache;
-#elif SP2016
+#if !ONPREMISES || SP2016 || SP2019
             clonedClientContext.DisableReturnValueCache = clientContext.DisableReturnValueCache;
 #endif
 
@@ -314,11 +310,22 @@ namespace Microsoft.SharePoint.Client
                 if (originalUri.Host != siteUrl.Host &&
                     accessTokens != null && accessTokens.Count > 0 &&
                     accessTokens.ContainsKey(siteUrl.Authority))
-                { 
+                {
                     // Let's apply that specific Access Token
                     clonedClientContext.ExecutingWebRequest += (sender, args) =>
                     {
                         args.WebRequestExecutor.RequestHeaders["Authorization"] = "Bearer " + accessTokens[siteUrl.Authority];
+                    };
+                }
+                else if (originalUri.Host != siteUrl.Host &&
+                    accessTokens == null && clientContext is PnPClientContext &&
+                    ((PnPClientContext)clientContext).PropertyBag.ContainsKey("AccessTokens") &&
+                    ((Dictionary<string, string>)((PnPClientContext)clientContext).PropertyBag["AccessTokens"]).ContainsKey(siteUrl.Authority))
+                {
+                    // Let's apply that specific Access Token
+                    clonedClientContext.ExecutingWebRequest += (sender, args) =>
+                    {
+                        args.WebRequestExecutor.RequestHeaders["Authorization"] = "Bearer " + ((Dictionary<string, string>)((PnPClientContext)clientContext).PropertyBag["AccessTokens"])[siteUrl.Authority];
                     };
                 }
                 else
