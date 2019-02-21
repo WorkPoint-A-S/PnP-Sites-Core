@@ -31,6 +31,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         private bool includeContentTypesFromSyndication = true;
         private bool includeHiddenLists = false;
         private bool includeFieldsNotInContenTypesOnList = false;
+        internal Dictionary<Tuple<string, int>, string> ResourceTokens = new Dictionary<Tuple<string, int>, string>();
 
         /// <summary>
         /// Provisioning Progress Delegate
@@ -114,7 +115,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         }
 
         /// <summary>
-        /// Do composed look files (theme files, site logo, alternate css) need to be persisted to storage when 
+        /// Do composed look files (theme files, site logo, alternate css) need to be persisted to storage when
         /// we're "getting" a template
         /// </summary>
         [Obsolete("Use PersistBrandingFiles instead")]
