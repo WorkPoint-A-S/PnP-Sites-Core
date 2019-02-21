@@ -114,7 +114,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions
                 if (!string.IsNullOrEmpty(value.Value))
                 {
                     returnValue = true;
-                    creationInfo.ResourceTokens.Add(new Tuple<string, int>(token, language.LCID), value.Value);
+
+                    if (!creationInfo.ResourceTokens.ContainsKey(new Tuple<string, int>(token, language.LCID)))
+                        creationInfo.ResourceTokens.Add(new Tuple<string, int>(token, language.LCID), value.Value);
                 }
             }
 
@@ -128,7 +130,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions
             if (!string.IsNullOrWhiteSpace(Title))
             {
                 returnValue = true;
-                creationInfo.ResourceTokens.Add(new Tuple<string, int>(token, LCID), Title);
+
+                if (!creationInfo.ResourceTokens.ContainsKey(new Tuple<string, int>(token, LCID)))
+                    creationInfo.ResourceTokens.Add(new Tuple<string, int>(token, LCID), Title);
             }
 
             return returnValue;
@@ -151,7 +155,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions
                 if (!string.IsNullOrWhiteSpace(currentView.Title))
                 {
                     returnValue = true;
-                    creationInfo.ResourceTokens.Add(new Tuple<string, int>(token, language.LCID), currentView.Title);
+
+                    if (!creationInfo.ResourceTokens.ContainsKey(new Tuple<string, int>(token, language.LCID)))
+                        creationInfo.ResourceTokens.Add(new Tuple<string, int>(token, language.LCID), currentView.Title);
                 }
 
                 clientContext.PendingRequest.RequestExecutor.WebRequest.Headers["Accept-Language"] = acceptLanguage;
