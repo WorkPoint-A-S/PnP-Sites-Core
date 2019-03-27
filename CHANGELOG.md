@@ -6,10 +6,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [3.7.1903.0 - unreleased]
+## [3.8.1904.0 - unreleased]
 
 ### Added
 
+- Added SyncToTeams method on the app ALM manager to synchronize an SPFX solution to the Microsoft Teams App Catalog
+
+### Changed
+
+- Fix: TokenParser to resolve tokens directly following each other {hosturl}{site} #2111 [czullu]
+- Fix: ClientSidePage description provisioning #2112 [czullu]
+- Fix: Failure with RatedBy and Ratings #2113 [czullu]
+
+## [3.7.1903.0 - March 2019 release]
+
+### Added
+
+- Client Side pages API support for SP2019 #2089 [lafe]
+- ALM functions for SharePoint 2019 on premises #2074 [lafe]
 - Authentication option based upon Azure AD credential flow in combination with the SPO Management Shell Azure AD application
 
 ### Changed
@@ -20,6 +34,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed token handling for resource files having quotes
 - Fixed parsing of SchemaXml #2067 [schaudk]
 - Fixed typo [lafe]
+- Fix #2088 - Provisioning template doesn't publish the app #2090 [gautamdsheth]
 
 ## [3.6.1902.0 - February 2019 release]
 
@@ -42,6 +57,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added delegate for callback on site fully provisioned within the Provisioning Engine
 - Added STS#3 base template for SharePoint Online template extraction
 - Added support to specify the hubsite id when creating modern sites and to set owners when creating a modern team site/O365 group associated site. [gautamdsheth]
+- Added support for hubsiteid when creating modern sites with New-PnPSite
+- Added support to set owners when creating a modern team site with New-PnPSite
 
 ### Changed
 
