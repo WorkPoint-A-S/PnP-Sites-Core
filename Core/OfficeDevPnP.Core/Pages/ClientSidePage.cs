@@ -1450,7 +1450,12 @@ namespace OfficeDevPnP.Core.Pages
                         // Need to parse empty sections
                         var jsonSerializerSettings = new JsonSerializerSettings()
                         {
-                            MissingMemberHandling = MissingMemberHandling.Ignore
+                            MissingMemberHandling = MissingMemberHandling.Ignore,
+                            Error = (se, ev) =>
+                            {
+                                if ("zoneEmphasis".Equals(ev.ErrorContext.Member))
+                                    ev.ErrorContext.Handled = true;
+                            }
                         };
                         var sectionData = JsonConvert.DeserializeObject<ClientSideCanvasData>(controlData, jsonSerializerSettings);
 
