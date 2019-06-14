@@ -30,6 +30,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             get { return "Files"; }
         }
 
+        public override string InternalName => "Files";
+
         public override TokenParser ProvisionObjects(Web web, ProvisioningTemplate template, TokenParser parser, ProvisioningTemplateApplyingInformation applyingInformation)
         {
             using (var scope = new PnPMonitoredScope(this.Name))
@@ -47,6 +49,15 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 }
 
                 var filesToProcess = template.Files.Union(directoryFiles).ToArray();
+
+                var siteAssetsFiles = filesToProcess.Where(f => f.Folder.ToLower().Contains("siteassets")).FirstOrDefault();
+                if (siteAssetsFiles != null)
+                {
+                    // Need this so that we dont have access denied error during the first time upload, especially for modern sites
+                    web.Lists.EnsureSiteAssetsLibrary();
+                    web.Context.ExecuteQueryRetry();
+                }
+
                 var currentFileIndex = 0;
                 var originalWeb = web; // Used to store and re-store context in case files are deployed to masterpage gallery
                 foreach (var file in filesToProcess)
@@ -129,11 +140,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         parser.AddToken(new FileUniqueIdToken(web, targetFile.ServerRelativeUrl.Substring(web.ServerRelativeUrl.Length).TrimStart("/".ToCharArray()), targetFile.UniqueId));
                         parser.AddToken(new FileUniqueIdEncodedToken(web, targetFile.ServerRelativeUrl.Substring(web.ServerRelativeUrl.Length).TrimStart("/".ToCharArray()), targetFile.UniqueId));
 #endif
-                        if (file.Properties != null && file.Properties.Any())
-                        {
-                            Dictionary<string, string> transformedProperties = file.Properties.ToDictionary(property => property.Key, property => parser.ParseString(property.Value));
-                            SetFileProperties(targetFile, transformedProperties, parser, false);
-                        }
 
 #if !SP2013
                         bool webPartsNeedLocalization = false;
@@ -205,6 +211,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         {
                             targetFile.ListItemAllFields.SetSecurity(parser, file.Security);
                         }
+
+                        if (file.Properties != null && file.Properties.Any())
+                        {
+                            Dictionary<string, string> transformedProperties = file.Properties.ToDictionary(property => property.Key, property => parser.ParseString(property.Value));
+                            SetFileProperties(targetFile, transformedProperties, parser, false);
+                        }
+
                     }
 
                     web = originalWeb; // restore context in case files are provisioned to the master page gallery #1059
@@ -279,13 +292,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     }
                 }
 
-                var web = parentList.ParentWeb;
-                var fields = parentList.Fields;
-                web.Context.Load(fields, fs => fs.Include(f => f.InternalName, f => f.FieldTypeKind, f => f.TypeAsString, f => f.ReadOnlyField, f => f.Title));
-                web.Context.ExecuteQueryRetry();
-
-                ListItemUtilities.UpdateListItem(web, file.ListItemAllFields, parser, parentList.Fields, properties);
-
+                ListItemUtilities.UpdateListItem(file.ListItemAllFields, parser, properties, ListItemUtilities.ListItemUpdateType.UpdateOverwriteVersion);
             }
         }
 
@@ -374,6 +381,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         /// </summary>
         private static Stream GetFileStream(ProvisioningTemplate template, Model.File file)
         {
+            // TODO: See if we can use ConnectorFileHelper instead
+
             var fileName = file.Src;
             var container = String.Empty;
             if (fileName.Contains(@"\") || fileName.Contains(@"/"))
@@ -469,13 +478,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
             if (!String.IsNullOrEmpty(directory.IncludedExtensions) && directory.IncludedExtensions != "*.*")
             {
-                var includedExtensions = directory.IncludedExtensions.Split(new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                var includedExtensions = directory.IncludedExtensions.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                 files = files.Where(f => includedExtensions.Contains($"*{Path.GetExtension(f).ToLower()}")).ToList();
             }
 
             if (!String.IsNullOrEmpty(directory.ExcludedExtensions))
             {
-                var excludedExtensions = directory.ExcludedExtensions.Split(new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                var excludedExtensions = directory.ExcludedExtensions.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                 files = files.Where(f => !excludedExtensions.Contains($"*{Path.GetExtension(f).ToLower()}")).ToList();
             }
 

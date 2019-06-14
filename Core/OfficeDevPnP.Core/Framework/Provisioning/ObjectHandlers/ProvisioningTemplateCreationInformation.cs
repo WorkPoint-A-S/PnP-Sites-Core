@@ -1,4 +1,5 @@
 ﻿using Microsoft.SharePoint.Client;
+using Newtonsoft.Json;
 using OfficeDevPnP.Core.Framework.Provisioning.Connectors;
 using OfficeDevPnP.Core.Framework.Provisioning.Model;
 using System;
@@ -32,15 +33,18 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         private bool includeHiddenLists = false;
         private bool includeFieldsNotInContenTypesOnList = false;
         internal Dictionary<Tuple<string, int>, string> ResourceTokens = new Dictionary<Tuple<string, int>, string>();
+        private bool includeAllClientSidePages = false;
 
         /// <summary>
         /// Provisioning Progress Delegate
         /// </summary>
+        [JsonIgnore]
         public ProvisioningProgressDelegate ProgressDelegate { get; set; }
 
         /// <summary>
         /// Provisioning Messages Delegate
         /// </summary>
+        [JsonIgnore]
         public ProvisioningMessagesDelegate MessagesDelegate { get; set; }
 
         /// <summary>
@@ -57,6 +61,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         /// <summary>
         /// Base template used to compare against when we're "getting" a template
         /// </summary>
+        [JsonIgnore]
         public ProvisioningTemplate BaseTemplate
         {
             get
@@ -72,6 +77,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         /// <summary>
         /// Connector used to persist files when needed
         /// </summary>
+        [JsonIgnore]
         public FileConnectorBase FileConnector
         {
             get
@@ -115,10 +121,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         }
 
         /// <summary>
-        /// Do composed look files (theme files, site logo, alternate css) need to be persisted to storage when
+        /// Do composed look files (theme files, site logo, alternate css) need to be persisted to storage when 
         /// we're "getting" a template
         /// </summary>
         [Obsolete("Use PersistBrandingFiles instead")]
+        [JsonIgnore]
         public bool PersistComposedLookFiles
         {
             get
@@ -264,6 +271,21 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         }
 
         /// <summary>
+        /// If true all client side pages will be included in the template.
+        /// </summary>
+        public bool IncludeAllClientSidePages
+        {
+            get
+            {
+                return this.includeAllClientSidePages;
+            }
+            set
+            {
+                this.includeAllClientSidePages = value;
+            }
+        }
+
+        /// <summary>
         /// List of of handlers to process
         /// </summary>
         public Handlers HandlersToProcess
@@ -315,10 +337,21 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             set { includeContentTypesFromSyndication = value; }
         }
 
+        /// <summary>
+        /// Declares whether to include hidden lists in the output or not
+        /// </summary>
         public bool IncludeHiddenLists
         {
             get { return includeHiddenLists; }
             set { includeHiddenLists = value; }
         }
+
+        /// <summary>
+        /// Optional argument to specify the collection of lists to extract
+        /// </summary>
+        /// <remarks>
+        /// Can contain the title or the ID of the lists to export
+        /// </remarks>
+        public List<String> ListsToExtract { get; set; } = new List<String>();
     }
 }

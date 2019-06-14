@@ -145,7 +145,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Utilities
                     }
                     if (modelTermSet.Owner != null)
                     {
-                        set.Owner = modelTermSet.Owner;
+                        set.Owner = parser.ParseString(modelTermSet.Owner);
                     }
                     termStore.CommitAll();
                     context.Load(set);
@@ -177,14 +177,17 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Utilities
                                         modelTerm.Id = returnTuple.Item1;
                                         parser = returnTuple.Item2;
                                     }
+                                    reusedTerms.AddRange(returnTuple.Item3);
                                 }
                                 else
                                 {
+                                    // todo: add handling for reused term?
                                     modelTerm.Id = term.Id;
                                 }
                             }
                             else
                             {
+                                // todo: add handling for reused term?
                                 modelTerm.Id = term.Id;
                             }
 
@@ -201,6 +204,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Utilities
                                 modelTerm.Id = returnTuple.Item1;
                                 parser = returnTuple.Item2;
                             }
+                            reusedTerms.AddRange(returnTuple.Item3);
                         }
                     }
                     else
@@ -211,6 +215,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Utilities
                             modelTerm.Id = returnTuple.Item1;
                             parser = returnTuple.Item2;
                         }
+                        reusedTerms.AddRange(returnTuple.Item3);
                     }
                 }
 
@@ -273,7 +278,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Utilities
                     Parent = parent,
                     TermStore = termStore
                 });
-                return Tuple.Create(Guid.Empty, parser, reusedTerms); ;
+                return Tuple.Create(modelTerm.Id, parser, reusedTerms); ;
             }
 
             // Create new term
@@ -378,7 +383,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Utilities
         /// <summary>
         /// Creates child terms for the current model term if any exist
         /// </summary>
-        /// <param name="web"></param>
+        /// <param name="context"></param>
         /// <param name="modelTerm"></param>
         /// <param name="term"></param>
         /// <param name="termStore"></param>
@@ -449,7 +454,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Utilities
         /// false for the first part of the the return tuple. this will notify the system
         /// that the term should be created instead of re-used.
         /// </summary>
-        /// <param name="web"></param>
+        /// <param name="context"></param>
         /// <param name="modelTerm"></param>
         /// <param name="parent"></param>
         /// <param name="termStore"></param>

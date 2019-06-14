@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions
 {
 
-#if !SP2013
+
     internal static class UserResourceExtensions
     {
         public static ProvisioningTemplate SaveResourceValues(ProvisioningTemplate template, ProvisioningTemplateCreationInformation creationInfo)
@@ -90,18 +90,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions
             return isDirty;
         }
 
-        public static bool ContainsResourceToken(this string value)
-        {
-            if (value != null)
-            {
-                return Regex.IsMatch(value, "\\{(res|loc|resource|localize|localization):(.*?)(\\})", RegexOptions.IgnoreCase);
-            }
-            else
-            {
-                return false;
-            }
-        }
-
         public static bool PersistResourceValue(UserResource userResource, string token, ProvisioningTemplate template, ProvisioningTemplateCreationInformation creationInfo)
         {
             bool returnValue = false;
@@ -165,6 +153,20 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions
             }
             return returnValue;
         }
-    }
+      
 #endif
+        public static bool ContainsResourceToken(this string value)
+        {
+            if (value != null)
+            {
+                return Regex.IsMatch(value, "\\{(res|loc|resource|localize|localization):(.*?)(\\})", RegexOptions.IgnoreCase);
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+    }
+
 }

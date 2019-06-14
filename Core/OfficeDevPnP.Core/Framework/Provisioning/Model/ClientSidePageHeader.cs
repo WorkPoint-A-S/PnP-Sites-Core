@@ -34,9 +34,49 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         public Double? TranslateY { get; set; }
 
         /// <summary>
-        /// Defines the layout used inside the header for the client side page.
+        /// Defines the type of layout used inside the header of the current client side page
         /// </summary>
         public ClientSidePageHeaderLayoutType LayoutType { get; set; }
+
+        /// <summary>
+        /// Defines the text alignment of the text in the header of the current client side page
+        /// </summary>
+        public ClientSidePageHeaderTextAlignment TextAlignment { get; set; }
+
+        /// <summary>
+        /// Defines whether to show the topic header in the title region of the current client side page
+        /// </summary>
+        public Boolean ShowTopicHeader { get; set; }
+
+        /// <summary>
+        /// Defines whether to show the page publication date in the title region of the current client side page
+        /// </summary>
+        public Boolean ShowPublishDate { get; set; }
+
+        /// <summary>
+        /// Defines the topic header text to show if ShowTopicHeader is set to true of the current client side page
+        /// </summary>
+        public String TopicHeader { get; set; }
+
+        /// <summary>
+        /// Defines the alternative text for the header image of the current client side page
+        /// </summary>
+        public String AlternativeText { get; set; }
+
+        /// <summary>
+        /// Defines the page author(s) to be displayed of the current client side page
+        /// </summary>
+        public String Authors { get; set; }
+
+        /// <summary>
+        /// Defines the page author by line of the current client side page
+        /// </summary>
+        public String AuthorByLine { get; set; }
+
+        /// <summary>
+        /// Defines the ID of the page author by line of the current client side page
+        /// </summary>
+        public Int32 AuthorByLineId { get; set; }
 
         #endregion
 
@@ -48,12 +88,21 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         /// <returns>Returns HashCode</returns>
         public override int GetHashCode()
         {
-            return (String.Format("{0}|{1}|{2}|{3}|",
+            return (String.Format("{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|{12}|",
                 this.Type.GetHashCode(),
-                this.ServerRelativeImageUrl.GetHashCode(),
+                this?.ServerRelativeImageUrl.GetHashCode() ?? 0,
                 this.TranslateX.GetHashCode(),
-                this.TranslateY.GetHashCode()
-            ).GetHashCode());
+                this.TranslateY.GetHashCode(),
+                this.LayoutType.GetHashCode(),
+                this.TextAlignment.GetHashCode(),
+                this.ShowTopicHeader.GetHashCode(),
+                this.ShowPublishDate.GetHashCode(),
+                this?.TopicHeader.GetHashCode() ?? 0,
+                this?.AlternativeText.GetHashCode() ?? 0,
+                this?.Authors.GetHashCode() ?? 0,
+                this?.AuthorByLine.GetHashCode() ?? 0,
+                this.AuthorByLineId.GetHashCode()
+           ).GetHashCode());
         }
 
         /// <summary>
@@ -71,7 +120,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         }
 
         /// <summary>
-        /// Compares ClientSidePageHeader object based on Type, ServerRelativeImageUrl, TranslateX, and TranslateY
+        /// Compares ClientSidePageHeader object based on Type, ServerRelativeImageUrl, TranslateX, TranslateY, 
+        /// Layout, TextAlignment, TopicHeader, AlternativeText, Authors, AuthorByLine, and AuthorByLineId
         /// </summary>
         /// <param name="other">ClientSidePageHeader Class object</param>
         /// <returns>true if the ClientSidePageHeader object is equal to the current object; otherwise, false.</returns>
@@ -86,7 +136,15 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
                 this.ServerRelativeImageUrl == other.ServerRelativeImageUrl &&
                 this.TranslateX == other.TranslateX &&
                 this.TranslateY == other.TranslateY &&
-                this.LayoutType == other.LayoutType
+                this.LayoutType == other.LayoutType &&
+                this.TextAlignment == other.TextAlignment &&
+                this.ShowTopicHeader == other.ShowTopicHeader &&
+                this.ShowPublishDate == other.ShowPublishDate &&
+                this.TopicHeader == other.TopicHeader &&
+                this.AlternativeText == other.AlternativeText &&
+                this.Authors == other.Authors &&
+                this.AuthorByLine == other.AuthorByLine &&
+                this.AuthorByLineId == other.AuthorByLineId
                 );
         }
 
@@ -113,25 +171,40 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
     }
 
     /// <summary>
-    /// Defines the possible values for the client side page title area layout
+    /// Defines the type of layout used inside the header of the current client side page
     /// </summary>
     public enum ClientSidePageHeaderLayoutType
     {
         /// <summary>
-        /// The client side page title area has image and title
+        /// Full Width Image
         /// </summary>
         FullWidthImage,
         /// <summary>
-        /// The client side page title area is plain
+        /// No Image
         /// </summary>
         NoImage,
         /// <summary>
-        /// The client side page title area has a colar block
+        /// Color Block
         /// </summary>
         ColorBlock,
         /// <summary>
-        /// The client side page title area has overlap
+        /// Cut In Shape
         /// </summary>
-        CutInShape
+        CutInShape,
+    }
+
+    /// <summary>
+    /// Defines the text alignment of the text in the header of the current client side page
+    /// </summary>
+    public enum ClientSidePageHeaderTextAlignment
+    {
+        /// <summary>
+        /// Align Left
+        /// </summary>
+        Left,
+        /// <summary>
+        /// Align Center
+        /// </summary>
+        Center,
     }
 }

@@ -39,9 +39,20 @@ namespace OfficeDevPnP.Core.Pages
         public const string DescriptionField = "Description";
         public const string _AuthorByline = "_AuthorByline";
         public const string _TopicHeader = "_TopicHeader";
+        public const string _OriginalSourceUrl = "_OriginalSourceUrl";
+        public const string _OriginalSourceSiteId = "_OriginalSourceSiteId";
+        public const string _OriginalSourceWebId = "_OriginalSourceWebId";
+        public const string _OriginalSourceListId = "_OriginalSourceListId";
+        public const string _OriginalSourceItemId = "_OriginalSourceItemId";
 
         // feature
         public const string SitePagesFeatureId = "b6917cb1-93a0-4b97-a84d-7cf49975d4ec";
+
+        // folders
+        public const string DefaultTemplatesFolder = "Templates";
+
+        // Properties
+        public const string TemplatesFolderGuid = "vti_TemplatesFolderGuid";
 
         private ClientContext context;
         private string pageName;
@@ -245,7 +256,7 @@ namespace OfficeDevPnP.Core.Pages
                     // Add a default section if there wasn't one yet created
                     if (this.sections.Count == 0)
                     {
-                        this.sections.Add(new CanvasSection(this, CanvasSectionTemplate.OneColumn, 0, 0));
+                        this.sections.Add(new CanvasSection(this, CanvasSectionTemplate.OneColumn, 0));
                     }
 
                     return sections.First();
@@ -260,7 +271,7 @@ namespace OfficeDevPnP.Core.Pages
                     {
                         if (this.sections.Count == 0)
                         {
-                            this.sections.Add(new CanvasSection(this, CanvasSectionTemplate.OneColumn, 0, 0));
+                            this.sections.Add(new CanvasSection(this, CanvasSectionTemplate.OneColumn, 0));
                         }
 
                         return sections.First();
@@ -299,6 +310,43 @@ namespace OfficeDevPnP.Core.Pages
                 return this.pageHeader;
             }
         }
+
+
+        /// <summary>
+        /// Returns the name of the templates folder, and creates if it doesn't exist.
+        /// </summary>
+        public static string GetTemplatesFolder(List spPagesLibrary)
+        {
+            var folderGuid = spPagesLibrary.GetPropertyBagValueString(TemplatesFolderGuid, null);
+            if (folderGuid == null)
+            {
+                // No templates Folder
+                var templateFolder = ((ClientContext)spPagesLibrary.Context).Web.EnsureFolderPath($"SitePages/{DefaultTemplatesFolder}");
+                var uniqueId = templateFolder.EnsureProperty(f => f.UniqueId);
+                spPagesLibrary.SetPropertyBagValue(TemplatesFolderGuid, uniqueId.ToString());
+                return templateFolder.Name;
+            }
+            else
+            {
+                var templateFolderName = string.Empty;
+                try
+                {
+                    var templateFolder = ((ClientContext)spPagesLibrary.Context).Web.GetFolderById(Guid.Parse(folderGuid));
+                    templateFolderName = templateFolder.EnsureProperty(f => f.Name);
+                }
+                catch
+                {
+                    var templateFolder = ((ClientContext)spPagesLibrary.Context).Web.EnsureFolderPath($"SitePages/{DefaultTemplatesFolder}");
+                    var uniqueId = templateFolder.EnsureProperty(f => f.UniqueId);
+                    spPagesLibrary.SetPropertyBagValue(TemplatesFolderGuid, uniqueId.ToString());
+                    templateFolderName = templateFolder.Name;
+                }
+                return templateFolderName;
+            }
+        }
+
+
+
         #endregion
 
         #region public methods
@@ -324,10 +372,35 @@ namespace OfficeDevPnP.Core.Pages
         /// </summary>
         /// <param name="template">The <see cref="CanvasSectionTemplate"/> type of the section</param>
         /// <param name="order">Controls the order of the new section</param>
-        /// <param name="zoneEmphasis">Controls the color emphasis of the new section</param>
+        /// <param name="zoneEmphasis">Zone emphasis (section background)</param>
+        public void AddSection(CanvasSectionTemplate template, float order, SPVariantThemeType zoneEmphasis)
+        {            
+            AddSection(template, order, (int)zoneEmphasis);
+        }
+
+        /// <summary>
+        /// Adds a new section to your client side page
+        /// </summary>
+        /// <param name="template">The <see cref="CanvasSectionTemplate"/> type of the section</param>
+        /// <param name="order">Controls the order of the new section</param>
+        /// <param name="zoneEmphasis">Zone emphasis (section background)</param>
         public void AddSection(CanvasSectionTemplate template, float order, int zoneEmphasis)
         {
-            var section = new CanvasSection(this, template, order, zoneEmphasis);
+            var section = new CanvasSection(this, template, order)
+            {
+                ZoneEmphasis = zoneEmphasis
+            };
+            AddSection(section);
+        }
+
+        /// <summary>
+        /// Adds a new section to your client side page
+        /// </summary>
+        /// <param name="template">The <see cref="CanvasSectionTemplate"/> type of the section</param>
+        /// <param name="order">Controls the order of the new section</param>
+        public void AddSection(CanvasSectionTemplate template, float order)
+        {
+            var section = new CanvasSection(this, template, order);
             AddSection(section);
         }
 
@@ -629,13 +702,15 @@ namespace OfficeDevPnP.Core.Pages
                     throw new Exception($"Page layout type could not be determined for page {pageName}");
                 }
 
+                // default canvas content for an empty page (this field contains the page's web part properties)
+                var canvasContent1Html = @"<div><div data-sp-canvascontrol="""" data-sp-canvasdataversion=""1.0"" data-sp-controldata=""&#123;&quot;controlType&quot;&#58;0,&quot;pageSettingsSlice&quot;&#58;&#123;&quot;isDefaultDescription&quot;&#58;true,&quot;isDefaultThumbnail&quot;&#58;true&#125;&#125;""></div></div>";
                 // If the canvasfield1 field is present and filled then let's parse it
                 if (item.FieldValues.ContainsKey(ClientSidePage.CanvasField) && !(item[ClientSidePage.CanvasField] == null || string.IsNullOrEmpty(item[ClientSidePage.CanvasField].ToString())))
                 {
-                    var html = item[ClientSidePage.CanvasField].ToString();
-                    var pageHeaderHtml = item[ClientSidePage.PageLayoutContentField] != null ? item[ClientSidePage.PageLayoutContentField].ToString() : "";
-                    page.LoadFromHtml(html, pageHeaderHtml);
+                    canvasContent1Html = item[ClientSidePage.CanvasField].ToString();
                 }
+                var pageHeaderHtml = item[ClientSidePage.PageLayoutContentField] != null ? item[ClientSidePage.PageLayoutContentField].ToString() : "";
+                page.LoadFromHtml(canvasContent1Html, pageHeaderHtml);
             }
             else
             {
@@ -643,6 +718,19 @@ namespace OfficeDevPnP.Core.Pages
             }
 
             return page;
+        }
+
+        public void SaveAsTemplate(string pageName)
+        {
+            if (this.spPagesLibrary == null)
+            {
+                this.spPagesLibrary = this.Context.Web.GetListByUrl(this.PagesLibrary, p => p.RootFolder);
+            }
+
+            string pageUrl = $"{GetTemplatesFolder(this.spPagesLibrary)}/{pageName}";
+
+            // Save the page as template
+            Save(pageUrl);
         }
 
         /// <summary>
@@ -685,6 +773,14 @@ namespace OfficeDevPnP.Core.Pages
             if (!string.IsNullOrEmpty(pageName) && pageName.StartsWith("/"))
             {
                 pageName = pageName.Substring(1);
+            }
+
+            var pageHeaderHtml = "";
+            if (this.pageHeader != null && this.pageHeader.Type != ClientSidePageHeaderType.None && this.LayoutType != ClientSidePageLayoutType.RepostPage)
+            {
+                // this triggers resolving of the header image which has to be done early as otherwise there will be version conflicts
+                // (see here: https://github.com/SharePoint/PnP-Sites-Core/issues/2203)
+                pageHeaderHtml = this.pageHeader.ToHtml(this.PageTitle);
             }
 
             // Try to load the page
@@ -739,7 +835,6 @@ namespace OfficeDevPnP.Core.Pages
                 }
                 item.Update();
                 this.Context.Web.Context.Load(item);
-                //this.Context.Web.Context.ExecuteQueryRetry();
             }
             else
             {
@@ -751,19 +846,33 @@ namespace OfficeDevPnP.Core.Pages
             }
 
             // Persist to page field
-            if (this.layoutType == ClientSidePageLayoutType.Home && this.KeepDefaultWebParts)
+            if (this.LayoutType == ClientSidePageLayoutType.RepostPage)
             {
+                item[ClientSidePage.ContentTypeId] = BuiltInContentTypeId.RepostPage;
                 item[ClientSidePage.CanvasField] = "";
+                item[ClientSidePage.PageLayoutContentField] = "";
+                item.Update();
+                this.Context.Web.Context.Load(item);
+                this.Context.ExecuteQueryRetry();
+
+                this.pageListItem = item;
+                return;
             }
             else
             {
-                item[ClientSidePage.CanvasField] = this.ToHtml();
-            }
+                if (this.layoutType == ClientSidePageLayoutType.Home && this.KeepDefaultWebParts)
+                {
+                    item[ClientSidePage.CanvasField] = "";
+                }
+                else
+                {
+                    item[ClientSidePage.CanvasField] = this.ToHtml();
+                }
 
-            // The page must first be saved, otherwise the page contents gets erased
-            item.Update();
-            this.Context.Web.Context.Load(item);
-            //this.Context.ExecuteQueryRetry();
+                // The page must first be saved, otherwise the page contents gets erased
+                item.Update();
+                this.Context.Web.Context.Load(item);
+            }
 
             // Persist the page header
             if (this.pageHeader.Type == ClientSidePageHeaderType.None)
@@ -782,11 +891,11 @@ namespace OfficeDevPnP.Core.Pages
             }
             else
             {
-                item[ClientSidePage.PageLayoutContentField] = this.pageHeader.ToHtml(this.pageTitle);
+                item[ClientSidePage.PageLayoutContentField] = pageHeaderHtml;
 
 #if !SP2019
                 // AuthorByline depends on a field holding the author values
-                if (this.pageHeader.AuthorByLineId > -1 /*&& item.FieldValues.ContainsKey(ClientSidePage._AuthorByline)*/)
+                if (this.pageHeader.AuthorByLineId > -1)
                 {
                     FieldUserValue[] userValueCollection = new FieldUserValue[1];
                     FieldUserValue fieldUserVal = new FieldUserValue
@@ -798,7 +907,7 @@ namespace OfficeDevPnP.Core.Pages
                 }
 
                 // Topic header needs to be persisted in a field
-                if (!string.IsNullOrEmpty(this.pageHeader.TopicHeader) /*&& item.FieldValues.ContainsKey(ClientSidePage._TopicHeader)*/)
+                if (!string.IsNullOrEmpty(this.pageHeader.TopicHeader))
                 {
                     item[ClientSidePage._TopicHeader] = this.PageHeader.TopicHeader;
                 }
@@ -859,6 +968,12 @@ namespace OfficeDevPnP.Core.Pages
                         catch { }
                     }
                 }
+            }
+
+            if (item[ClientSidePage.PageLayoutType] as string != this.layoutType.ToString())
+            {
+                item[ClientSidePage.PageLayoutType] = this.layoutType.ToString();
+                isDirty = true;
             }
 
             // Try to set the page description if not yet set
@@ -970,6 +1085,7 @@ namespace OfficeDevPnP.Core.Pages
                 case DefaultClientSideWebParts.ListProperties: return "a8cd4347-f996-48c1-bcfb-75373fed2a27";
                 case DefaultClientSideWebParts.MarkDown: return "1ef5ed11-ce7b-44be-bc5e-4abd55101d16";
                 case DefaultClientSideWebParts.Planner: return "39c4c1c2-63fa-41be-8cc2-f6c0b49b253d";
+                case DefaultClientSideWebParts.Sites: return "7cba020c-5ccb-42e8-b6fc-75b3149aba7b";
 #endif
                 default: return "";
             }
@@ -1032,6 +1148,7 @@ namespace OfficeDevPnP.Core.Pages
                 case "a8cd4347-f996-48c1-bcfb-75373fed2a27": return DefaultClientSideWebParts.ListProperties;
                 case "1ef5ed11-ce7b-44be-bc5e-4abd55101d16": return DefaultClientSideWebParts.MarkDown;
                 case "39c4c1c2-63fa-41be-8cc2-f6c0b49b253d": return DefaultClientSideWebParts.Planner;
+                case "7cba020c-5ccb-42e8-b6fc-75b3149aba7b": return DefaultClientSideWebParts.Sites;
 #endif
                 default: return DefaultClientSideWebParts.ThirdParty;
             }
@@ -1245,7 +1362,7 @@ namespace OfficeDevPnP.Core.Pages
             }
 
             // ensure we do have the page list item loaded
-            EnsurePageListItem();
+            EnsurePageListItem(true);
 
             // Set promoted state
             this.pageListItem[ClientSidePage.PromotedStateField] = (Int32)PromotedState.Promoted;
@@ -1305,9 +1422,9 @@ namespace OfficeDevPnP.Core.Pages
                 TranslateY = translateY
             };
         }
-#endregion
+        #endregion
 
-                #region Internal and private methods
+        #region Internal and private methods
         private void EnableCommentsImplementation(bool enable)
         {
             // ensure we do have the page list item loaded
@@ -1344,9 +1461,9 @@ namespace OfficeDevPnP.Core.Pages
             }
         }
 
-        private void EnsurePageListItem()
+        private void EnsurePageListItem(Boolean force = false)
         {
-            if (this.pageListItem == null)
+            if (this.pageListItem == null || force)
             {
                 string serverRelativePageName;
                 File pageFile;
@@ -1450,12 +1567,7 @@ namespace OfficeDevPnP.Core.Pages
                         // Need to parse empty sections
                         var jsonSerializerSettings = new JsonSerializerSettings()
                         {
-                            MissingMemberHandling = MissingMemberHandling.Ignore,
-                            Error = (se, ev) =>
-                            {
-                                if ("zoneEmphasis".Equals(ev.ErrorContext.Member))
-                                    ev.ErrorContext.Handled = true;
-                            }
+                            MissingMemberHandling = MissingMemberHandling.Ignore
                         };
                         var sectionData = JsonConvert.DeserializeObject<ClientSideCanvasData>(controlData, jsonSerializerSettings);
 
@@ -1469,7 +1581,7 @@ namespace OfficeDevPnP.Core.Pages
                         {
                             if (sectionData.Position != null)
                             {
-                                this.AddSection(new CanvasSection(this) { ZoneEmphasis = sectionData.Emphasis != null ? sectionData.Emphasis.ZoneEmphasis : 0}, sectionData.Position.ZoneIndex);
+                                this.AddSection(new CanvasSection(this) { ZoneEmphasis = sectionData.Emphasis != null ? sectionData.Emphasis.ZoneEmphasis : 0 }, sectionData.Position.ZoneIndex);
                                 currentSection = this.sections.Where(p => p.Order == sectionData.Position.ZoneIndex).First();
                             }
                         }
@@ -1556,7 +1668,7 @@ namespace OfficeDevPnP.Core.Pages
             var currentSection = this.sections.Where(p => p.Order == position.ZoneIndex).FirstOrDefault();
             if (currentSection == null)
             {
-                this.AddSection(new CanvasSection(this) { ZoneEmphasis = emphasis != null ? emphasis.ZoneEmphasis : 0}, position.ZoneIndex);
+                this.AddSection(new CanvasSection(this) { ZoneEmphasis = emphasis != null ? emphasis.ZoneEmphasis : 0 }, position.ZoneIndex);
                 currentSection = this.sections.Where(p => p.Order == position.ZoneIndex).First();
             }
 
@@ -1654,7 +1766,7 @@ namespace OfficeDevPnP.Core.Pages
                 this.accessToken = e.WebRequestExecutor.RequestHeaders.Get("Authorization").Replace("Bearer ", "");
             }
         }
-                #endregion
+        #endregion
     }
 #endif
-            }
+}

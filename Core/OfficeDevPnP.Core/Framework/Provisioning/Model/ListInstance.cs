@@ -441,6 +441,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
             private set { this._propertyBags = value; }
         }
 
+        /// <summary>
+        /// Defines the alternate template internal name for a list based on a .STP file/list definition
+        /// </summary>
+        public String TemplateInternalName { get; set; }
+
         #endregion
 
         #region Comparison code
@@ -451,7 +456,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         /// <returns>Returns HashCode</returns>
         public override int GetHashCode()
         {
-            return (String.Format("{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|{12}|{13}|{14}|{15}|{16}|{17}|{18}|{19}|{20}|{21}|{22}|{23}|{24}|{25}|{26}|{27}|{28}|{29}|{30}|{31}|{32}|{33}|{34}|{35}|{36}|{37}|{38}|{39}|{40}|{41}|{42}|{43}|{44}|",
+            return (String.Format("{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}|{9}|{10}|{11}|{12}|{13}|{14}|{15}|{16}|{17}|{18}|{19}|{20}|{21}|{22}|{23}|{24}|{25}|{26}|{27}|{28}|{29}|{30}|{31}|{32}|{33}|{34}|{35}|{36}|{37}|{38}|{39}|{40}|{41}|{42}|{43}|{44}|{45}|",
                 this.ContentTypesEnabled.GetHashCode(),
                 (this.Description != null ? this.Description.GetHashCode() : 0),
                 (this.DocumentTemplate != null ? this.DocumentTemplate.GetHashCode() : 0),
@@ -496,7 +501,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
                 this.ValidationMessage?.GetHashCode() ?? 0,
                 this.DataSource.Aggregate(0, (acc, next) => acc += next.GetHashCode()),
                 this.WriteSecurity.GetHashCode(),
-                this.PropertyBagEntries.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0))
+                this.PropertyBagEntries.Aggregate(0, (acc, next) => acc += (next != null ? next.GetHashCode() : 0)),
+                this.TemplateInternalName?.GetHashCode() ?? 0
             ).GetHashCode());
         }
 
@@ -519,7 +525,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         /// MaxVersionLimit, MinorVersionLimit, OnQuickLaunch, EnableAttachments, EnableFolderCreation, ForceCheckOut, RemoveExistingContentTypes, TemplateType,
         /// Title, Url, TemplateFeatureID, RemoveExistingViews, ContentTypeBindings, View, Fields, FieldRefs, FieldDefaults, Security, Folders, UserCustomActions, 
         /// Webhooks, IRMSettings, DefaultDisplayFormUrl, DefaultEditFormUrl, DefaultNewFormUrl, Direction, ImageUrl, IrmExpire, IrmReject, IsApplicationList,
-        /// ReadSecurity, ValidationFormula, ValidationMessage, DataSource, and WriteSecurity properties.
+        /// ReadSecurity, ValidationFormula, ValidationMessage, DataSource, WriteSecurity, and TemplateInternalName properties.
         /// </summary>
         /// <param name="other">ListInstance object</param>
         /// <returns>true if the ListInstance object is equal to the current object; otherwise, false.</returns>
@@ -567,7 +573,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
                 this.DefaultEditFormUrl == other.DefaultEditFormUrl &&
                 this.DefaultNewFormUrl == other.DefaultNewFormUrl &&
                 this.Direction == other.Direction &&
-                this.ImageUrl == other.ImageUrl &&
+                CheckImage(this.ImageUrl, other.ImageUrl) &&
                 this.IrmExpire == other.IrmExpire &&
                 this.IrmReject == other.IrmReject &&
                 this.IsApplicationList == other.IsApplicationList &&
@@ -576,12 +582,39 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
                 this.ValidationMessage == other.ValidationMessage &&
                 this.DataSource.DeepEquals(other.DataSource) &&
                 this.WriteSecurity == other.WriteSecurity &&
-                this.PropertyBagEntries.DeepEquals(other.PropertyBagEntries)
+                this.PropertyBagEntries.DeepEquals(other.PropertyBagEntries) &&
+                this.TemplateInternalName == other.TemplateInternalName
             );
+        }
+
+        private bool CheckImage(string image1, string image2)
+        {
+            if (string.IsNullOrEmpty(image1) && string.IsNullOrEmpty(image2))
+            {
+                return true;
+            }
+            else if ((!string.IsNullOrEmpty(image1) && string.IsNullOrEmpty(image2)) || (string.IsNullOrEmpty(image1) && !string.IsNullOrEmpty(image2)))
+            {
+                return false;
+            }
+            else
+            {
+                if (image1.IndexOf("?") > -1)
+                {
+                    image1 = image1.Substring(0, image1.IndexOf("?"));
+                }
+                if (image2.IndexOf("?") > -1)
+                {
+                    image2 = image2.Substring(0, image2.IndexOf("?"));
+                }
+                return image1.Equals(image2, StringComparison.InvariantCultureIgnoreCase);
+            }
         }
 
         #endregion
     }
+
+
 
     public enum ListExperience
     {

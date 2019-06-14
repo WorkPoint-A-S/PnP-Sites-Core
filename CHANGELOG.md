@@ -6,11 +6,91 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [3.8.1904.0 - unreleased]
+## [3.11. - Unreleased]
 
 ### Added
 
+### Changed
+
+- Fixed issue when importing a CSV file using ImportTerms where terms where always added to the first termset. [IonutLupsan]
+
+## [3.10.1906.0 - June 2019 release ]
+
+### Added
+
+- Added ability to include all client side pages in an extracted template
+- Feature: Adds capability to connect existing team site to MS Teams team (teamify) #2265 [gautamdsheth]
+
+### Changed 
+
+- Client side page serialization fix: if web part serverProcessedContent properties contains htmlStrings then these are now correctly serialized in the resulting html
+- Update SiteLockState enum to support ReadOnly status #2275 [TomekPi]
+- Fix DataRow parameters replacement. #2248 [siata13]
+- The specified user {associatedownergroupid} could not be found. #2281 [StaffanNelemans]
+- Fix DataRow URL field name: data value URL,Description. #2273 [cgenero]
+- Provisioning webhook fixes
+
+## [3.9.1905.3 - May 2019 Intermediate Release 3]
+
+### Changed 
+
+- Reintroduced fieldlink reordering on content types after server side fixes are in place.
+- Allow for retrieval of principals via their ID in objectsitesecurity.cs
+- Improved 'delta' detection for lists factoring out version changes in the list image url
+- Fixed xml comments to reduce compiler warnings [gszdev]
+
+## [3.9.1905.2 - May 2019 Intermediate Release 2]
+
+### Changed 
+
+- Fixed issue with nested tokens in token parser
+
+## [3.9.1905.1 - May 2019 Intermediate Release]
+
+### Changed
+
+- Temporarily removed the functionality to reorder fieldlinks in content types created through the provisioning engine due to server side code issue.
+
+## [3.9.1905.0 - May 2019 release]
+
+### Added
+
+- Support to export terms with a specific lcid in TaxonomyExtensions.ExportTermSet
+- Support for new page header and section backgrounds in the modern client side page provisioning [NicolajHedeager]
+- Support for provisioning client side page templates
+- Support for Provisioning Schema 201903
+- Support for provisioning Microsoft Teams
+- Support for provisioning Site Header settings
+- Support for provisioning Site Footer links
+- New PnPProvisioningContext object for security scope management
+- New tenant extension method (tenant.EnableCommSite) to to convert the root site collection of a tenant into a communication site
+- Added support to extract and provision list propertybag entries #2201 [patrikhellgren]
+- A lot of schema 201903 unit tests [s-KaiNet]
+
+### Changed
+
+- Added support to apply an OOTB theme using web.ApplyTheme() [gautamdsheth]
+- Added support for setting owners and hubsite id in GroupifySite [gautamdsheth]
+- Allow fileuniqueid in NavigationNodes for Group OneNote Url #2150 [czullu]
+- fixing client side page existence check sometimes flags page as existing although it isn't #2185 [heinrich-ulbricht]
+- Fix loading of ClientSidePage contents if CanvasContent1 property is empty #2199 [heinrich-ulbricht]
+- Adding test for saving and loading of ClientSidePage header #2198 [heinrich-ulbricht]
+- Fix: conflict when provisioning client side pages with headers #2208 [heinrich-ulbricht]
+- Fix: fix for GlobalNavigation serialization in Provisioning Schema #2210 [patrikhellgren]
+- Fix: Handling of re-used terms #2176 [heinrich-ulbricht]
+- Fix: fixes to the serialization engine #2214 [s-KaiNet]
+- Fix: Removing SP groups from role assignments in PnP templates
+- Fix: Improved exporting and importing of associated groups #2192 / #2174 [heinrich-ulbricht]
+- Fix: NullReferenceException caused by missing cookie #2232 [lafe]
+- Fix: tokenization for calculated field formula where one field is present multiple times in the formula #2236 [NicolajHedeager]
+
+## [3.8.1904.0 - April 2019 release]
+
+### Added
+
+- Export and import client side web parts with dynamic data connections #2120 [YannickRe]
 - Added SyncToTeams method on the app ALM manager to synchronize an SPFX solution to the Microsoft Teams App Catalog
+- Extension method IsCommunicationSite for Site objects
 
 ### Changed
 
@@ -18,6 +98,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fix: ClientSidePage description provisioning #2112 [czullu]
 - Fix: Failure with RatedBy and Ratings #2113 [czullu]
 - Ensure Field InternalName is correctly retrieved when logging provisision progress #2140 [NicolajHedeager]
+- Feature/Fix: Added ensureSiteAssetsLibrary method to prevent access denied #2129 [gautamdsheth]
+- Fix : Skip creation of associated groups if they already exist #2128 [gautamdsheth]
+- Fix: Added capability to set the private CDN orgins and policies #2141 [gautamdsheth]
+- EnsureUser for external users #2136 [schaudk]
+- Don't fail on modern page save when the provided header image url is living in a different web then the client side page
+- Correctly save a modern repost page
 
 ## [3.7.1903.0 - March 2019 release]
 
