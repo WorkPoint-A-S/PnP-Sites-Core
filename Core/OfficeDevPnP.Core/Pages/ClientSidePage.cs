@@ -256,7 +256,7 @@ namespace OfficeDevPnP.Core.Pages
                     // Add a default section if there wasn't one yet created
                     if (this.sections.Count == 0)
                     {
-                        this.sections.Add(new CanvasSection(this, CanvasSectionTemplate.OneColumn, 0));
+                        this.sections.Add(new CanvasSection(this, CanvasSectionTemplate.OneColumn, 0, 0));
                     }
 
                     return sections.First();
@@ -271,7 +271,7 @@ namespace OfficeDevPnP.Core.Pages
                     {
                         if (this.sections.Count == 0)
                         {
-                            this.sections.Add(new CanvasSection(this, CanvasSectionTemplate.OneColumn, 0));
+                            this.sections.Add(new CanvasSection(this, CanvasSectionTemplate.OneColumn, 0, 0));
                         }
 
                         return sections.First();
@@ -374,7 +374,7 @@ namespace OfficeDevPnP.Core.Pages
         /// <param name="order">Controls the order of the new section</param>
         /// <param name="zoneEmphasis">Zone emphasis (section background)</param>
         public void AddSection(CanvasSectionTemplate template, float order, SPVariantThemeType zoneEmphasis)
-        {            
+        {
             AddSection(template, order, (int)zoneEmphasis);
         }
 
@@ -386,7 +386,7 @@ namespace OfficeDevPnP.Core.Pages
         /// <param name="zoneEmphasis">Zone emphasis (section background)</param>
         public void AddSection(CanvasSectionTemplate template, float order, int zoneEmphasis)
         {
-            var section = new CanvasSection(this, template, order)
+            var section = new CanvasSection(this, template, order, zoneEmphasis)
             {
                 ZoneEmphasis = zoneEmphasis
             };
@@ -400,7 +400,7 @@ namespace OfficeDevPnP.Core.Pages
         /// <param name="order">Controls the order of the new section</param>
         public void AddSection(CanvasSectionTemplate template, float order)
         {
-            var section = new CanvasSection(this, template, order);
+            var section = new CanvasSection(this, template, order, 0);
             AddSection(section);
         }
 
@@ -532,7 +532,7 @@ namespace OfficeDevPnP.Core.Pages
         /// Adds a new control to your client side page in the given section
         /// </summary>
         /// <param name="control"><see cref="CanvasControl"/> to add</param>
-        /// <param name="column"><see cref="CanvasColumn"/> that will hold the control</param>    
+        /// <param name="column"><see cref="CanvasColumn"/> that will hold the control</param>
         public void AddControl(CanvasControl control, CanvasColumn column)
         {
             if (control == null)
@@ -554,7 +554,7 @@ namespace OfficeDevPnP.Core.Pages
         /// Adds a new control to your client side page in the given section with a given order
         /// </summary>
         /// <param name="control"><see cref="CanvasControl"/> to add</param>
-        /// <param name="column"><see cref="CanvasColumn"/> that will hold the control</param>    
+        /// <param name="column"><see cref="CanvasColumn"/> that will hold the control</param>
         /// <param name="order">Order of the control in the given section</param>
         public void AddControl(CanvasControl control, CanvasColumn column, int order)
         {
@@ -1392,7 +1392,7 @@ namespace OfficeDevPnP.Core.Pages
         }
 
         /// <summary>
-        /// Removes the set page header 
+        /// Removes the set page header
         /// </summary>
         public void RemovePageHeader()
         {

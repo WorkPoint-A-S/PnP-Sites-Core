@@ -368,7 +368,7 @@ namespace OfficeDevPnP.Core.Pages
                 if (!headerImageResolved)
                 {
                     // if resolving image results in an exception we might end up with a version conflict on the item where the html is set
-                    this.clientContext.ExecuteQueryRetry(); 
+                    this.clientContext.ExecuteQueryRetry();
                     ResolvePageHeaderImage();
                 }
 

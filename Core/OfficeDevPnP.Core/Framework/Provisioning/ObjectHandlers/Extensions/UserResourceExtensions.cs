@@ -153,8 +153,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions
             }
             return returnValue;
         }
-      
-#endif
+
         public static bool ContainsResourceToken(this string value)
         {
             if (value != null)
