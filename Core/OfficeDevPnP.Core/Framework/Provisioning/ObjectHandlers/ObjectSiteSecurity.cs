@@ -82,7 +82,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                 var ownerGroupCandidate = web.SiteGroups.GetByName(parsedAssociatedOwnerGroupName);
                                 web.Context.Load(ownerGroupCandidate,
                                     g => g.Id);
-                                web.Context.Load(web.AssociatedOwnerGroup, 
+                                web.Context.Load(web.AssociatedOwnerGroup,
                                     g => g.Id);
                                 web.Context.ExecuteQueryRetry();
                                 // there is no associated group yet OR
@@ -275,7 +275,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 ))
                 {
                     Group group;
-                    var allGroups = web.Context.LoadQuery(web.SiteGroups.Include(gr => gr.LoginName));
+                    var allGroups = web.Context.LoadQuery(web.SiteGroups.Include(gr => gr.Id, gr => gr.LoginName));
                     web.Context.ExecuteQueryRetry();
 
                     string parsedGroupTitle = parser.ParseString(siteGroup.Title);
