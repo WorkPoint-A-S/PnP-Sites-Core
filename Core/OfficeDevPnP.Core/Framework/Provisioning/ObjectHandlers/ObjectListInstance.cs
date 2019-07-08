@@ -630,6 +630,15 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     viewRowLimit = uint.Parse(rowLimitElement.Value);
                 }
 
+#if !SP2013 && !SP2016
+                //BaseViewID
+                int BaseViewID = 1;
+                var baseviewIDElement = viewElementRaw.Attribute("BaseViewID");
+                if (baseviewIDElement != null)
+                {
+                    BaseViewID = int.Parse(baseviewIDElement.Value);
+                }
+#endif
                 // Query
                 var viewQuery = new StringBuilder();
                 foreach (var queryElement in viewElement.Descendants("Query").Elements())
@@ -639,6 +648,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                 var viewCI = new ViewCreationInformation
                 {
+#if !SP2013 && !SP2016
+                    baseViewId = BaseViewID,
+#endif
                     ViewFields = viewFields,
                     RowLimit = viewRowLimit,
                     Paged = viewPaged,

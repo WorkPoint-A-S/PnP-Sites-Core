@@ -178,4 +178,6 @@ FakesAssemblies/
 
 # Visual Studio 2015 cache/options directory
 .vs/
-/Core/OfficeDevPnP.Core/Framework/Provisioning/Providers/Xml
+
+# VS Code Settings
+.vscode/
