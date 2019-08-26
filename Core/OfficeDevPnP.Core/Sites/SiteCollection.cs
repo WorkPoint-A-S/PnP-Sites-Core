@@ -9,7 +9,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace OfficeDevPnP.Core.Sites
 {
@@ -28,6 +30,19 @@ namespace OfficeDevPnP.Core.Sites
         /// <param name="delayAfterCreation">Defines the number of seconds to wait after creation</param>
         /// <returns>ClientContext object for the created site collection</returns>
         public static ClientContext Create(ClientContext clientContext, CommunicationSiteCollectionCreationInformation siteCollectionCreationInformation, Int32 delayAfterCreation = 0)
+        {
+            var context = CreateAsync(clientContext, siteCollectionCreationInformation, delayAfterCreation).GetAwaiter().GetResult();
+            return context;
+        }
+
+        /// <summary>
+        /// Creates a new Team Site Collection with no group and waits for it to be created
+        /// </summary>
+        /// <param name="clientContext">ClientContext object of a regular site</param>
+        /// <param name="siteCollectionCreationInformation">information about the site to create</param>
+        /// <param name="delayAfterCreation">Defines the number of seconds to wait after creation</param>
+        /// <returns>ClientContext object for the created site collection</returns>
+        public static ClientContext Create(ClientContext clientContext, TeamNoGroupSiteCollectionCreationInformation siteCollectionCreationInformation, Int32 delayAfterCreation = 0)
         {
             var context = CreateAsync(clientContext, siteCollectionCreationInformation, delayAfterCreation).GetAwaiter().GetResult();
             return context;
@@ -55,11 +70,59 @@ namespace OfficeDevPnP.Core.Sites
         /// <returns>ClientContext object for the created site collection</returns>
         public static async Task<ClientContext> CreateAsync(ClientContext clientContext, CommunicationSiteCollectionCreationInformation siteCollectionCreationInformation, Int32 delayAfterCreation = 0)
         {
+            Dictionary<string, object> payload = GetRequestPayload(siteCollectionCreationInformation);
+
+            var siteDesignId = GetSiteDesignId(siteCollectionCreationInformation);
+            if (siteDesignId != Guid.Empty)
+            {
+                payload.Add("SiteDesignId", siteDesignId);
+            }
+            payload.Add("HubSiteId", siteCollectionCreationInformation.HubSiteId);
+
+            return await CreateAsync(clientContext, siteCollectionCreationInformation.Owner, payload, delayAfterCreation);
+        }
+
+        /// <summary>
+        /// Creates a new Team Site Collection with no group
+        /// </summary>
+        /// <param name="clientContext">ClientContext object of a regular site</param>
+        /// <param name="siteCollectionCreationInformation">information about the site to create</param>
+        /// <param name="delayAfterCreation">Defines the number of seconds to wait after creation</param>
+        /// <returns>ClientContext object for the created site collection</returns>
+        public static async Task<ClientContext> CreateAsync(ClientContext clientContext, TeamNoGroupSiteCollectionCreationInformation siteCollectionCreationInformation, Int32 delayAfterCreation = 0)
+        {
+            Dictionary<string, object> payload = GetRequestPayload(siteCollectionCreationInformation);
+            return await CreateAsync(clientContext, siteCollectionCreationInformation.Owner, payload, delayAfterCreation);
+        }
+
+        private static Dictionary<string, object> GetRequestPayload(SiteCreationInformation siteCollectionCreationInformation)
+        {
+            Dictionary<string, object> payload = new Dictionary<string, object>
+            {
+                { "Title", siteCollectionCreationInformation.Title },
+                { "Lcid", siteCollectionCreationInformation.Lcid },
+                { "ShareByEmailEnabled", siteCollectionCreationInformation.ShareByEmailEnabled },
+                { "Url", siteCollectionCreationInformation.Url },
+                { "Classification", siteCollectionCreationInformation.Classification ?? "" },
+                { "Description", siteCollectionCreationInformation.Description ?? "" },
+                { "WebTemplate", siteCollectionCreationInformation.WebTemplate },
+                { "WebTemplateExtensionId", Guid.Empty },
+                { "Owner", siteCollectionCreationInformation.Owner }
+            };
+            return payload;
+        }
+
+        private static async Task<ClientContext> CreateAsync(ClientContext clientContext, string owner, Dictionary<string, object> payload, 
+            Int32 delayAfterCreation = 0,
+            Int32 maxRetryCount = 12, // Maximum number of retries (12 x 10 sec = 120 sec = 2 mins)
+            Int32 retryDelay = 1000 * 10 // Wait time default to 10sec
+            )
+        {
             await new SynchronizationContextRemover();
 
             ClientContext responseContext = null;
 
-            if (clientContext.IsAppOnly() && string.IsNullOrEmpty(siteCollectionCreationInformation.Owner))
+            if (clientContext.IsAppOnly() && string.IsNullOrEmpty(owner))
             {
                 throw new Exception("You need to set the owner in App-only context");
             }
@@ -78,28 +141,6 @@ namespace OfficeDevPnP.Core.Sites
                 using (var httpClient = new PnPHttpProvider(handler))
                 {
                     string requestUrl = $"{clientContext.Web.Url}/_api/SPSiteManager/Create";
-                    //    string requestUrl = String.Format("{0}/_api/sitepages/communicationsite/create", clientContext.Web.Url);
-
-                    var siteDesignId = GetSiteDesignId(siteCollectionCreationInformation);
-
-                    Dictionary<string, object> payload = new Dictionary<string, object>();
-                    //payload.Add("__metadata", new { type = "Microsoft.SharePoint.Portal.SPSiteCreationRequest" });
-                    payload.Add("Title", siteCollectionCreationInformation.Title);
-                    payload.Add("Lcid", siteCollectionCreationInformation.Lcid);
-                    payload.Add("ShareByEmailEnabled", siteCollectionCreationInformation.ShareByEmailEnabled);
-                    payload.Add("Url", siteCollectionCreationInformation.Url);
-                    // Deprecated
-                    // payload.Add("AllowFileSharingForGuestUsers", siteCollectionCreationInformation.AllowFileSharingForGuestUsers);
-                    if (siteDesignId != Guid.Empty)
-                    {
-                        payload.Add("SiteDesignId", siteDesignId);
-                    }
-                    payload.Add("Classification", siteCollectionCreationInformation.Classification ?? "");
-                    payload.Add("Description", siteCollectionCreationInformation.Description ?? "");
-                    payload.Add("WebTemplate", "SITEPAGEPUBLISHING#0");
-                    payload.Add("WebTemplateExtensionId", Guid.Empty);
-                    payload.Add("HubSiteId", siteCollectionCreationInformation.HubSiteId);
-                    payload.Add("Owner", siteCollectionCreationInformation.Owner);
 
                     var body = new { request = payload };
 
@@ -145,7 +186,80 @@ namespace OfficeDevPnP.Core.Sites
                                 }
                                 else
                                 {
-                                    throw new Exception(responseString);
+                                    /*
+                                     * BEGIN : Changes to address the SiteStatus=Provisioning scenario
+                                     */
+                                    if (Convert.ToInt32(responseJson["SiteStatus"]) == 1)
+                                    {
+                                        var spOperationsMaxRetryCount = maxRetryCount;
+                                        var spOperationsRetryWait = retryDelay;
+                                        var siteCreated = false;
+                                        var siteUrl = string.Empty;
+                                        var retryAttempt = 1;
+
+                                        do
+                                        {
+                                            if (retryAttempt > 1)
+                                            {
+                                                System.Threading.Thread.Sleep(retryAttempt * spOperationsRetryWait);
+                                            }
+
+                                            try
+                                            {
+                                                var urlToCheck = HttpUtility.UrlEncode(payload["Url"].ToString());
+
+                                                var siteStatusRequestUrl = $"{clientContext.Web.Url}/_api/SPSiteManager/status?url='{urlToCheck}'";
+
+                                                var siteStatusRequest = new HttpRequestMessage(HttpMethod.Get, siteStatusRequestUrl);
+                                                siteStatusRequest.Headers.Add("accept", "application/json;odata=verbose");
+
+                                                if (!string.IsNullOrEmpty(accessToken))
+                                                {
+                                                    siteStatusRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                                                }
+
+                                                siteStatusRequest.Headers.Add("X-RequestDigest", await clientContext.GetRequestDigest());
+
+                                                var siteStatusResponse = await httpClient.SendAsync(siteStatusRequest, new System.Threading.CancellationToken());
+                                                var siteStatusResponseString = await siteStatusResponse.Content.ReadAsStringAsync();
+
+                                                var siteStatusResponseJson = JObject.Parse(siteStatusResponseString);
+
+                                                if (siteStatusResponse.IsSuccessStatusCode)
+                                                {
+                                                    var siteStatus = Convert.ToInt32(siteStatusResponseJson["d"]["Status"]["SiteStatus"].ToString());
+                                                    if (siteStatus == 2)
+                                                    {
+                                                        siteCreated = true;
+                                                        siteUrl = siteStatusResponseJson["d"]["Status"]["SiteUrl"].ToString();
+                                                    }
+                                                }
+                                            }
+                                            catch (Exception)
+                                            {
+                                                // Just skip it and retry after a delay
+                                            }
+
+                                            retryAttempt++;
+                                        }
+                                        while (!siteCreated && retryAttempt <= spOperationsMaxRetryCount);
+
+                                        if (siteCreated)
+                                        {
+                                            responseContext = clientContext.Clone(siteUrl);
+                                        }
+                                        else
+                                        {
+                                            throw new Exception($"OfficeDevPnP.Core.Sites.SiteCollection.CreateAsync: Could not create {payload["WebTemplate"].ToString()} site.");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        throw new Exception(responseString);
+                                    }
+                                    /*
+                                     * END : Changes to address the SiteStatus=Provisioning scenario
+                                     */
                                 }
                             }
                             catch (Exception)
