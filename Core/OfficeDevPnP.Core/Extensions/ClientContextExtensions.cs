@@ -180,11 +180,16 @@ namespace Microsoft.SharePoint.Client
                 }
                 catch (WebException wex)
                 {
+                    string internalServerErrMsg = "The remote server returned an error: (500) Internal Server Error.";
                     var response = wex.Response as HttpWebResponse;
                     // Check if request was throttled - http status code 429
                     // Check is request failed due to server unavailable - http status code 503
-                    if (response != null && (response.StatusCode == (HttpStatusCode)429 || response.StatusCode == (HttpStatusCode)503))
+                    if (response != null && (response.StatusCode == (HttpStatusCode)429 || response.StatusCode == (HttpStatusCode)503 
+                        || wex.Message.Equals(internalServerErrMsg, StringComparison.OrdinalIgnoreCase)))
                     {
+                        if (wex.Message.Equals(internalServerErrMsg, StringComparison.OrdinalIgnoreCase))
+                            Log.Warning(Constants.LOGGING_SOURCE, wex.Message);
+                        
                         Log.Warning(Constants.LOGGING_SOURCE, CoreResources.ClientContextExtensions_ExecuteQueryRetry, backoffInterval);
 
 #if !ONPREMISES
