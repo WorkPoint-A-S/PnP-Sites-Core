@@ -52,7 +52,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                         IsPublic = t.IsPublic
                                     };
 
-                                    var groupSiteInfo = Sites.SiteCollection.GetGroupInfo(tenant.Context as ClientContext, siteInfo.Alias).GetAwaiter().GetResult();
+                                    var groupSiteInfo = Sites.SiteCollection.GetGroupInfoAsync(tenant.Context as ClientContext, siteInfo.Alias).GetAwaiter().GetResult();
                                     if (groupSiteInfo == null)
                                     {
                                         WriteMessage($"Creating Team Site {siteInfo.Alias}", ProvisioningMessageType.Progress);
@@ -68,13 +68,39 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                     }
                                     if (t.IsHubSite)
                                     {
-                                        RegisterAsHubSite(tenant, siteContext.Url, t.HubSiteLogoUrl);
+                                        siteContext.Load(siteContext.Site, s => s.Id);
+                                        siteContext.ExecuteQueryRetry();
+                                        RegisterAsHubSite(tenant, siteContext.Url, siteContext.Site.Id, t.HubSiteLogoUrl, t.HubSiteTitle, tokenParser);
                                     }
                                     if (!string.IsNullOrEmpty(t.Theme))
                                     {
                                         var parsedTheme = tokenParser.ParseString(t.Theme);
                                         tenant.SetWebTheme(parsedTheme, siteContext.Url);
                                         tenant.Context.ExecuteQueryRetry();
+                                    }
+                                    if (t.Teamify)
+                                    {
+                                        try
+                                        {
+                                            WriteMessage($"Teamifying the O365 group connected site at URL - {siteContext.Url}", ProvisioningMessageType.Progress);
+                                            siteContext.TeamifyAsync().GetAwaiter().GetResult();
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            WriteMessage($"Teamifying site at URL - {siteContext.Url} failed due to an exception:- {ex.Message}", ProvisioningMessageType.Warning);
+                                        }
+                                    }
+                                    if (t.HideTeamify)
+                                    {
+                                        try
+                                        {
+                                            WriteMessage($"Teamify prompt is now hidden for site at URL - {siteContext.Url}", ProvisioningMessageType.Progress);
+                                            siteContext.HideTeamifyPrompt().GetAwaiter().GetResult();
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            WriteMessage($"Teamify prompt couldn't be hidden for site at URL - {siteContext.Url} due to an exception:- {ex.Message}", ProvisioningMessageType.Warning);
+                                        }
                                     }
                                     siteUrls.Add(t.Id, siteContext.Url);
                                     if (!string.IsNullOrEmpty(t.ProvisioningId))
@@ -135,7 +161,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                     }
                                     if (c.IsHubSite)
                                     {
-                                        RegisterAsHubSite(tenant, siteInfo.Url, c.HubSiteLogoUrl);
+                                        siteContext.Load(siteContext.Site, s => s.Id);
+                                        siteContext.ExecuteQueryRetry();
+                                        RegisterAsHubSite(tenant, siteInfo.Url, siteContext.Site.Id, c.HubSiteLogoUrl, c.HubSiteTitle, tokenParser);
                                     }
                                     if (!string.IsNullOrEmpty(c.Theme))
                                     {
@@ -158,16 +186,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             case TeamNoGroupSiteCollection t:
                                 {
                                     var siteUrl = tokenParser.ParseString(t.Url);
-                                    SiteEntity siteInfo = new SiteEntity()
+                                    TeamNoGroupSiteCollectionCreationInformation siteInfo = new TeamNoGroupSiteCollectionCreationInformation()
                                     {
                                         Lcid = (uint)t.Language,
-                                        Template = "STS#3",
-                                        TimeZoneId = t.TimeZoneId,
+                                        Url = siteUrl,
                                         Title = tokenParser.ParseString(t.Title),
-                                        Url = tokenParser.ParseString(t.Url),
-                                        SiteOwnerLogin = tokenParser.ParseString(t.Owner),
+                                        Description = tokenParser.ParseString(t.Description),
+                                        Owner = tokenParser.ParseString(t.Owner)
                                     };
-                                    WriteMessage($"Creating Team Site with no Office 365 group at {siteUrl}", ProvisioningMessageType.Progress);
                                     if (tenant.SiteExists(siteUrl))
                                     {
                                         WriteMessage($"Using existing Team Site at {siteUrl}", ProvisioningMessageType.Progress);
@@ -175,12 +201,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                     }
                                     else
                                     {
-                                        tenant.CreateSiteCollection(siteInfo, false, true);
-                                        siteContext = tenant.Context.Clone(siteUrl, applyingInformation.AccessTokens);
+                                        WriteMessage($"Creating Team Site with no Office 365 group at {siteUrl}", ProvisioningMessageType.Progress);
+                                        siteContext = Sites.SiteCollection.Create(tenant.Context as ClientContext, siteInfo, applyingInformation.DelayAfterModernSiteCreation);
                                     }
                                     if (t.IsHubSite)
                                     {
-                                        RegisterAsHubSite(tenant, siteContext.Url, t.HubSiteLogoUrl);
+                                        siteContext.Load(siteContext.Site, s => s.Id);
+                                        siteContext.ExecuteQueryRetry();
+                                        RegisterAsHubSite(tenant, siteContext.Url, siteContext.Site.Id, t.HubSiteLogoUrl, t.HubSiteTitle, tokenParser);
                                     }
                                     if (!string.IsNullOrEmpty(t.Theme))
                                     {
@@ -290,7 +318,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                     web.EnsureProperties(w => w.Webs.IncludeWithDefaultProperties(), w => w.ServerRelativeUrl);
                                     siteTokenParser = ApplySubSiteTemplates(hierarchy, siteTokenParser, sitecollection, clonedContext, web, subSiteObject, provisioningTemplateApplyingInformation);
                                 }
+
+                                if (sitecollection.IsHubSite)
+                                {
+                                    RESTUtilities.ExecuteGet(web, "/_api/web/hubsitedata(true)").GetAwaiter().GetResult();
+                                }
+
                             }
+
                         }
                     }
                 }
@@ -298,22 +333,48 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
         }
 
-        private static void RegisterAsHubSite(Tenant tenant, string siteUrl, string logoUrl)
+        private static void RegisterAsHubSite(Tenant tenant, string siteUrl, Guid siteId, string logoUrl, string hubsiteTitle, TokenParser parser)
         {
+            siteUrl = parser.ParseString(siteUrl);
             var hubSiteProperties = tenant.GetHubSitePropertiesByUrl(siteUrl);
             tenant.Context.Load<HubSiteProperties>(hubSiteProperties);
             tenant.Context.ExecuteQueryRetry();
             if (hubSiteProperties.ServerObjectIsNull == true)
             {
-                hubSiteProperties = tenant.RegisterHubSite(siteUrl);
-                tenant.Context.Load(hubSiteProperties);
+                var ci = new HubSiteCreationInformation();
+                ci.SiteId = siteId;
+                if (!string.IsNullOrEmpty(logoUrl))
+                {
+                    ci.LogoUrl = parser.ParseString(logoUrl);
+                }
+                if (!string.IsNullOrEmpty(hubsiteTitle))
+                {
+                    ci.Title = parser.ParseString(hubsiteTitle);
+                }
+                tenant.RegisterHubSiteWithCreationInformation(siteUrl, ci);
+                //tenant.Context.Load(hubSiteProperties);
                 tenant.Context.ExecuteQueryRetry();
             }
-            if (!string.IsNullOrEmpty(logoUrl))
+            else
             {
-                hubSiteProperties.LogoUrl = logoUrl;
-                hubSiteProperties.Update();
-                tenant.Context.ExecuteQueryRetry();
+                bool isDirty = false;
+                if (!string.IsNullOrEmpty(logoUrl))
+                {
+                    logoUrl = parser.ParseString(logoUrl);
+                    hubSiteProperties.LogoUrl = logoUrl;
+                    isDirty = true;
+                }
+                if (!string.IsNullOrEmpty(hubsiteTitle))
+                {
+                    hubsiteTitle = parser.ParseString(hubsiteTitle);
+                    hubSiteProperties.Title = hubsiteTitle;
+                    isDirty = true;
+                }
+                if (isDirty)
+                {
+                    hubSiteProperties.Update();
+                    tenant.Context.ExecuteQueryRetry();
+                }
             }
         }
 
@@ -360,7 +421,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
             var subweb = web.Webs.FirstOrDefault(t => t.ServerRelativeUrl.Equals(UrlUtility.Combine(web.ServerRelativeUrl, "/", url.Trim(new char[] { '/' }))));
 
-            foreach (var templateRef in sitecollection.Templates)
+            foreach (var templateRef in subSiteObject.Templates)
             {
                 var provisioningTemplate = hierarchy.Templates.FirstOrDefault(t => t.Id == templateRef);
                 if (provisioningTemplate != null)
