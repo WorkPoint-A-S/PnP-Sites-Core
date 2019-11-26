@@ -6,6 +6,54 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Added
+
+- UnifiedGroupsUtility.HasTeamsTeam checks if an Office 365 group also has a Teams team
+- SiteExistsAnywhere method to improve SiteExists internal behavior
+
+### Changed
+
+## [3.15.1911.0 - November 2019 release]
+
+### Added
+
+- Added ApplyTenantTemplate and GetTenantTemplate methods
+- Added new configuration support for extraction and applying of site and tenant templates. See https://docs.microsoft.com/en-us/sharepoint/dev/solution-guidance/configuring-the-pnp-provisioning-engine
+- Added initial TenantTemplate extraction, supporting Sequences and Teams
+- Limiting lists to extract now supports besides filtering on title also filtering on list url
+- Support for User Profile properties upload [gautamdsheth]
+- Support for UpdateChildren="true" in fields definition for content types [SteveClements]
+
+### Changed
+
+- Deprecated ApplyProvisioningHierarchy and replaced with ApplyTenantTemplate
+- IsProvisioningComplete waits for max 20 minutes and logs a warning instead of throwing an exception when a longer wait is needed
+- Fix: reading/setting search redirect URL on a root site
+- Fix: Updated handling SharePoint groups and groups' owners #2444 [NicolajHedeager]
+- Fix: Update us gov auth endpoint #2463 [gobigfoot]
+- Fix: Add null guard to catch block in GetAccess*Token #2435 [fowl2]
+- Fix: ObjectSiteSettings provisioning - SearchBoxInNavBar property was not always initialized #2474 [czullu]
+- Fix: Added support for new taxonomy field default values for fields #2329 [KoenZomers]
+
+## [3.14.1910.1 - October 2019 intermediate release]
+
+### Added
+
+- You can now specify to overwrite a tenant theme if already present when using the 201909 schema of the provisioning engine [gautamdsheth]
+
+### Changed
+
+- When you create a modern site and don't specify a wait time after site creation we'll now use the IsProvisioningComplete attribute to wait until all server side async provisioning processes are done
+- Fix: Make sure to load item when exporting datarows and no attachment exists [czullu]
+- Fix: provisioning a content type to a folder will now change the folder to a documentset if the contenttype is a documentset [czullu]
+- Fix: default document of a documentset will now be exported if PersistAssetFiles has been set to true in the extraction configuration [czullu]
+- Fix: fixes issue when using configuration file for list extraction, includeAttachments=true, but no viewfields have been specified where only the attachments would have been extracted instead of all expected list field values. [czullu]
+- Fix: fixes issue where security is not set on new listitems when adding datarows from a provisioning template [czullu]
+- Fix: fixes issue where multichoice fields were not exported correctly to datarows when extracting a template.
+- Fix: fixes issue with null templates while invoking provisioning webhooks [gautamdsheth]
+
 ## [3.14.1910.0 - October 2019 release]
 
 ### Added

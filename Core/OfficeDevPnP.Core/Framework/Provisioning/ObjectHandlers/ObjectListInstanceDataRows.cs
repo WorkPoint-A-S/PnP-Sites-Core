@@ -98,7 +98,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                     // if it is empty, skip the check
                                     if (dataRowValues.Any())
                                     {
-                                        var query = $@"<View><Query><Where><Eq><FieldRef Name=""{parsedKeyColumn}""/><Value Type=""{keyColumnType}"">{parser.ParseString(dataRowValues.FirstOrDefault().Value)}</Value></Eq></Where></Query><RowLimit>1</RowLimit></View>";
+                                        var keyColumnValue = parser.ParseString(dataRowValues.FirstOrDefault().Value);
+                                        if(keyColumnType == "DateTime")
+                                        {
+                                            keyColumnValue = DateTime.Parse(keyColumnValue).ToString("s") + "Z";
+                                        }
+                                        var query = $@"<View><Query><Where><Eq><FieldRef Name=""{parsedKeyColumn}""/><Value {(keyColumnType == "DateTime" ? "IncludeTimeValue='TRUE'": "")} Type=""{keyColumnType}"">{keyColumnValue}</Value></Eq></Where></Query><RowLimit>1</RowLimit></View>";
                                         var camlQuery = new CamlQuery()
                                         {
                                             ViewXml = query
@@ -132,11 +137,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                     }
 
                                     ListItemUtilities.UpdateListItem(listitem, parser, dataRow.Values, ListItemUtilities.ListItemUpdateType.UpdateOverwriteVersion, IsNewItem);
-
-                                    if (dataRow.Security != null && (dataRow.Security.ClearSubscopes || dataRow.Security.CopyRoleAssignments || dataRow.Security.RoleAssignments.Count > 0))
-                                    {
-                                        listitem.SetSecurity(parser, dataRow.Security);
-                                    }
 
                                     if (dataRow.Attachments != null && dataRow.Attachments.Count > 0)
                                     {
@@ -173,8 +173,15 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                                 AddAttachment(template, listitem, attachment, IsNewItem);
                                             }
                                         }
-                                        if (IsNewItem)
-                                            listitem.Context.ExecuteQueryRetry();
+                                    }
+                                    if (IsNewItem)
+                                    {
+                                        listitem.Context.Load(listitem, i => i.Id);
+                                        listitem.Context.ExecuteQueryRetry();
+                                    }
+                                    if (dataRow.Security != null && (dataRow.Security.ClearSubscopes || dataRow.Security.CopyRoleAssignments || dataRow.Security.RoleAssignments.Count > 0))
+                                    {
+                                        listitem.SetSecurity(parser, dataRow.Security);
                                     }
                                 }
                             }
@@ -232,16 +239,42 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 listitem.Update();
         }
 
+        private static bool ShouldNotExtractList(ProvisioningTemplateCreationInformation creationInfo, List siteList)
+        {
+            if (creationInfo.ExtractConfiguration != null && creationInfo.ExtractConfiguration.Lists != null
+                && creationInfo.ExtractConfiguration.Lists.HasLists
+                &&
+                !creationInfo.ExtractConfiguration.Lists.Lists.Any(i =>
+                {
+                    if (Guid.TryParse(i.Title, out Guid listId))
+                    {
+                        return (listId == siteList.Id) && i.IncludeItems;
+                    }
+                    else
+                    {
+                        return (false);
+                    }
+                })
+                && !creationInfo.ExtractConfiguration.Lists.Lists.Any(i => i.Title.Equals(siteList.Title) && i.IncludeItems)
+                && !creationInfo.ExtractConfiguration.Lists.Lists.Any(i => siteList.RootFolder.ServerRelativeUrl.EndsWith(i.Title, StringComparison.InvariantCultureIgnoreCase) && i.IncludeItems))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public override ProvisioningTemplate ExtractObjects(Web web, ProvisioningTemplate template, ProvisioningTemplateCreationInformation creationInfo)
         {
             using (var scope = new PnPMonitoredScope(this.Name))
             {
                 var lists = web.Lists;
-                web.EnsureProperties(w => w.ServerRelativeUrl, w => w.Url);
+                web.EnsureProperties(w => w.ServerRelativeUrl, w => w.Url, w => w.Id);
                 web.Context.Load(lists,
                   lc => lc.IncludeWithDefaultProperties(
                         l => l.RootFolder.ServerRelativeUrl,
                         l => l.EnableAttachments,
+                        l => l.ContentTypes,
                         l => l.Fields.IncludeWithDefaultProperties(
                           f => f.Id,
                           f => f.Title,
@@ -259,24 +292,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 var listsToProcess = lists.AsEnumerable().Where(l => l.Hidden == false || l.Hidden == creationInfo.IncludeHiddenLists).ToArray();
                 foreach (var siteList in listsToProcess)
                 {
-                    if (!creationInfo.ExtractConfiguration.Lists.Lists.Any(i =>
-                      {
-                          Guid listId;
-                          if (Guid.TryParse(i.Title, out listId))
-                          {
-                              return (listId == siteList.Id);
-                          }
-                          else
-                          {
-                              return (false);
-                          }
-                      }) && creationInfo.ExtractConfiguration.Lists.Lists.FirstOrDefault(i => i.Title.Equals(siteList.Title) && i.IncludeItems) == null)
+                    if (ShouldNotExtractList(creationInfo, siteList))
                     {
                         continue;
                     }
-                    var extractionConfig = creationInfo.ExtractConfiguration.Lists.Lists.FirstOrDefault(e => e.Title.Equals(siteList.Title));
+                    var extractionConfig = creationInfo.ExtractConfiguration.Lists.Lists.FirstOrDefault(e => e.Title.Equals(siteList.Title) || siteList.RootFolder.ServerRelativeUrl.EndsWith(e.Title, StringComparison.InvariantCultureIgnoreCase));
                     CamlQuery camlQuery = CamlQuery.CreateAllItemsQuery();
-                    Model.Configuration.Lists.Lists.ExtractQueryConfiguration queryConfig = null;
+                    Model.Configuration.Lists.Lists.ExtractListsQueryConfiguration queryConfig = null;
                     if (extractionConfig.Query != null)
                     {
                         queryConfig = extractionConfig.Query;
@@ -294,7 +316,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             {
                                 queryConfig.ViewFields = new List<string>();
                             }
-                            if (!queryConfig.ViewFields.Contains("Attachments"))
+                            else if (!queryConfig.ViewFields.Contains("Attachments"))
                             {
                                 queryConfig.ViewFields.Add("Attachments");
                             }
@@ -317,13 +339,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         camlQuery.ViewXml = viewXml;
 
                     }
+
                     var listInstance = template.Lists.FirstOrDefault(l => siteList.RootFolder.ServerRelativeUrl.Equals(UrlUtility.Combine(web.ServerRelativeUrl, l.Url)));
                     if (listInstance != null)
                     {
                         do
                         {
-
-                            camlQuery.ListItemCollectionPosition = RetrieveItems(web, template, creationInfo, scope, siteList, extractionConfig, camlQuery, queryConfig, listInstance);
+                            camlQuery.ListItemCollectionPosition = RetrieveItems(web, template, creationInfo, scope, siteList, extractionConfig, camlQuery, queryConfig, listInstance, siteList.ContentTypes[0].Id.StringValue);
 
                         } while (camlQuery.ListItemCollectionPosition != null);
                     }
@@ -332,7 +354,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return template;
         }
 
-        private ListItemCollectionPosition RetrieveItems(Web web, ProvisioningTemplate template, ProvisioningTemplateCreationInformation creationInfo, PnPMonitoredScope scope, List siteList, Model.Configuration.Lists.Lists.ExtractConfiguration extractionConfiguration, CamlQuery camlQuery, Model.Configuration.Lists.Lists.ExtractQueryConfiguration queryConfig, ListInstance listInstance)
+        private ListItemCollectionPosition RetrieveItems(Web web, ProvisioningTemplate template, ProvisioningTemplateCreationInformation creationInfo, PnPMonitoredScope scope, List siteList, Model.Configuration.Lists.Lists.ExtractListsListsConfiguration extractionConfiguration, CamlQuery camlQuery, Model.Configuration.Lists.Lists.ExtractListsQueryConfiguration queryConfig, ListInstance listInstance, string defaultContentTypeId)
         {
             var items = siteList.GetItems(camlQuery);
             siteList.Context.Load(items, i => i.IncludeWithDefaultProperties(li => li.FieldValuesAsText), i => i.ListItemCollectionPosition);
@@ -340,14 +362,17 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 foreach (var viewField in queryConfig.ViewFields)
                 {
-                    siteList.Context.Load(items, i => i.Include(li => li[viewField]));
+                    if (siteList.Fields.FirstOrDefault(f => f.InternalName == viewField) != null)
+                    {
+                        siteList.Context.Load(items, i => i.Include(li => li[viewField]));
+                    }
                 }
             }
             siteList.Context.ExecuteQueryRetry();
             var baseUri = new Uri(web.Url);
             if (siteList.BaseType == BaseType.DocumentLibrary)
             {
-                ProcessLibraryItems(web, siteList, template, listInstance, extractionConfiguration, queryConfig, creationInfo, scope, items, baseUri);
+                ProcessLibraryItems(web, siteList, template, listInstance, extractionConfiguration, queryConfig, creationInfo, scope, items, baseUri, defaultContentTypeId);
             }
             else
             {
@@ -378,12 +403,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             List siteList,
             ProvisioningTemplate template,
             ListInstance listInstance,
-            Model.Configuration.Lists.Lists.ExtractConfiguration extractionConfig,
-            Model.Configuration.Lists.Lists.ExtractQueryConfiguration queryConfig,
+            Model.Configuration.Lists.Lists.ExtractListsListsConfiguration extractionConfig,
+            Model.Configuration.Lists.Lists.ExtractListsQueryConfiguration queryConfig,
             ProvisioningTemplateCreationInformation creationInfo,
             PnPMonitoredScope scope,
             ListItemCollection items,
-            Uri baseUri)
+            Uri baseUri,
+            string defaultContentTypeId)
         {
             var itemCount = 1;
             foreach (var item in items)
@@ -393,7 +419,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     case FileSystemObjectType.File:
                         {
                             //PnP:File
-                            ProcessDocumentRow(web, siteList, baseUri, item, listInstance, template, creationInfo, scope, itemCount, items.Count);
+                            ProcessDocumentRow(web, siteList, baseUri, item, listInstance, template, creationInfo, scope, itemCount, items.Count, defaultContentTypeId);
                             break;
                         }
                     case FileSystemObjectType.Folder:
@@ -413,7 +439,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
             return template;
         }
-        private void ProcessDocumentRow(Web web, List siteList, Uri baseUri, ListItem listItem, ListInstance listInstance, ProvisioningTemplate template, ProvisioningTemplateCreationInformation creationInfo, PnPMonitoredScope scope, int itemCount, int itemsCount)
+        private void ProcessDocumentRow(Web web, List siteList, Uri baseUri, ListItem listItem, ListInstance listInstance, ProvisioningTemplate template, ProvisioningTemplateCreationInformation creationInfo, PnPMonitoredScope scope, int itemCount, int itemsCount, string defaultContentTypeId)
         {
             var myFile = listItem.File; ;
             web.Context.Load(myFile,
@@ -438,7 +464,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
             var templateFolderPath = folderPath.Substring(web.ServerRelativeUrl.Length).TrimStart("/".ToCharArray());
 
-            WriteMessage($"Library|{listInstance.Title} : {myFile.Name}|{itemCount}|{itemsCount}", ProvisioningMessageType.Progress);
+            WriteSubProgress("Library", $"{listInstance.Title} : {myFile.Name}", itemCount, itemsCount);
 
             // Avoid duplicate file entries
             Model.File newFile = null;
@@ -452,7 +478,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 {
                     Folder = templateFolderPath,
                     Src = $"{templateFolderPath}/{fileName}",
-                    TargetFileName = myFile.Name,
                     Overwrite = true,
                     Level = (Model.FileLevel)Enum.Parse(typeof(Model.FileLevel), myFile.Level.ToString())
                 };
@@ -460,9 +485,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
 
 #if !SP2013 && !SP2016
-            ExtractFileSettings(web, siteList, myFile.UniqueId, ref newFile, scope);
+            ExtractFileSettings(web, siteList, myFile.UniqueId, ref newFile, defaultContentTypeId, scope);
 #else
-            ExtractFileSettings(web, siteList, myFile.ServerRelativeUrl, ref newFile, scope);
+            ExtractFileSettings(web, siteList, myFile.ServerRelativeUrl, ref newFile, defaultContentTypeId, scope);
 #endif
 
             if (addFile && creationInfo.PersistBrandingFiles)
@@ -481,9 +506,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         }
 
 #if !SP2013 && !SP2016
-        private void ExtractFileSettings(Web web, List siteList, Guid fileUniqueId, ref Model.File pnpFile, PnPMonitoredScope scope)
+        private void ExtractFileSettings(Web web, List siteList, Guid fileUniqueId, ref Model.File pnpFile, string defaultContentTypeId, PnPMonitoredScope scope)
 #else
-        private void ExtractFileSettings(Web web, List siteList, string fileServerRelativeUrl, ref Model.File pnpFile, PnPMonitoredScope scope)
+        private void ExtractFileSettings(Web web, List siteList, string fileServerRelativeUrl, ref Model.File pnpFile, string defaultContentTypeId, PnPMonitoredScope scope)
 #endif
         {
             try
@@ -519,7 +544,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     string ctId = string.Empty;
                     foreach (var ct in web.ContentTypes.OrderByDescending(c => c.StringId.Length))
                     {
-                        if (file.ListItemAllFields.ContentType.StringId.StartsWith(ct.StringId))
+                        if (file.ListItemAllFields.ContentType.StringId.StartsWith(ct.StringId) && file.ListItemAllFields.ContentType.StringId != defaultContentTypeId) // skip if it is the default content type
                         {
                             pnpFile.Properties.Add("ContentTypeId", ct.StringId);
                             break;
@@ -538,7 +563,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             {
                                 value = TokenizeValue(web, field.TypeAsString, fieldValue, fieldValuesAsText[field.InternalName]);
 
-                                if (fieldValue.Key == "ContentTypeId")
+                                if (fieldValue.Key == "ContentTypeId" && fieldValue.Key == "Attachments")
                                 {
                                     value = null; //it's already in Properties - we can ignore here
                                 }
@@ -592,7 +617,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     if (userMultiFieldValue != null)
                     {
 #if !SP2013 && !SP2016
-                        value = string.Join(",", userMultiFieldValue.Select(u => u.Email).ToArray())?.TrimEnd(new char[] { ',' });
+                        value = string.Join(",", userMultiFieldValue.Select(u => u.Email).ToArray())?.TrimEnd(new char[] { ',' }).Trim(new char[] { ',' });
 #else
                         value = string.Join(",", userMultiFieldValue.Select(u => u.LookupValue).ToArray())?.TrimEnd(new char[] { ',' });
 #endif
@@ -638,16 +663,23 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         value = dateTimeFieldValue.Value.ToString("yyyy-MM-ddTHH:mm:ssZ");
                     }
                     break;
+                case "MultiChoice":
+                    if (fieldValue.Value != null)
+                    {
+                        var multiChoiceArray = fieldValue.Value as string[];
+                        value = string.Join(";#", multiChoiceArray.Select(v => Tokenize(v, web.Url, web)).ToList());
+                    }
+                    break;
                 case "ContentTypeIdFieldType":
                 default:
-                    value = Tokenize(fieldValue.Value.ToString(), web.Url, web);
+                    value = Tokenize(fieldValue.Value?.ToString(), web.Url, web);
                     break;
             }
 
             return value;
         }
 
-        public Model.Folder ExtractFolderSettings(Web web, List siteList, string serverRelativePathToFolder, PnPMonitoredScope scope, Model.Configuration.Lists.Lists.ExtractQueryConfiguration queryConfig)
+        public Model.Folder ExtractFolderSettings(Web web, List siteList, string serverRelativePathToFolder, PnPMonitoredScope scope, Model.Configuration.Lists.Lists.ExtractListsQueryConfiguration queryConfig)
         {
             Model.Folder pnpFolder = null;
             try
@@ -727,7 +759,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                 value = TokenizeValue(web, field.TypeAsString, fieldValue, fieldValuesAsText[field.InternalName]);
                             }
 
-                            if (fieldValue.Key.Equals("ContentTypeId", StringComparison.CurrentCultureIgnoreCase))
+                            if (fieldValue.Key.Equals("ContentTypeId", StringComparison.InvariantCultureIgnoreCase) || fieldValue.Key.Equals("Attachments", StringComparison.InvariantCultureIgnoreCase))
                             {
                                 value = null; //ignore here since already in dataRow
                             }
@@ -756,7 +788,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return pnpFolder;
         }
 
-        private void ProcessFolderRow(Web web, ListItem listItem, List siteList, ListInstance listInstance, Model.Configuration.Lists.Lists.ExtractQueryConfiguration queryConfig, ProvisioningTemplate template, PnPMonitoredScope scope)
+        private void ProcessFolderRow(Web web, ListItem listItem, List siteList, ListInstance listInstance, Model.Configuration.Lists.Lists.ExtractListsQueryConfiguration queryConfig, ProvisioningTemplate template, PnPMonitoredScope scope)
         {
             listItem.EnsureProperties(it => it.ParentList.RootFolder.ServerRelativeUrl);
             string serverRelativeListUrl = listItem.ParentList.RootFolder.ServerRelativeUrl;
@@ -798,16 +830,22 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             List siteList,
             ListInstance listInstance,
             ProvisioningTemplateCreationInformation creationInfo,
-            Model.Configuration.Lists.Lists.ExtractConfiguration extractionConfig,
-            Model.Configuration.Lists.Lists.ExtractQueryConfiguration queryConfig,
+            Model.Configuration.Lists.Lists.ExtractListsListsConfiguration extractionConfig,
+            Model.Configuration.Lists.Lists.ExtractListsQueryConfiguration queryConfig,
             Uri baseUri,
             ListItemCollection items,
             PnPMonitoredScope scope)
         {
+            if (!string.IsNullOrEmpty(extractionConfig.KeyColumn))
+            {
+                listInstance.DataRows.KeyColumn = extractionConfig.KeyColumn;
+                listInstance.DataRows.UpdateBehavior = extractionConfig.UpdateBehavior;
+            }
+
             var itemCount = 1;
             foreach (var item in items)
             {
-                WriteMessage($"List|{listInstance.Title}|{itemCount}|{items.Count}", ProvisioningMessageType.Progress);
+                WriteSubProgress("List", listInstance.Title, itemCount, items.Count);
 
                 var dataRow = ProcessDataRow(web, siteList, item, listInstance, extractionConfig, queryConfig, baseUri, creationInfo, scope);
 
@@ -817,13 +855,17 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return listInstance;
         }
 
-        private Model.DataRow ProcessDataRow(Web web, List siteList, ListItem item, ListInstance listInstance, Model.Configuration.Lists.Lists.ExtractConfiguration extractionConfig, Model.Configuration.Lists.Lists.ExtractQueryConfiguration queryConfig, Uri baseUri, ProvisioningTemplateCreationInformation creationInfo, PnPMonitoredScope scope)
+        private Model.DataRow ProcessDataRow(Web web, List siteList, ListItem item, ListInstance listInstance, Model.Configuration.Lists.Lists.ExtractListsListsConfiguration extractionConfig, Model.Configuration.Lists.Lists.ExtractListsQueryConfiguration queryConfig, Uri baseUri, ProvisioningTemplateCreationInformation creationInfo, PnPMonitoredScope scope)
         {
             var dataRow = new Model.DataRow();
             var filteredFieldValues = item.FieldValues.ToList();
             if (queryConfig != null && queryConfig.ViewFields != null && queryConfig.ViewFields.Count > 0)
             {
                 filteredFieldValues = item.FieldValues.Where(f => queryConfig.ViewFields.Contains(f.Key)).ToList();
+            }
+            if (queryConfig != null && queryConfig.IncludeAttachments)
+            {
+                filteredFieldValues = filteredFieldValues.Where(f => !f.Key.Equals("Attachments", StringComparison.InvariantCultureIgnoreCase)).ToList();
             }
             foreach (var fieldValue in filteredFieldValues)
             {
@@ -850,7 +892,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     var fullUri = new Uri(baseUri, attachmentFile.ServerRelativeUrl);
 #endif
                     var folderPath = HttpUtility.UrlDecode(fullUri.Segments.Take(fullUri.Segments.Count() - 1).ToArray().Aggregate((i, x) => i + x).TrimEnd('/'));
-                    var targetFolder = $"Attachments/{item.Id}";
+                    var targetFolder = $"ListData/SITE_{web.Id.ToString("N")}/LIST_{siteList.Id.ToString("N")}/Attachments/{item.Id}";
                     dataRow.Attachments.Add(new Model.SharePoint.InformationArchitecture.DataRowAttachment()
                     {
 #if !SP2013 && !SP2016
@@ -891,7 +933,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
             else
             {
-                scope.LogError("No connector present to persist homepage");
+                scope.LogError($"No connector present to persist file {fileServerRelativeUrl}");
             }
         }
 
