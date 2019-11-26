@@ -379,7 +379,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         public PageCollection Pages
         {
             get { return this._pages; }
-            private set { this._pages = value; }
+            private set
+            {
+                this._pages = value;
+            }
         }
 
         /// <summary>

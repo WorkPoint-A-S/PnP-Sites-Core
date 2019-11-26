@@ -93,7 +93,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
 
             return (this.LCID == other.LCID &&
                     this.Name == other.Name &&
-                    this.ResourceFile == other.ResourceFile 
+                    this.ResourceFile == other.ResourceFile
                 );
 
         }
@@ -101,3 +101,4 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         #endregion
     }
 }
+

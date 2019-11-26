@@ -271,7 +271,7 @@ namespace OfficeDevPnP.Core.Pages
                     // Add a default section if there wasn't one yet created
                     if (this.sections.Count == 0)
                     {
-                        this.sections.Add(new CanvasSection(this, CanvasSectionTemplate.OneColumn, 0));
+                        this.sections.Add(new CanvasSection(this, CanvasSectionTemplate.OneColumn, 0, 0));
                     }
 
                     return sections.First();
@@ -286,7 +286,7 @@ namespace OfficeDevPnP.Core.Pages
                     {
                         if (this.sections.Count == 0)
                         {
-                            this.sections.Add(new CanvasSection(this, CanvasSectionTemplate.OneColumn, 0));
+                            this.sections.Add(new CanvasSection(this, CanvasSectionTemplate.OneColumn, 0, 0));
                         }
 
                         return sections.First();
@@ -403,7 +403,7 @@ namespace OfficeDevPnP.Core.Pages
         /// <param name="verticalSectionZoneEmphasis">Vertical Section Zone emphasis (section background)</param>
         public void AddSection(CanvasSectionTemplate template, float order, int zoneEmphasis, int? verticalSectionZoneEmphasis = null)
         {
-            var section = new CanvasSection(this, template, order)
+            var section = new CanvasSection(this, template, order, zoneEmphasis)
             {
                 ZoneEmphasis = zoneEmphasis,
             };
@@ -421,7 +421,7 @@ namespace OfficeDevPnP.Core.Pages
         /// <param name="order">Controls the order of the new section</param>
         public void AddSection(CanvasSectionTemplate template, float order)
         {
-            var section = new CanvasSection(this, template, order);
+            var section = new CanvasSection(this, template, order, 0);
             AddSection(section);
         }
 
@@ -561,7 +561,7 @@ namespace OfficeDevPnP.Core.Pages
         /// Adds a new control to your client side page in the given section
         /// </summary>
         /// <param name="control"><see cref="CanvasControl"/> to add</param>
-        /// <param name="column"><see cref="CanvasColumn"/> that will hold the control</param>    
+        /// <param name="column"><see cref="CanvasColumn"/> that will hold the control</param>
         public void AddControl(CanvasControl control, CanvasColumn column)
         {
             if (control == null)
@@ -583,7 +583,7 @@ namespace OfficeDevPnP.Core.Pages
         /// Adds a new control to your client side page in the given section with a given order
         /// </summary>
         /// <param name="control"><see cref="CanvasControl"/> to add</param>
-        /// <param name="column"><see cref="CanvasColumn"/> that will hold the control</param>    
+        /// <param name="column"><see cref="CanvasColumn"/> that will hold the control</param>
         /// <param name="order">Order of the control in the given section</param>
         public void AddControl(CanvasControl control, CanvasColumn column, int order)
         {
@@ -1424,7 +1424,12 @@ namespace OfficeDevPnP.Core.Pages
         /// </summary>
         public void PromoteAsNewsArticle()
         {
-            if (this.LayoutType == ClientSidePageLayoutType.Home || this.layoutType == ClientSidePageLayoutType.SingleWebPartAppPage)
+
+            if (this.LayoutType == ClientSidePageLayoutType.Home
+#if !SP2019
+                || this.layoutType == ClientSidePageLayoutType.SingleWebPartAppPage
+#endif
+                )
             {
                 throw new Exception("You can only promote article and repost pages as news article");
             }
@@ -1460,7 +1465,7 @@ namespace OfficeDevPnP.Core.Pages
         }
 
         /// <summary>
-        /// Removes the set page header 
+        /// Removes the set page header
         /// </summary>
         public void RemovePageHeader()
         {
@@ -1490,9 +1495,9 @@ namespace OfficeDevPnP.Core.Pages
                 TranslateY = translateY
             };
         }
-        #endregion
+#endregion
 
-        #region Internal and private methods
+                #region Internal and private methods
         private void EnableCommentsImplementation(bool enable)
         {
             // ensure we do have the page list item loaded
@@ -1975,7 +1980,7 @@ namespace OfficeDevPnP.Core.Pages
                 this.accessToken = e.WebRequestExecutor.RequestHeaders.Get("Authorization").Replace("Bearer ", "");
             }
         }
-        #endregion
+                #endregion
     }
 #endif
-}
+        }

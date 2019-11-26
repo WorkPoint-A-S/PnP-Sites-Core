@@ -1,7 +1,7 @@
 ﻿using Microsoft.SharePoint.Client;
-using Newtonsoft.Json;
 using OfficeDevPnP.Core.Framework.Provisioning.Connectors;
 using OfficeDevPnP.Core.Framework.Provisioning.Model;
+using OfficeDevPnP.Core.Framework.Provisioning.Model.Configuration;
 using System;
 using System.Collections.Generic;
 using static OfficeDevPnP.Core.Framework.Provisioning.Model.Configuration.ExtractConfiguration;
@@ -32,21 +32,18 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         private Handlers handlersToProcess = Handlers.All;
         private bool includeContentTypesFromSyndication = true;
         private bool includeHiddenLists = false;
+        private bool includeFieldsNotInContenTypesOnList = false;
+        internal Dictionary<Tuple<string, int>, string> ResourceTokens = new Dictionary<Tuple<string, int>, string>();
         private bool includeAllClientSidePages = false;
-        private bool excludeAuthorInformation = false;
-        private bool overwriteExistingNavigation = false;
-        private bool overwriteSiteFooterNavigation = false;
 
         /// <summary>
         /// Provisioning Progress Delegate
         /// </summary>
-        [JsonIgnore]
         public ProvisioningProgressDelegate ProgressDelegate { get; set; }
 
         /// <summary>
         /// Provisioning Messages Delegate
         /// </summary>
-        [JsonIgnore]
         public ProvisioningMessagesDelegate MessagesDelegate { get; set; }
 
         /// <summary>
@@ -63,7 +60,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         /// <summary>
         /// Base template used to compare against when we're "getting" a template
         /// </summary>
-        [JsonIgnore]
         public ProvisioningTemplate BaseTemplate
         {
             get
@@ -79,7 +75,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         /// <summary>
         /// Connector used to persist files when needed
         /// </summary>
-        [JsonIgnore]
         public FileConnectorBase FileConnector
         {
             get
@@ -127,7 +122,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         /// we're "getting" a template
         /// </summary>
         [Obsolete("Use PersistBrandingFiles instead")]
-        [JsonIgnore]
         public bool PersistComposedLookFiles
         {
             get
@@ -258,6 +252,21 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         }
 
         /// <summary>
+        /// if true, includes fields not contained in any content types on the list
+        /// </summary>
+        public bool IncludeFieldsNotInContenTypesOnList
+        {
+            get
+            {
+                return this.includeFieldsNotInContenTypesOnList;
+            }
+            set
+            {
+                this.includeFieldsNotInContenTypesOnList = value;
+            }
+        }
+
+        /// <summary>
         /// If true all client side pages will be included in the template.
         /// </summary>
         public bool IncludeAllClientSidePages
@@ -341,24 +350,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         /// </remarks>
         public List<String> ListsToExtract { get; set; } = new List<String>();
 
-        internal List<ExtractListsListsConfiguration> ListsExtractionConfiguration { get; set; } = new List<ExtractListsListsConfiguration>();
+        /// <summary>
+        /// Extraction configuration coming from JSON
+        /// </summary>
+        internal Model.Configuration.ExtractConfiguration ExtractConfiguration { get; set; }
 
-        internal bool ExcludeAuthorInformation
-        {
-            get { return excludeAuthorInformation; }
-            set { excludeAuthorInformation = value; }
-        }
-
-        internal bool OverwriteExistingNavigation
-        {
-            get { return overwriteExistingNavigation; }
-            set { overwriteExistingNavigation = value; }
-        }
-
-        internal bool OverwriteSiteFooterNavigation
-        {
-            get { return overwriteSiteFooterNavigation; }
-            set { overwriteSiteFooterNavigation = value; }
-        }
     }
 }

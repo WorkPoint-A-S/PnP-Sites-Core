@@ -68,7 +68,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         );
 
                     currentFileIndex++;
-                    WriteMessage($"File|{targetFileName}|{currentFileIndex}|{filesToProcess.Length}", ProvisioningMessageType.Progress);
+                    WriteSubProgress("File", targetFileName, currentFileIndex, filesToProcess.Length);
                     var folderName = parser.ParseString(file.Folder);
 
                     if (folderName.ToLower().Contains("/_catalogs/"))
@@ -356,14 +356,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             File targetFile = null;
             try
             {
+                // The file name might contain encoded characters that prevent upload. Decode it.
+                fileName = WebUtility.UrlDecode(fileName);
                 targetFile = folder.UploadFile(fileName, stream, overwrite);
             }
             catch (ServerException ex)
             {
                 if (ex.ServerErrorCode != -2130575306) //Error code: -2130575306 = The file is already checked out.
                 {
-                    //The file name might contain encoded characters that prevent upload. Decode it and try again.
-                    fileName = WebUtility.UrlDecode(fileName);
                     try
                     {
                         targetFile = folder.UploadFile(fileName, stream, overwrite);

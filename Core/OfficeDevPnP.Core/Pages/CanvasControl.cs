@@ -323,7 +323,12 @@ namespace OfficeDevPnP.Core.Pages
             // Deserialize the json string
             var jsonSerializerSettings = new JsonSerializerSettings()
             {
-                MissingMemberHandling = MissingMemberHandling.Ignore
+                MissingMemberHandling = MissingMemberHandling.Ignore,
+                Error = (se, ev) =>
+                {
+                    if ("zoneEmphasis".Equals(ev.ErrorContext.Member))
+                        ev.ErrorContext.Handled = true;
+                }
             };
             var controlData = JsonConvert.DeserializeObject<ClientSideCanvasControlData>(controlDataJson, jsonSerializerSettings);
 
@@ -350,7 +355,12 @@ namespace OfficeDevPnP.Core.Pages
             // deserialize control data
             var jsonSerializerSettings = new JsonSerializerSettings()
             {
-                MissingMemberHandling = MissingMemberHandling.Ignore
+                MissingMemberHandling = MissingMemberHandling.Ignore,
+                Error = (se, ev) => 
+                {
+                    if ("zoneEmphasis".Equals(ev.ErrorContext.Member))
+                        ev.ErrorContext.Handled = true;
+                }
             };
 
             var controlData = JsonConvert.DeserializeObject<ClientSideCanvasControlData>(element.GetAttribute(CanvasControl.ControlDataAttribute), jsonSerializerSettings);

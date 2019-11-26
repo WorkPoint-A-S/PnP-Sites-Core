@@ -93,7 +93,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 navigationEntity.AddNewPagesToNavigation = navigationSettings.AddNewPagesToNavigation;
                 navigationEntity.CreateFriendlyUrlsForNewPages = navigationSettings.CreateFriendlyUrlsForNewPages;
 
-                if (creationInfo.OverwriteExistingNavigation)
+                if (creationInfo.ExtractConfiguration != null && creationInfo.ExtractConfiguration.Navigation != null && creationInfo.ExtractConfiguration.Navigation.RemoveExistingNodes)
                 {
                     if (navigationEntity.SearchNavigation != null)
                     {
@@ -103,7 +103,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     {
                         navigationEntity.GlobalNavigation.StructuralNavigation.RemoveExistingNodes = true;
                     }
-                    if(navigationEntity.CurrentNavigation != null && navigationEntity.CurrentNavigation.StructuralNavigation != null)
+                    if (navigationEntity.CurrentNavigation != null && navigationEntity.CurrentNavigation.StructuralNavigation != null)
                     {
                         navigationEntity.CurrentNavigation.StructuralNavigation.RemoveExistingNodes = true;
                     }
@@ -312,9 +312,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                 }
                                 UrlValue = Regex.Replace(UrlValue, $"{{{match.Groups["tokenname"].Value}:{match.Groups["fileurl"].Value}}}", folderId, RegexOptions.IgnoreCase);
                             }
-                            catch (Exception ex1)
+                            catch (Exception)
                             {
-
+                                // swallow exception
                             }
                         }
                     }
@@ -330,7 +330,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             // The Navigation handler for managed metedata only works for sites with Publishing Features enabled
             if (!web.IsPublishingWeb())
             {
-                // NOTE: Here there could be a very edge case for a site where publishing features were enabled, 
+                // NOTE: Here there could be a very edge case for a site where publishing features were enabled,
                 // configured managed navigation, and then disabled, keeping one navigation managed and another
                 // one structural. Just as a reminder ...
                 if (template.Navigation.GlobalNavigation != null
@@ -353,7 +353,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             // The Navigation handler for managed metedata only works for sites with Publishing Features enabled
             if (!web.IsPublishingWeb())
             {
-                // NOTE: Here we could have the same edge case of method WebSupportsProvisionNavigation. 
+                // NOTE: Here we could have the same edge case of method WebSupportsProvisionNavigation.
                 // Just as a reminder ...
                 var navigationSettings = new WebNavigationSettings(web.Context, web);
                 navigationSettings.EnsureProperties(ns => ns.CurrentNavigation, ns => ns.GlobalNavigation);
@@ -585,7 +585,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             if (!sourceNodes.ServerObjectIsNull.Value)
             {
                 result.NavigationNodes.AddRange(from n in sourceNodes.AsEnumerable()
-                                                select n.ToDomainModelNavigationNode(web, creationInfo.PersistMultiLanguageResources, defaultCulture));
+                                                select n.ToDomainModelNavigationNode(web, creationInfo.PersistMultiLanguageResources, defaultCulture, creationInfo));
 
                 if (creationInfo.PersistMultiLanguageResources)
                 {
@@ -602,9 +602,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                         if (!sourceNodes.ServerObjectIsNull.Value)
                         {
-                            //we dont need to add to result - just extract Titles - to List as we need to 
+                            //we dont need to add to result - just extract Titles - to List as we need to
                             var alternateLang = (from n in sourceNodes.AsEnumerable()
-                                                 select n.ToDomainModelNavigationNode(web, creationInfo.PersistMultiLanguageResources, currentCulture)).ToList();
+                                                 select n.ToDomainModelNavigationNode(web, creationInfo.PersistMultiLanguageResources, currentCulture, creationInfo)).ToList();
                         }
 
                         clientContext.PendingRequest.RequestExecutor.WebRequest.Headers["Accept-Language"] = acceptLanguage;
@@ -689,14 +689,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
     internal static class NavigationNodeExtensions
     {
-        internal static Model.NavigationNode ToDomainModelNavigationNode(this Microsoft.SharePoint.Client.NavigationNode node, Web web, bool PersistLanguage, CultureInfo currentCulture, int ParentNodeId = 0)
+        internal static Model.NavigationNode ToDomainModelNavigationNode(this Microsoft.SharePoint.Client.NavigationNode node, Web web, bool PersistLanguage, CultureInfo currentCulture, ProvisioningTemplateCreationInformation creationInfo, int ParentNodeId = 0)
         {
 
             string nodeTitle = node.Title;
 #if !SP2013
             if (PersistLanguage && !string.IsNullOrWhiteSpace(nodeTitle))
             {
-                if (UserResourceExtensions.PersistResourceValue($"NavigationNode_{ParentNodeId}_{node.Id}_Title", currentCulture.LCID, nodeTitle))
+                if (UserResourceExtensions.PersistResourceValue($"NavigationNode_{ParentNodeId}_{node.Id}_Title", currentCulture.LCID, nodeTitle, creationInfo))
                 {
                     nodeTitle = $"{{res:NavigationNode_{ParentNodeId}_{node.Id}_Title}}";
                 }
@@ -720,7 +720,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             node.Context.ExecuteQueryRetry();
 
             result.NavigationNodes.AddRange(from n in node.Children.AsEnumerable()
-                                            select n.ToDomainModelNavigationNode(web, PersistLanguage, currentCulture, node.Id));
+                                            select n.ToDomainModelNavigationNode(web, PersistLanguage, currentCulture, creationInfo, node.Id));
 
 #if !SP2013
             if (PersistLanguage)

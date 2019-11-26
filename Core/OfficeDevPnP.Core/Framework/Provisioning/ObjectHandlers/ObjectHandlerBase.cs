@@ -27,7 +27,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         }
 
         public ProvisioningMessagesDelegate MessagesDelegate { get; set; }
-
+        
         public abstract bool WillProvision(Web web, ProvisioningTemplate template, ProvisioningTemplateApplyingInformation applyingInformation);
 
         public abstract bool WillExtract(Web web, ProvisioningTemplate template, ProvisioningTemplateCreationInformation creationInfo);
@@ -41,6 +41,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             if (MessagesDelegate != null)
             {
                 MessagesDelegate(message, messageType);
+            }
+        }
+
+        internal void WriteSubProgress(string title, string message, int step, int total)
+        {
+            if(MessagesDelegate != null)
+            {
+                MessagesDelegate($"{title}|{message}|{step}|{total}", ProvisioningMessageType.Progress);
             }
         }
 
@@ -119,7 +127,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         }
 
         /// <summary>
-        /// Check if all tokens where replaced. If the field is a taxonomy field then we will check for the values of the referenced termstore and termset. 
+        /// Check if all tokens where replaced. If the field is a taxonomy field then we will check for the values of the referenced termstore and termset.
         /// </summary>
         /// <param name="fieldXml">The xml to parse</param>
         /// <param name="parser"></param>

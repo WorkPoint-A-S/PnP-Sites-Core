@@ -60,6 +60,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml.Serializers.V20
                 expressions.Add(l => l.UserCustomActions[0].CommandUIExtension, new XmlAnyFromSchemaToModelValueResolver("CommandUIExtension"));
                 expressions.Add(l => l.UserCustomActions[0].RegistrationType, new FromStringToEnumValueResolver(typeof(UserCustomActionRegistrationType)));
                 expressions.Add(l => l.UserCustomActions[0].Rights, new FromStringToBasePermissionsValueResolver());
+                expressions.Add(l => l.UserCustomActions[0].ClientSideComponentId, new FromStringToGuidValueResolver());
 
                 // Define custom resolver for Views (XML Any + RemoveExistingViews)
                 expressions.Add(l => l.Views,
@@ -139,6 +140,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml.Serializers.V20
                 resolvers.Add($"{customActionType}.RegistrationType", new FromStringToEnumValueResolver(registrationTypeType));
                 resolvers.Add($"{customActionType}.RegistrationTypeSpecified", new ExpressionValueResolver(() => true));
                 resolvers.Add($"{customActionType}.SequenceSpecified", new ExpressionValueResolver(() => true));
+                resolvers.Add($"{customActionType}.ClientSideComponentId", new ExpressionValueResolver((s, v) => v != null ? v.ToString() : s?.ToString()));
 
 
                 // Define custom resolver for Views (XML Any + RemoveExistingViews)

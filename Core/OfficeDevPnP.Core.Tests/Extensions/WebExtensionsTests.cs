@@ -733,7 +733,7 @@ namespace Microsoft.SharePoint.Client.Tests
         public void DeploySharePointFrameworkSolutionTest()
         {
             using (var ctx = TestCommon.CreateClientContext())
-            {                
+            {
                 var app = ctx.Web.DeployApplicationPackageToAppCatalog("hello-world.sppkg", "../../Resources", true, true, true);
             }
         }
@@ -776,7 +776,7 @@ namespace Microsoft.SharePoint.Client.Tests
                     Template = "STS#0"
                 };
                 Web subSite = ctx.Web.CreateWeb(subSiteInfo);
-                
+
                 string subWebName = subSite.GetName();
                 Assert.AreEqual(subWebUrl, subWebName);
             }

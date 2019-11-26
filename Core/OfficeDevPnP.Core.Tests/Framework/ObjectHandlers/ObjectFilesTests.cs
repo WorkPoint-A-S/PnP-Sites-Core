@@ -105,7 +105,7 @@ alert(""Hello!"");
                 ctx.Web.EnsureProperties(w => w.ServerRelativeUrl);
                 var serverRelativeUrl = UrlUtility.Combine(ctx.Web.ServerRelativeUrl, UrlUtility.Combine(folder, fileName));
                 var file = ctx.Web.GetFileByServerRelativeUrl(serverRelativeUrl);
-                
+
                 // This call will fail as we're creating a file not bound to a list
                 ctx.Load(file);
                 try
@@ -169,7 +169,7 @@ alert(""Hello!"");
                 // first of all do we even find the form ?
                 Assert.IsTrue(file.Exists);
                 var webParts = file.GetLimitedWebPartManager(PersonalizationScope.Shared).WebParts;
-                ctx.Load(webParts, wp => wp.IncludeWithDefaultProperties(w=>w.Id, w=>w.WebPart, w=>w.WebPart.Title));
+                ctx.Load(webParts, wp => wp.IncludeWithDefaultProperties(w => w.Id, w => w.WebPart, w => w.WebPart.Title));
                 ctx.ExecuteQueryRetry();
 
                 var webPartsArray = webParts.ToArray();
@@ -179,10 +179,10 @@ alert(""Hello!"");
                     if (webPartDefinition.WebPart.Title == "Script Editor")
                     {
                         webPartExists = true;
-                        // cleanup after ourselves if we can find the webpart... 
+                        // cleanup after ourselves if we can find the webpart...
                         webPartDefinition.DeleteWebPart();
                     }
-                   
+
                 }
                 ctx.ExecuteQueryRetry();
                 Assert.IsTrue(webPartExists);
