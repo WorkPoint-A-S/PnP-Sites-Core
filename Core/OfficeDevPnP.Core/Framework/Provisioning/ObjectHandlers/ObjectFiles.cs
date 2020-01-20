@@ -215,7 +215,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         if (file.Properties != null && file.Properties.Any())
                         {
                             Dictionary<string, string> transformedProperties = file.Properties.ToDictionary(property => property.Key, property => parser.ParseString(property.Value));
-                            SetFileProperties(targetFile, transformedProperties, parser, false);
+                            try
+                            {
+                                SetFileProperties(targetFile, transformedProperties, parser, false);
+                            }
+                            catch (Exception ex)
+                            {
+                                WriteMessage($"File properties was'nt set for file '{targetFile.ServerRelativeUrl}'. ErrorMessage: {ex.Message}", ProvisioningMessageType.Warning);
+                            }
                         }
 
                     }
