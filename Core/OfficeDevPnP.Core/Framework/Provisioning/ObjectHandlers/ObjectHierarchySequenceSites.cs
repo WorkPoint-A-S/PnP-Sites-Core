@@ -462,7 +462,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     {
                         configuration.ProgressDelegate?.Invoke($"{currentSite} : {message}", step, total);
                     };
-                    
+
                     foreach (var sitecollection in sequence.SiteCollections)
                     {
                         currentSite = sitecollection.ProvisioningId != null ? sitecollection.ProvisioningId : sitecollection.Title;
@@ -470,7 +470,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         siteUrls.TryGetValue(sitecollection.Id, out string siteUrl);
                         if (siteUrl != null)
                         {
-                            using (var clonedContext = tenant.Context.Clone(siteUrl, configuration.AccessTokens))
+                            using (var clonedContext = tenant.Context.Clone(siteUrl, configuration.AccessTokens, true))
                             {
                                 var web = clonedContext.Web;
                                 foreach (var templateRef in sitecollection.Templates)

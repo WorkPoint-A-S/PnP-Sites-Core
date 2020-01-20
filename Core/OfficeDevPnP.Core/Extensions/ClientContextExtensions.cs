@@ -53,14 +53,14 @@ namespace Microsoft.SharePoint.Client
         /// <param name="siteUrl">Site URL to be used for cloned ClientContext</param>
         /// <param name="accessTokens">Dictionary of access tokens for sites URLs</param>
         /// <returns>A ClientContext object created for the passed site URL</returns>
-        public static ClientContext Clone(this ClientRuntimeContext clientContext, string siteUrl, Dictionary<String, String> accessTokens = null)
+        public static ClientContext Clone(this ClientRuntimeContext clientContext, string siteUrl, Dictionary<String, String> accessTokens = null, bool ignoreContextSettings = false)
         {
             if (string.IsNullOrWhiteSpace(siteUrl))
             {
                 throw new ArgumentException(CoreResources.ClientContextExtensions_Clone_Url_of_the_site_is_required_, nameof(siteUrl));
             }
 
-            return clientContext.Clone(new Uri(siteUrl), accessTokens);
+            return clientContext.Clone(new Uri(siteUrl), accessTokens, ignoreContextSettings);
         }
 
 #if !ONPREMISES
@@ -87,7 +87,7 @@ namespace Microsoft.SharePoint.Client
         /// <param name="userAgent">UserAgent string value to insert for this request. You can define this value in your app's config file using key="SharePointPnPUserAgent" value="PnPRocks"></param>
         public static void ExecuteQueryRetry(this ClientRuntimeContext clientContext, int retryCount = 10, int delay = 500, string userAgent = null)
         {
-#if !ONPREMISES            
+#if !ONPREMISES
             Task.Run(() => ExecuteQueryImplementation(clientContext, retryCount, delay, userAgent)).GetAwaiter().GetResult();
 #else
             ExecuteQueryImplementation(clientContext, retryCount, delay, userAgent);
@@ -138,7 +138,7 @@ namespace Microsoft.SharePoint.Client
                 {
                     clientContext.ClientTag = SetClientTag(clientTag);
 
-                    // Make CSOM request more reliable by disabling the return value cache. Given we 
+                    // Make CSOM request more reliable by disabling the return value cache. Given we
                     // often clone context objects and the default value is
 #if !ONPREMISES || SP2016 || SP2019
                     clientContext.DisableReturnValueCache = true;
@@ -184,12 +184,12 @@ namespace Microsoft.SharePoint.Client
                     var response = wex.Response as HttpWebResponse;
                     // Check if request was throttled - http status code 429
                     // Check is request failed due to server unavailable - http status code 503
-                    if (response != null && (response.StatusCode == (HttpStatusCode)429 || response.StatusCode == (HttpStatusCode)503 
+                    if (response != null && (response.StatusCode == (HttpStatusCode)429 || response.StatusCode == (HttpStatusCode)503
                         || wex.Message.Equals(internalServerErrMsg, StringComparison.OrdinalIgnoreCase)))
                     {
                         if (wex.Message.Equals(internalServerErrMsg, StringComparison.OrdinalIgnoreCase))
                             Log.Warning(Constants.LOGGING_SOURCE, wex.Message);
-                        
+
                         Log.Warning(Constants.LOGGING_SOURCE, CoreResources.ClientContextExtensions_ExecuteQueryRetry, backoffInterval);
 
 #if !ONPREMISES
@@ -285,9 +285,9 @@ namespace Microsoft.SharePoint.Client
         /// <param name="siteUrl">Site URL to be used for cloned ClientContext</param>
         /// <param name="accessTokens">Dictionary of access tokens for sites URLs</param>
         /// <returns>A ClientContext object created for the passed site URL</returns>
-        public static ClientContext Clone(this ClientRuntimeContext clientContext, Uri siteUrl, Dictionary<String, String> accessTokens = null)
+        public static ClientContext Clone(this ClientRuntimeContext clientContext, Uri siteUrl, Dictionary<String, String> accessTokens = null, bool ignoreContextSettings = false)
         {
-            return Clone(clientContext, new ClientContext(siteUrl), siteUrl, accessTokens);
+            return Clone(clientContext, new ClientContext(siteUrl), siteUrl, accessTokens, ignoreContextSettings);
         }
         /// <summary>
         /// Clones a ClientContext object while "taking over" the security context of the existing ClientContext instance
@@ -296,8 +296,9 @@ namespace Microsoft.SharePoint.Client
         /// <param name="targetContext">CientContext stub to be used for cloning</param>
         /// <param name="siteUrl">Site URL to be used for cloned ClientContext</param>
         /// <param name="accessTokens">Dictionary of access tokens for sites URLs</param>
+        /// <param name="ignoreContextSettings">Don't use ContextSettings when cloning</param>
         /// <returns>A ClientContext object created for the passed site URL</returns>
-        internal static ClientContext Clone(this ClientRuntimeContext clientContext, ClientContext targetContext, Uri siteUrl, Dictionary<String, String> accessTokens = null)
+        internal static ClientContext Clone(this ClientRuntimeContext clientContext, ClientContext targetContext, Uri siteUrl, Dictionary<String, String> accessTokens = null, bool ignoreContextSettings = false)
         {
             if (siteUrl == null)
             {
@@ -311,7 +312,6 @@ namespace Microsoft.SharePoint.Client
             clonedClientContext.DisableReturnValueCache = clientContext.DisableReturnValueCache;
 #endif
 
-
             // In case of using networkcredentials in on premises or SharePointOnlineCredentials in Office 365
             if (clientContext.Credentials != null)
             {
@@ -319,11 +319,10 @@ namespace Microsoft.SharePoint.Client
             }
             else
             {
-
                 // Check if we do have context settings
                 var contextSettings = clientContext.GetContextSettings();
 
-                if (contextSettings != null) // We do have more information about this client context, so let's use it to do a more intelligent clone
+                if (contextSettings != null && !ignoreContextSettings) // We do have more information about this client context, so let's use it to do a more intelligent clone
                 {
                     string newSiteUrl = siteUrl.ToString();
 
@@ -372,7 +371,7 @@ namespace Microsoft.SharePoint.Client
 
                         clonedClientContext.ExecutingWebRequest += delegate (object oSender, WebRequestEventArgs webRequestEventArgs)
                         {
-                            // Call the ExecutingWebRequest delegate method from the original ClientContext object, but pass along the webRequestEventArgs of 
+                            // Call the ExecutingWebRequest delegate method from the original ClientContext object, but pass along the webRequestEventArgs of
                             // the new delegate method
                             MethodInfo methodInfo = clientContext.GetType().GetMethod("OnExecutingWebRequest", BindingFlags.Instance | BindingFlags.NonPublic);
                             object[] parametersArray = new object[] { webRequestEventArgs };
@@ -429,7 +428,7 @@ namespace Microsoft.SharePoint.Client
                         // In case of app only or SAML
                         clonedClientContext.ExecutingWebRequest += (sender, webRequestEventArgs) =>
                         {
-                            // Call the ExecutingWebRequest delegate method from the original ClientContext object, but pass along the webRequestEventArgs of 
+                            // Call the ExecutingWebRequest delegate method from the original ClientContext object, but pass along the webRequestEventArgs of
                             // the new delegate method
                             MethodInfo methodInfo = clientContext.GetType().GetMethod("OnExecutingWebRequest", BindingFlags.Instance | BindingFlags.NonPublic);
                             object[] parametersArray = new object[] { webRequestEventArgs };

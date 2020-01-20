@@ -225,7 +225,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         {
                             CallWebHooks(hierarchy.Templates.FirstOrDefault(), sequenceTokenParser,
                                 ProvisioningTemplateWebhookKind.ProvisioningExceptionOccurred, handler.Name, ex);
-                            throw ex;
+                            throw;
                         }
                     }
                 }
@@ -482,7 +482,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         {
                             CallWebHooks(template, tokenParser, ProvisioningTemplateWebhookKind.ExceptionOccurred,
                                 handler.InternalName, ex);
-                            throw ex;
+                            throw;
                         }
                         CallWebHooks(template, tokenParser,
                             ProvisioningTemplateWebhookKind.ObjectHandlerProvisioningCompleted,
