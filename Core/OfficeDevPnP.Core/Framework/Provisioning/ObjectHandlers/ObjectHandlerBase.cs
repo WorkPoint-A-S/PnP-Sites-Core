@@ -105,6 +105,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 sspIdElement.Value = "{sitecollectiontermstoreid}";
             }
+
+            var anchorIdElement = element.XPathSelectElement("./Customization/ArrayOfProperty/Property[Name = 'AnchorId']/Value");
+
             var termSetIdElement = element.XPathSelectElement("./Customization/ArrayOfProperty/Property[Name = 'TermSetId']/Value");
             if (termSetIdElement != null)
             {
@@ -112,6 +115,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 if (termSetId != Guid.Empty)
                 {
                     Microsoft.SharePoint.Client.Taxonomy.TermSet termSet = store.GetTermSet(termSetId);
+                    Microsoft.SharePoint.Client.Taxonomy.Term sourceAnchorTerm = null;
+                    if (!string.IsNullOrEmpty(anchorIdElement?.Value))
+                    {
+                        var anchorTermGuid = new Guid(anchorIdElement.Value);
+                        sourceAnchorTerm = store.GetTerm(anchorTermGuid);
+                        store.Context.Load(sourceAnchorTerm, ats => ats.Name, ats => ats.Id, ats => ats.PathOfTerm);
+                    }
                     store.Context.ExecuteQueryRetry();
 
                     if (!termSet.ServerObjectIsNull())
@@ -120,6 +130,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                         termSetIdElement.Value = String.Format("{{termsetid:{0}:{1}}}", termSet.Group.IsSiteCollectionGroup ? "{sitecollectiontermgroupname}" : termSet.Group.Name, termSet.Name);
                     }
+                    if (!sourceAnchorTerm.ServerObjectIsNull())
+                        anchorIdElement.Value = String.Format("{{termid:{0}:{1}:{2}}}", termSet.Group.IsSiteCollectionGroup ? "{sitecollectiontermgroupname}" : termSet.Group.Name, termSet.Name, sourceAnchorTerm.PathOfTerm);
+
                 }
             }
 

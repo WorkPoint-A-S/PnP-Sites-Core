@@ -430,7 +430,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
         private void AddTermStoreTokens(Web web, List<string> tokenIds)
         {
-            if (tokenIds.Contains("termstoreid") || tokenIds.Contains("termsetid") || tokenIds.Contains("sitecollectiontermgroupid") || tokenIds.Contains("sitecollectiontermgroupname") || tokenIds.Contains("sitecollectiontermsetid"))
+            if (tokenIds.Contains("termstoreid") || tokenIds.Contains("termsetid") || tokenIds.Contains("sitecollectiontermgroupid") || tokenIds.Contains("sitecollectiontermgroupname") || tokenIds.Contains("sitecollectiontermsetid") || tokenIds.Contains("termid"))
             {
                 TaxonomySession session = TaxonomySession.GetTaxonomySession(web.Context);
 
@@ -445,7 +445,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 var termStore = session.GetDefaultSiteCollectionTermStore();
                 web.Context.Load(termStore);
                 web.Context.ExecuteQueryRetry();
-                if (tokenIds.Contains("termsetid"))
+                if (tokenIds.Contains("termsetid") || tokenIds.Contains("termid"))
                 {
                     if (!termStore.ServerObjectIsNull.Value)
                     {
@@ -462,6 +462,16 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             foreach (var termSet in termGroup.TermSets)
                             {
                                 _tokens.Add(new TermSetIdToken(web, termGroup.Name, termSet.Name, termSet.Id));
+                                if (tokenIds.Contains("termid"))
+                                {
+                                    var allTerms = termSet.GetAllTerms();
+                                    web.Context.Load(allTerms, ts => ts.Include(t => t.PathOfTerm, t => t.Id));
+                                    web.Context.ExecuteQueryRetry();
+                                    foreach (var term in allTerms)
+                                    {
+                                        _tokens.Add(new TermIdToken(web, termGroup.Name, termSet.Name, term.PathOfTerm, term.Id));
+                                    }
+                                }
                             }
                         }
                     }
@@ -472,7 +482,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 if (tokenIds.Contains("sitecollectiontermgroupname"))
                     _tokens.Add(new SiteCollectionTermGroupNameToken(web));
 
-                if (tokenIds.Contains("sitecollectiontermsetid"))
+                if (tokenIds.Contains("sitecollectiontermsetid") || tokenIds.Contains("termid"))
                 {
                     var site = (web.Context as ClientContext).Site;
                     var siteCollectionTermGroup = termStore.GetSiteCollectionGroup(site, true);
@@ -487,6 +497,16 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             foreach (var termSet in siteCollectionTermGroup.TermSets)
                             {
                                 _tokens.Add(new SiteCollectionTermSetIdToken(web, termSet.Name, termSet.Id));
+                                if (tokenIds.Contains("termid"))
+                                {
+                                    var allTerms = termSet.GetAllTerms();
+                                    web.Context.Load(allTerms, ts => ts.Include(t => t.PathOfTerm, t => t.Id));
+                                    web.Context.ExecuteQueryRetry();
+                                    foreach (var term in allTerms)
+                                    {
+                                        _tokens.Add(new TermIdToken(web, siteCollectionTermGroup.Name, termSet.Name, term.PathOfTerm, term.Id));
+                                    }
+                                }
                             }
                         }
                     }
