@@ -7,8 +7,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.TokenDefinitio
 {
     [TokenDefinitionDescription(
       Token = "{termsetid:[groupname]:[termsetname]}",
-      Description = "Returns the id of a term set given its name and its parent group",
-      Example = "{termsetid:MyGroup:MyTermset}",
+      Description = "Returns the id of a term set given its name, its parent group and Term path",
+      Example = "{termsetid:MyGroup:MyTermset:TermPath}",
       Returns = "9188a794-cfcf-48b6-9ac5-df2048e8aa5d")]
     internal class TermIdToken : TokenDefinition
     {
