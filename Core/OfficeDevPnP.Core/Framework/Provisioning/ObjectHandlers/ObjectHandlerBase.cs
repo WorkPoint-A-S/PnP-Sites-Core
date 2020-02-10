@@ -133,7 +133,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                         termSetIdElement.Value = String.Format("{{termsetid:{0}:{1}}}", termSet.Group.IsSiteCollectionGroup ? "{sitecollectiontermgroupname}" : termSet.Group.Name, termSet.Name);
                     }
-                    if (!sourceAnchorTerm?.ServerObjectIsNull() ?? false)
+                    if (sourceAnchorTerm != null && !sourceAnchorTerm.ServerObjectIsNull())
                         anchorIdElement.Value = String.Format("{{termid:{0}:{1}:{2}}}", termSet.Group.IsSiteCollectionGroup ? "{sitecollectiontermgroupname}" : termSet.Group.Name, termSet.Name, sourceAnchorTerm.PathOfTerm);
 
                 }
