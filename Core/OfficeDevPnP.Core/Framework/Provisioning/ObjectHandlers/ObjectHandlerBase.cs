@@ -119,8 +119,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     if (!string.IsNullOrEmpty(anchorIdElement?.Value))
                     {
                         var anchorTermGuid = new Guid(anchorIdElement.Value);
-                        sourceAnchorTerm = store.GetTerm(anchorTermGuid);
-                        store.Context.Load(sourceAnchorTerm, ats => ats.Name, ats => ats.Id, ats => ats.PathOfTerm);
+                        if (anchorTermGuid != Guid.Empty)
+                        {
+                            sourceAnchorTerm = store.GetTerm(anchorTermGuid);
+                            store.Context.Load(sourceAnchorTerm, ats => ats.Name, ats => ats.Id, ats => ats.PathOfTerm);
+                        }
                     }
                     store.Context.ExecuteQueryRetry();
 
@@ -130,7 +133,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                         termSetIdElement.Value = String.Format("{{termsetid:{0}:{1}}}", termSet.Group.IsSiteCollectionGroup ? "{sitecollectiontermgroupname}" : termSet.Group.Name, termSet.Name);
                     }
-                    if (!sourceAnchorTerm.ServerObjectIsNull())
+                    if (sourceAnchorTerm != null && !sourceAnchorTerm.ServerObjectIsNull())
                         anchorIdElement.Value = String.Format("{{termid:{0}:{1}:{2}}}", termSet.Group.IsSiteCollectionGroup ? "{sitecollectiontermgroupname}" : termSet.Group.Name, termSet.Name, sourceAnchorTerm.PathOfTerm);
 
                 }
