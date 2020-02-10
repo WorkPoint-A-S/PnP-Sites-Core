@@ -119,8 +119,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     if (!string.IsNullOrEmpty(anchorIdElement?.Value))
                     {
                         var anchorTermGuid = new Guid(anchorIdElement.Value);
-                        sourceAnchorTerm = store.GetTerm(anchorTermGuid);
-                        store.Context.Load(sourceAnchorTerm, ats => ats.Name, ats => ats.Id, ats => ats.PathOfTerm);
+                        if (anchorTermGuid != Guid.Empty)
+                        {
+                            sourceAnchorTerm = store.GetTerm(anchorTermGuid);
+                            store.Context.Load(sourceAnchorTerm, ats => ats.Name, ats => ats.Id, ats => ats.PathOfTerm);
+                        }
                     }
                     store.Context.ExecuteQueryRetry();
 
