@@ -2062,6 +2062,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         {
             // Determine the folder name, parsing any token
             String targetFolderName = parser.ParseString(folder.Name);
+            list.SiteList.ParentWeb.EnsureProperties(w => w.ServerRelativeUrl);
 
             // Check if the folder already exists
             if (parentFolder.FolderExists(targetFolderName))
@@ -2077,6 +2078,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
             if (currentFolder != null)
             {
+#if !SP2013
+                //add the uniqueid's of the folders to the Token Parser
+                currentFolder.EnsureProperties(p => p.UniqueId, p => p.ServerRelativeUrl);
+                parser.AddToken(new FileUniqueIdToken(list.SiteList.ParentWeb, currentFolder.ServerRelativeUrl.Substring(list.SiteList.ParentWeb.ServerRelativeUrl.Length).TrimStart("/".ToCharArray()), currentFolder.UniqueId));
+                parser.AddToken(new FileUniqueIdEncodedToken(list.SiteList.ParentWeb, currentFolder.ServerRelativeUrl.Substring(list.SiteList.ParentWeb.ServerRelativeUrl.Length).TrimStart("/".ToCharArray()), currentFolder.UniqueId));
+#endif
                 // Handle any child-folder
                 if (folder.Folders != null && folder.Folders.Count > 0)
                 {

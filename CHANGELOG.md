@@ -10,11 +10,28 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Option to use an access token in the TimerJob framework
+- Option specify the Azure environment being used by the timerjob framework
+
+### Changed
+
+- Respect the set Azure environment in the GetAzureADCredentialsContext AuthenticationManager method
+- Added fallback to check for web setting on search redirect url on a root site if sc setting is empty in the SearchExtensions SetWebSearchCenterUrl method
+
+## [3.17.2002.0 - February 2020 release]
+
+### Added
+
 - EnableCommunicationSite extension method to transform a classic, non publishing, site into a communication site
+- February 2020 schema version was added and set as default schema
+- Support for SharingSettings, Search Center URL, new Teams settings, and Groupify of STS#3 sites in the Provisioning Engine
 
 ### Changed
 
 - Reliability improvements in pages API to load some very old pages
+- Add Folder UniqueID to parser token as fileuniqueid #2524 [czullu - Christian Zuellig]
+- Fix: Change indentation back to spaces. #2529 [jensotto - Jens Otto Hatlevold]
+- Added option to set requesting access to a web to the default owners + marked the methods supporting multiple email addresses as obsolete #2533 / #2534 [KoenZomers - Koen Zomers]
 
 ## [3.17.2001.2 - January 2020 release]
 
