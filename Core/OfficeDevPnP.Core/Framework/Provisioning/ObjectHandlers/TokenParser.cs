@@ -1048,7 +1048,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         public string ParseStringSPGroupName(string input)
         {
             var parsedString = ParseString(input, null);
-            return ReInvalidSPGroupNameChars.Replace(parsedString, "_");
+            return parsedString != null ? ReInvalidSPGroupNameChars.Replace(parsedString, "_") : null;
         }
 
         internal void RemoveToken<T>(T oldToken) where T : TokenDefinition
