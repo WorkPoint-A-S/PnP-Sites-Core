@@ -267,9 +267,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
             // Strip the /sites/root part from /sites/root/lib/folder structure, special case for root site handling.
             Uri u = new Uri(webUrl);
-            if (f.Folder.IndexOf(u.PathAndQuery, StringComparison.InvariantCultureIgnoreCase) > -1 && u.PathAndQuery.Length > 1)
+            string pathAndQueryDecoded = System.Net.WebUtility.UrlDecode(u.PathAndQuery);
+            if (f.Folder.IndexOf(pathAndQueryDecoded, StringComparison.InvariantCultureIgnoreCase) > -1 && pathAndQueryDecoded.Length > 1)
             {
-                f.Folder = f.Folder.Replace(u.PathAndQuery, "");
+                f.Folder = f.Folder.Replace(pathAndQueryDecoded, "");
             }
 
             // in case of a theme catalog we need to use the root site reader as that list only exists on root site level
