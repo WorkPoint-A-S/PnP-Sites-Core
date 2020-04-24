@@ -31,6 +31,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         private List<ExtensibilityHandler> extensibilityHandlers = new List<ExtensibilityHandler>();
         private Handlers handlersToProcess = Handlers.All;
         private bool includeContentTypesFromSyndication = true;
+        private bool includeFieldsFromSyndication = true;
         private bool includeHiddenLists = false;
         private bool includeFieldsNotInContenTypesOnList = false;
         internal Dictionary<Tuple<string, int>, string> ResourceTokens = new Dictionary<Tuple<string, int>, string>();
@@ -331,6 +332,18 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         {
             get { return includeContentTypesFromSyndication; }
             set { includeContentTypesFromSyndication = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to include fields from syndication (= content type hub) or not.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if the export should contains fields issued from syndication (= content type hub)
+        /// </value>
+        public bool IncludeFieldsFromSyndication
+        {
+            get { return includeFieldsFromSyndication; }
+            set { includeFieldsFromSyndication = value; }
         }
 
         /// <summary>

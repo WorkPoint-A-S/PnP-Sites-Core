@@ -191,7 +191,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         catch (Exception ex)
                         {
                             if ((ex is ServerException && (ex as ServerException).ServerErrorTypeName == "Microsoft.SharePoint.Client.ClientServiceTimeoutException")
-                               || (ex is WebException && (ex as WebException).Status == WebExceptionStatus.Timeout))
+                                || (ex is WebException && (ex as WebException).Status == WebExceptionStatus.Timeout))
                             {
                                 string fieldName = existingFieldElement.Attribute("Name") != null ? existingFieldElement.Attribute("Name").Value : existingFieldElement.Attribute("StaticName").Value;
                                 WriteMessage(string.Format(CoreResources.Provisioning_ObjectHandlers_Fields_Updating_field__0__timeout, fieldName), ProvisioningMessageType.Warning);
@@ -496,6 +496,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 web.Context.Load(web.Lists, ls => ls.Include(l => l.Id, l => l.Title));
                 web.Context.ExecuteQueryRetry();
 
+                Guid contentTypeHubWebId = !creationInfo.IncludeFieldsFromSyndication ? GetContentTypeHubWebId(web) : Guid.Empty;
+
                 var taxTextFieldsToMoveUp = new List<Guid>();
                 var calculatedFieldsToMoveDown = new List<Guid>();
 
@@ -507,6 +509,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     WriteSubProgress("Field", field.InternalName, currentFieldIndex, fieldsToProcessCount);
                     if (!BuiltInFieldId.Contains(field.Id))
                     {
+                        // Exclude the field if it's from syndication (content type hub)
+                        if (!creationInfo.IncludeFieldsFromSyndication && !contentTypeHubWebId.Equals(Guid.Empty) && IsFieldFromSyndication(contentTypeHubWebId, field))
+                        {
+                            scope.LogInfo($"Field {field.Id} excluded from export because it's a syndicated field from the content type hub.");
+                            continue;
+                        }
+
                         var fieldXml = field.SchemaXml;
                         XElement element = XElement.Parse(fieldXml);
 
@@ -603,6 +612,30 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             WriteMessage($"Done processing fields", ProvisioningMessageType.Completed);
 
             return template;
+        }
+
+        private static bool IsFieldFromSyndication(Guid contentTypeHubWebId, SPField field)
+        {
+            if (field == null) throw new ArgumentNullException(nameof(field));
+
+            var fieldElement = XElement.Parse(field.SchemaXml);
+            var sourceId = fieldElement.Attribute("SourceID") != null ? fieldElement.Attribute("SourceID").Value : null;
+
+            if (Guid.TryParse(sourceId, out Guid sourceIdGuid))
+                return sourceIdGuid.Equals(contentTypeHubWebId);
+            else
+                return false;
+        }
+
+        private static Guid GetContentTypeHubWebId(Web web)
+        {
+            string ctHubUrl = (web.Context as ClientContext).Site.GetContentTypePublishingHub();
+            if (!string.IsNullOrWhiteSpace(ctHubUrl))
+            {
+                using (var ctHubContext = web.Context.Clone(ctHubUrl))
+                    return ctHubContext.Web.EnsureProperty(w => w.Id);
+            }
+            return Guid.Empty;
         }
 
         private ProvisioningTemplate CleanupEntities(ProvisioningTemplate template, ProvisioningTemplate baseTemplate)
