@@ -468,7 +468,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             var roleDefinitions = existingRoleDefinitions as RoleDefinition[] ?? existingRoleDefinitions.ToArray();
                             var parsedRoleDefinitionName = parser.ParseString(templateRoleDefinition.Name);
                             var parsedTemplateRoleDefinitionDesc = parser.ParseString(templateRoleDefinition.Description);
-                            var siteRoleDefinition = roleDefinitions.FirstOrDefault(erd => erd.Name == parsedRoleDefinitionName);
+                            var siteRoleDefinition = roleDefinitions.FirstOrDefault(erd => erd.Name?.ToLower() == parsedRoleDefinitionName?.ToLower());
                             if (siteRoleDefinition == null)
                             {
                                 scope.LogDebug("Creating role definition {0}", parsedRoleDefinitionName);
@@ -540,7 +540,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             var parsedRoleDefinition = parser.ParseString(roleAssignment.RoleDefinition);
                             if (!roleAssignment.Remove)
                             {
-                                var roleDefinition = webRoleDefinitions.FirstOrDefault(r => r.Name == parsedRoleDefinition);
+                                var roleDefinition = webRoleDefinitions.FirstOrDefault(r => r.Name?.ToLower() == parsedRoleDefinition?.ToLower());
                                 if (roleDefinition != null)
                                 {
                                     Principal principal = GetPrincipal(web, parser, scope, groups, roleAssignment);
