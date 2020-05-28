@@ -683,7 +683,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 // _tokens.Add(new ListIdToken(web, list.Title, Guid.Empty));
 #if !SP2013
                 var mainLanguageName = GetListTitleForMainLanguage(web, list.Title);
-                if (mainLanguageName != list.Title)
+                if (mainLanguageName != null && mainLanguageName != list.Title)
                 {
                     _tokens.Add(new ListIdToken(web, mainLanguageName, list.Id));
                 }
