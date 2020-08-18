@@ -250,9 +250,17 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     ClientObjectList<Microsoft.Online.SharePoint.TenantManagement.ThemeProperties> tenantThemes = null;
                     if (TenantExtensions.IsCurrentUserTenantAdmin((ClientContext)tenant.Context))
                     {
-                        tenantThemes = tenant.GetAllTenantThemes();
-                        tenant.Context.Load(tenantThemes);
-                        tenant.Context.ExecuteQueryRetry();
+                        try
+                        {
+                            tenantThemes = tenant.GetAllTenantThemes();
+                            tenant.Context.Load(tenantThemes);
+                            tenant.Context.ExecuteQueryRetry();
+                        }
+                        catch (ServerException se)
+                        {
+                            if (se.ServerErrorTypeName != "System.ArgumentNullException")
+                                throw;
+                        }
                     }
 
                     foreach (var sitecollection in sequence.SiteCollections)
