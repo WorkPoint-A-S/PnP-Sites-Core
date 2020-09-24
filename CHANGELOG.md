@@ -6,6 +6,51 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+# [Unreleased]
+
+## Changed
+
+- Update extract-configuration.schema.json #2747 [pschaeflein - Paul Schaeflein]
+- Additional check while extracting/setting hub site #2489 [gautamdsheth - Gautam Sheth]
+- Multiple improvements while working with Teams #2476 [gautamdsheth - Gautam Sheth]
+- Added retry mechanism to handle team creation replication delays #2521 [gautamdsheth - Gautam Sheth]
+- Fix site design token parsing (and application) in tenant provisioning #2736 [michael-jensen - Mike Jensen]
+
+## [3.25.2009.1 September 2020 release]
+
+## Changed
+
+- Fixed issue with Team model serialization preventing Teams provisioning
+
+## [3.25.2009 September 2020 release]
+
+## Added
+
+- Enhance GetAzureADAppOnlyAuthenticatedContext to be called with IClientAssertionCertificate #2612 [czullu - Christian Zuellig]
+- Added support for O365 Group settings #2450 [gautamdsheth - Gautam Sheth]
+
+## Changes
+
+- Initialize ServerRelativeUrl in NavigationExtensions.LoadFooterNavigation() before trying to use it #2743 [jackpoz - Giacomo Pozzoni]
+- Fix for being able to apply custom themes from provisioning templates #2680 [cmzaragoza - Cristian M. Zaragoza]
+- Handle update of taxonomy field specific properties seperately in UpdateField #2731 [NicolajHedeager - Nicolaj Hedeager Larsen]
+- Ensure decode of folderpath from uri segments to fix issue when url contains spacing #2730 [NicolajHedeager - Nicolaj Hedeager Larsen]
+- Log missing users which couldn't be added to a group and fix potential exception #2728 [heinrich-ulbricht Heinrich Ulbricht]
+- Fix missing (non-loaded) AlternateCssUrl property value for SP2016/SP2019 #2727 [heinrich-ulbricht Heinrich Ulbricht]
+- Checking for and ignore missing principals when provisioning object security #2724 [heinrich-ulbricht Heinrich Ulbricht]
+- Fixing handling of missing principal in site security handler #2722 [heinrich-ulbricht Heinrich Ulbricht]
+- Fixing SharePoint 2013 not returning any web parts #2721 [heinrich-ulbricht Heinrich Ulbricht]
+- Made enum nullable for certain types of Teams #2715 [gautamdsheth - Gautam Sheth]
+- Allow providing a specific URL with GetWebLoginClientContext to log on to #2707 [koenzomers - Koen Zomers]
+
+## [3.24.2008.1 August 2020 release]
+
+## Added
+
+- Added support for a json formatted localization file `{ "key":"value", "key": "value" }` for location elements in a Provisioning Template.
+
+## Changes
+
 ## [3.24.2008.0 August 2020 release]
 
 ## Added

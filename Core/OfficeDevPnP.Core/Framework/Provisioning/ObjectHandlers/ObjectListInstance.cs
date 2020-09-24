@@ -1543,7 +1543,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 }
                 if (templateList.Security != null)
                 {
-                    existingList.SetSecurity(parser, templateList.Security);
+                    existingList.SetSecurity(parser, templateList.Security, WriteMessage);
                 }
                 return Tuple.Create(existingList, parser);
             }
@@ -2087,7 +2087,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 #endif
             if (templateList.Security != null)
             {
-                createdList.SetSecurity(parser, templateList.Security);
+                createdList.SetSecurity(parser, templateList.Security, WriteMessage);
             }
             return Tuple.Create(createdList, parser);
         }
@@ -2227,7 +2227,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     var currentFolderItem = currentFolder.ListItemAllFields;
                     parentFolder.Context.Load(currentFolderItem);
                     parentFolder.Context.ExecuteQueryRetry();
-                    currentFolderItem.SetSecurity(parser, folder.Security);
+                    currentFolderItem.SetSecurity(parser, folder.Security, WriteMessage);
                 }
 
                 // Handle current folder property bags
