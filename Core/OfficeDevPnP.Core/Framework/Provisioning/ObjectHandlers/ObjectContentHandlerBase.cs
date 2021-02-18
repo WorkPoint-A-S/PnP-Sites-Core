@@ -99,7 +99,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     "_StubFile",
                     "_VirusStatus",
                     "_VirusVendorID",
-                    "_CheckinComment"
+                    "_CheckinComment",
+                    "_HasEncryptedContent"
                 };
 
                 foreach (var fieldValue in fieldValues.Where(f => !fieldstoExclude.Contains(f.Key)))
