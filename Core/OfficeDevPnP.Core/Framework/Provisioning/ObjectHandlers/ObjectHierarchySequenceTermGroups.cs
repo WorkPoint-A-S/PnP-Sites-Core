@@ -55,9 +55,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         return parser;
                     }
 
+                    context.Web.EnsureProperty(w => w.Url);
+                    TokenDefinitions.SiteCollectionTermGroupNameToken siteCollectionTermGroupNameToken = new TokenDefinitions.SiteCollectionTermGroupNameToken(context.Web);
+
                     foreach (var modelTermGroup in sequence.TermStore.TermGroups)
                     {
-                        this.reusedTerms.AddRange(TermGroupHelper.ProcessGroup(context, taxSession, termStore, modelTermGroup, null, parser, scope));
+                        this.reusedTerms.AddRange(TermGroupHelper.ProcessGroup(context, taxSession, termStore, modelTermGroup, null, parser, siteCollectionTermGroupNameToken, scope));
                     }
 
                     foreach (var reusedTerm in this.reusedTerms)

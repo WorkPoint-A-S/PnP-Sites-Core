@@ -10,12 +10,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Utilities
 {
     internal static class TermGroupHelper
     {
-        internal static List<ReusedTerm> ProcessGroup(ClientContext context, TaxonomySession session, TermStore termStore, Model.TermGroup modelTermGroup, TermGroup siteCollectionTermGroup, TokenParser parser, PnPMonitoredScope scope)
+        internal static List<ReusedTerm> ProcessGroup(ClientContext context, TaxonomySession session, TermStore termStore, Model.TermGroup modelTermGroup, TermGroup siteCollectionTermGroup, TokenParser parser, SiteCollectionTermGroupNameToken siteCollectionTermGroupNameToken, PnPMonitoredScope scope)
         {
             List<ReusedTerm> reusedTerms = new List<ReusedTerm>();
-
-            SiteCollectionTermGroupNameToken siteCollectionTermGroupNameToken =
-              new SiteCollectionTermGroupNameToken(context.Web);
 
             #region Group
 

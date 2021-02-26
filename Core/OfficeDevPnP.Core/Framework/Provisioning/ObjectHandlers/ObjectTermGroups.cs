@@ -52,12 +52,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     return parser;
                 }
 
-                SiteCollectionTermGroupNameToken siteCollectionTermGroupNameToken =
-                    new SiteCollectionTermGroupNameToken(web);
+                SiteCollectionTermGroupNameToken siteCollectionTermGroupNameToken = new SiteCollectionTermGroupNameToken(web);
 
                 foreach (var modelTermGroup in template.TermGroups)
                 {
-                    this.reusedTerms.AddRange(TermGroupHelper.ProcessGroup(web.Context as ClientContext, taxSession, termStore, modelTermGroup, siteCollectionTermGroup, parser, scope));
+                    this.reusedTerms.AddRange(TermGroupHelper.ProcessGroup(web.Context as ClientContext, taxSession, termStore, modelTermGroup, siteCollectionTermGroup, parser, siteCollectionTermGroupNameToken, scope));
                 }
 
                 foreach (var reusedTerm in this.reusedTerms)
