@@ -1549,7 +1549,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
             else
             {
-                var warning = string.Format(CoreResources.Provisioning_ObjectHandlers_ListInstances_List__0____1____2___exists_but_is_of_a_different_type__Skipping_list_, templateList.Title, templateList.Url, existingList.Id);
+                var warning = string.Format(CoreResources.Provisioning_ObjectHandlers_ListInstances_List__0____1____2___exists_but_is_of_a_different_type__Skipping_list_, parser.ParseString(templateList.Title), templateList.Url, existingList.Id);
                 scope.LogWarning(warning);
                 WriteMessage(warning, ProvisioningMessageType.Warning);
                 return null;
