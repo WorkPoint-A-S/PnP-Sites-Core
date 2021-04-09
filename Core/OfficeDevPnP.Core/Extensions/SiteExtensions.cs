@@ -106,7 +106,7 @@ namespace Microsoft.SharePoint.Client
             // First of all check if the site is full Team Site
             var templateId = site.RootWeb.GetBaseTemplateId();
 
-            var result = (templateId == "GROUP#0");
+            var result = (templateId == "GROUP#0" || templateId == "STS#3");
 
             return (result);
         }
