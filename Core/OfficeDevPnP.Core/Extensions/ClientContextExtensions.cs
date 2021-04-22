@@ -179,10 +179,11 @@ namespace Microsoft.SharePoint.Client
                 {
                     string internalServerErrMsg = "The remote server returned an error: (500) Internal Server Error.";
                     var response = wex.Response as HttpWebResponse;
+                    // Check if request was bad request - http status code 400
                     // Check if request was throttled - http status code 429
                     // Check is request failed due to server unavailable - http status code 503
                     // Check if we are unable to connect to the remote server - Only one usage of each socket address (protocol/network address/port)
-                    if ((response != null && (response.StatusCode == (HttpStatusCode)429 || response.StatusCode == (HttpStatusCode)503))
+                    if ((response != null && (response.StatusCode == (HttpStatusCode)400 || response.StatusCode == (HttpStatusCode)429 || response.StatusCode == (HttpStatusCode)503))
                         || (wex.InnerException is SocketException sockex && sockex.SocketErrorCode == SocketError.AddressAlreadyInUse))
                     {
                         if (wex.Message.Equals(internalServerErrMsg, StringComparison.OrdinalIgnoreCase))
