@@ -93,6 +93,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         /// Defines the Compact Layout for the Site Header
         /// </summary>
         Compact,
+        /// <summary>
+        /// Defines the Minimal Layout for the Site Header
+        /// </summary>
+        Minimal,        
+        /// <summary>
+        /// Defines the Extended Layout for the Site Header
+        /// </summary>
+        Extended
     }
 
     /// <summary>

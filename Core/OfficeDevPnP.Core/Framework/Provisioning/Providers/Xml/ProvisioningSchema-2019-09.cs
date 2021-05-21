@@ -3744,6 +3744,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml.V201909 {
         
         /// <remarks/>
         Compact,
+
+        /// <remarks/>
+        Minimal,
+
+        /// <remarks/>
+        Extended
     }
     
     /// <remarks/>

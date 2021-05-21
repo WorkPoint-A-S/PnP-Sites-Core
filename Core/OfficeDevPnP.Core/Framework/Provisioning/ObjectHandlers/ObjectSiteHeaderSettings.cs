@@ -34,6 +34,16 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             header.Layout = SiteHeaderLayout.Compact;
                             break;
                         }
+                    case HeaderLayoutType.Minimal:
+                        {
+                            header.Layout = SiteHeaderLayout.Minimal;
+                            break;
+                        }
+                    case HeaderLayoutType.Extended:
+                        {
+                            header.Layout = SiteHeaderLayout.Extended;
+                            break;
+                        }
                     case HeaderLayoutType.Standard:
                     default:
                         {
@@ -65,6 +75,16 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         case SiteHeaderLayout.Compact:
                             {
                                 web.HeaderLayout = HeaderLayoutType.Compact;
+                                break;
+                            }
+                        case SiteHeaderLayout.Minimal:
+                            {
+                                web.HeaderLayout = HeaderLayoutType.Minimal;
+                                break;
+                            }
+                        case SiteHeaderLayout.Extended:
+                            {
+                                web.HeaderLayout = HeaderLayoutType.Extended;
                                 break;
                             }
                         case SiteHeaderLayout.Standard:
