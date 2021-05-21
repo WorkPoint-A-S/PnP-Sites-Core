@@ -80,10 +80,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             site.AllowSavePublishDeclarativeWorkflow = template.SiteSettings.AllowSavePublishDeclarativeWorkflow;
                             isDirty = true;
                         }
-
-                        // Right now this works in Communication Sites only
-                        // For further details: https://github.com/SharePoint/sp-dev-docs/issues/1532
-                        if (site.IsCommunicationSite())
+                        else
                         {
                             site.SocialBarOnSitePagesDisabled = template.SiteSettings.SocialBarOnSitePagesDisabled;
                             isDirty = true;
