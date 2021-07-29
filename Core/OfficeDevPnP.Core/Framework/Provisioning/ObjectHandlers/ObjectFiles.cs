@@ -186,7 +186,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         if (file.Properties != null && file.Properties.Any())
                         {
                             Dictionary<string, string> transformedProperties = file.Properties.ToDictionary(property => property.Key, property => parser.ParseString(property.Value));
-                            SetFileProperties(targetFile, transformedProperties, parser, false);
+                            try 
+                            { 
+                                SetFileProperties(targetFile, transformedProperties, parser, false);
+                            }
+                            catch (Exception ex)
+                            {
+                                WriteMessage($"File properties was'nt set for file '{targetFile.ServerRelativeUrl}'. ErrorMessage: {ex.Message}", ProvisioningMessageType.Warning);
+                            }
                         }
 
                         switch (file.Level)
@@ -218,20 +225,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         {
                             targetFile.ListItemAllFields.SetSecurity(parser, file.Security, WriteMessage);
                         }
-
-                        if (file.Properties != null && file.Properties.Any())
-                        {
-                            Dictionary<string, string> transformedProperties = file.Properties.ToDictionary(property => property.Key, property => parser.ParseString(property.Value));
-                            try
-                            {
-                                SetFileProperties(targetFile, transformedProperties, parser, false);
-                            }
-                            catch (Exception ex)
-                            {
-                                WriteMessage($"File properties was'nt set for file '{targetFile.ServerRelativeUrl}'. ErrorMessage: {ex.Message}", ProvisioningMessageType.Warning);
-                            }
-                        }
-
                     }
 
                     web = originalWeb; // restore context in case files are provisioned to the master page gallery #1059
