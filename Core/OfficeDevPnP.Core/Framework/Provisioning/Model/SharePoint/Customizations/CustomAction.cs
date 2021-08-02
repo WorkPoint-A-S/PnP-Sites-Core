@@ -99,6 +99,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         /// </summary>
         public String ClientSideComponentProperties { get; set; }
 
+        /// <summary>
+        /// Gets or sets the client side host properties. Only applies to custom actions which are added to SharePoint Online.
+        /// </summary>
+        public string ClientSideHostProperties { get; set; }
+
         #endregion
 
         #region Comparison code
