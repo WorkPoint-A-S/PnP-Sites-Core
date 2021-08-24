@@ -525,7 +525,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 }
 
                 var existingFields = web.Fields;
-                web.Context.Load(web, w => w.ServerRelativeUrl);
+                web.Context.Load(web, w => w.Id, w => w.ServerRelativeUrl);
                 web.Context.Load(existingFields, fs => fs.Include(f => f.Id, f => f.SchemaXml, f => f.TypeAsString, f => f.InternalName, f => f.Title));
                 web.Context.Load(web.Lists, ls => ls.Include(l => l.Id, l => l.Title));
                 web.Context.ExecuteQueryRetry();
@@ -544,7 +544,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     if (!BuiltInFieldId.Contains(field.Id))
                     {
                         // Exclude the field if it's from syndication (content type hub)
-                        if (!creationInfo.IncludeFieldsFromSyndication && !contentTypeHubWebId.Equals(Guid.Empty) && IsFieldFromSyndication(contentTypeHubWebId, field))
+                        if (!creationInfo.IncludeFieldsFromSyndication && !contentTypeHubWebId.Equals(Guid.Empty) && !contentTypeHubWebId.Equals(web.Id) && IsFieldFromSyndication(contentTypeHubWebId, field))
                         {
                             scope.LogInfo($"Field {field.Id} excluded from export because it's a syndicated field from the content type hub.");
                             continue;

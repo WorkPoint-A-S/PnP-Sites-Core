@@ -90,6 +90,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 #if !SP2013 && !SP2016
                         ClientSideComponentId = customAction.ClientSideComponentId,
                         ClientSideComponentProperties = customAction.ClientSideComponentProperties != null ? parser.ParseString(customAction.ClientSideComponentProperties) : customAction.ClientSideComponentProperties,
+                        ClientSideHostProperties = customAction.ClientSideHostProperties,
 #endif
                         CommandUIExtension = customAction.CommandUIExtension != null ? parser.ParseString(customAction.CommandUIExtension.ToString()) : string.Empty,
                         Description = parser.ParseString(customAction.Description),
@@ -210,6 +211,15 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 if (existingCustomAction.ClientSideComponentProperties != parser.ParseString(customAction.ClientSideComponentProperties))
                 {
                     existingCustomAction.ClientSideComponentProperties = parser.ParseString(customAction.ClientSideComponentProperties);
+                    isDirty = true;
+                }
+            }
+
+            if (!String.IsNullOrEmpty(customAction.ClientSideHostProperties))
+            {
+                if (existingCustomAction.HostProperties != customAction.ClientSideHostProperties)
+                {
+                    existingCustomAction.HostProperties = customAction.ClientSideHostProperties;
                     isDirty = true;
                 }
             }
@@ -425,6 +435,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 #if !SP2013 && !SP2016
             customAction.ClientSideComponentId = userCustomAction.ClientSideComponentId;
             customAction.ClientSideComponentProperties = userCustomAction.ClientSideComponentProperties;
+            customAction.ClientSideHostProperties = userCustomAction.HostProperties;
 #endif
 
             customAction.CommandUIExtension = !System.String.IsNullOrEmpty(userCustomAction.CommandUIExtension) ?

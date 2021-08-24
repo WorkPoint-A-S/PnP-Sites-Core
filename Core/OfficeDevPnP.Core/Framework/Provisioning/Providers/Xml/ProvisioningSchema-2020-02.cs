@@ -6975,6 +6975,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml.V202002 {
         private string clientSideComponentIdField;
         
         private string clientSideComponentPropertiesField;
+
+        private string clientSideHostPropertiesField;
         
         public CustomAction() {
             this.enabledField = true;
@@ -7199,6 +7201,17 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml.V202002 {
             }
             set {
                 this.clientSideComponentPropertiesField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string ClientSideHostProperties {
+            get {
+                return this.clientSideHostPropertiesField;
+            }
+            set {
+                this.clientSideHostPropertiesField = value;
             }
         }
     }
