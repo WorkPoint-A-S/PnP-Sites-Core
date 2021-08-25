@@ -981,7 +981,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         {
                             foreach (var roleDefinition in webRoleAssignment.RoleDefinitionBindings)
                             {
-                                if (roleDefinition.RoleTypeKind != RoleType.Guest)
+                                if (roleDefinition.RoleTypeKind != RoleType.Guest && roleDefinition.RoleTypeKind != RoleType.RestrictedGuest)
                                 {
                                     var modelRoleAssignment = new Model.RoleAssignment();
                                     var roleDefinitionValue = roleDefinition.Name;

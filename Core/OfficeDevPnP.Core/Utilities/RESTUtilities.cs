@@ -23,6 +23,7 @@ namespace OfficeDevPnP.Core.Utilities
 #if !NETSTANDARD2_0
             if (context.Credentials is SharePointOnlineCredentials spCred)
             {
+                context.Web.EnsureProperty(x => x.Url);
                 handler.Credentials = context.Credentials;
                 handler.CookieContainer.SetCookies(new Uri(context.Web.Url), spCred.GetAuthenticationCookie(new Uri(context.Web.Url)));
             }
@@ -30,6 +31,7 @@ namespace OfficeDevPnP.Core.Utilities
 #endif            
             if (context.Credentials == null)
             {
+                context.Web.EnsureProperty(x => x.Url);
                 var cookieString = CookieReader.GetCookie(context.Web.Url)?.Replace("; ", ",")?.Replace(";", ",");
                 if(cookieString == null)
                 {

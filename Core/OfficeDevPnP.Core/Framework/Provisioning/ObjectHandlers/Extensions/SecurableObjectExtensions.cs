@@ -180,7 +180,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions
                         {
                             foreach (var roleDefinition in roleAssignment.RoleDefinitionBindings)
                             {
-                                if (roleDefinition.RoleTypeKind != RoleType.Guest)
+                                if (roleDefinition.RoleTypeKind != RoleType.Guest && roleDefinition.RoleTypeKind != RoleType.RestrictedGuest)
                                 {
                                     security.RoleAssignments.Add(new Model.RoleAssignment()
                                     {
