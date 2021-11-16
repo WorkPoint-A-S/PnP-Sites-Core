@@ -880,21 +880,34 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Utilities
             json = Regex.Replace(json, web.Id.ToString(), "{siteid}", RegexOptions.IgnoreCase);
             json = Regex.Replace(json, web.Id.ToString().Replace("-", "%2D"), "{siteidencoded}", RegexOptions.IgnoreCase);
             json = Regex.Replace(json, web.Id.ToString("N"), "{siteid}", RegexOptions.IgnoreCase);
+
+            var webServerRelativeUrlWithEncodedSpaces = web.ServerRelativeUrl.Replace(" ", "%20");
             if (web.ServerRelativeUrl != "/")
             {
                 // Normal site collection
                 json = Regex.Replace(json, "(\"" + web.ServerRelativeUrl + ")(?!&)", "\"{site}", RegexOptions.IgnoreCase);
+                json = Regex.Replace(json, "(\"" + webServerRelativeUrlWithEncodedSpaces + ")(?!&)", "\"{site}", RegexOptions.IgnoreCase);
+
                 json = Regex.Replace(json, "'" + web.ServerRelativeUrl, "'{site}", RegexOptions.IgnoreCase);
+                json = Regex.Replace(json, "'" + webServerRelativeUrlWithEncodedSpaces, "'{site}", RegexOptions.IgnoreCase);
+
                 json = Regex.Replace(json, ">" + web.ServerRelativeUrl, ">{site}", RegexOptions.IgnoreCase);
+                json = Regex.Replace(json, ">" + webServerRelativeUrlWithEncodedSpaces, ">{site}", RegexOptions.IgnoreCase);
+
                 json = Regex.Replace(json, web.ServerRelativeUrl, "{site}", RegexOptions.IgnoreCase);
+                json = Regex.Replace(json, webServerRelativeUrlWithEncodedSpaces, "{site}", RegexOptions.IgnoreCase);
             }
             else
             {
                 // Root site collection
                 json = Regex.Replace(json, "(\"" + web.ServerRelativeUrl + ")(?!&)", "\"{site}/", RegexOptions.IgnoreCase);
-                json = Regex.Replace(json, "'" + web.ServerRelativeUrl, "'{site}/", RegexOptions.IgnoreCase);
-                json = Regex.Replace(json, ">" + web.ServerRelativeUrl, ">{site}/", RegexOptions.IgnoreCase);
+                json = Regex.Replace(json, "(\"" + webServerRelativeUrlWithEncodedSpaces + ")(?!&)", "\"{site}/", RegexOptions.IgnoreCase);
 
+                json = Regex.Replace(json, "'" + web.ServerRelativeUrl, "'{site}/", RegexOptions.IgnoreCase);
+                json = Regex.Replace(json, "'" + webServerRelativeUrlWithEncodedSpaces, "'{site}/", RegexOptions.IgnoreCase);
+
+                json = Regex.Replace(json, ">" + web.ServerRelativeUrl, ">{site}/", RegexOptions.IgnoreCase);
+                json = Regex.Replace(json, ">" + webServerRelativeUrlWithEncodedSpaces, ">{site}/", RegexOptions.IgnoreCase);
             }
 
             // Connected Office 365 group tokenization
