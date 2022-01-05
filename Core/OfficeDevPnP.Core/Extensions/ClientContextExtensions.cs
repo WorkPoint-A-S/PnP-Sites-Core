@@ -573,12 +573,15 @@ namespace Microsoft.SharePoint.Client
                 // Try to decode the access token
                 var token = new JwtSecurityToken(accessToken);
 
-                // Search for the UPN claim, to see if we have user's delegation
+                // Search for the UPN and Actor claim, to see if we have user's delegation
                 var upn = token.Claims.FirstOrDefault(claim => claim.Type == "upn")?.Value;
-                if (String.IsNullOrEmpty(upn))
+                var actor = token.Claims.FirstOrDefault(claim => claim.Type == "actor")?.Value;
+                
+                if (String.IsNullOrEmpty(upn) && String.IsNullOrEmpty(actor))
                 {
                     result = true;
                 }
+
             }
             else if (clientContext.Credentials == null)
             {
