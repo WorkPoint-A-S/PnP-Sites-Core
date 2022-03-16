@@ -1247,7 +1247,7 @@ namespace Microsoft.SharePoint.Client
                     var properties = tenant.GetSitePropertiesByUrl(siteFullUrl, false);
                     tenant.Context.Load(properties);
                     tenant.Context.ExecuteQueryRetry();
-                    ret = properties.Status.Equals(status, StringComparison.OrdinalIgnoreCase);
+                    ret = properties.EnsureProperty(p => p.Status).Equals(status, StringComparison.OrdinalIgnoreCase);
                 }
                 catch (ServerException ex)
                 {
@@ -1259,7 +1259,7 @@ namespace Microsoft.SharePoint.Client
                             var deletedProperties = tenant.GetDeletedSitePropertiesByUrl(siteFullUrl);
                             tenant.Context.Load(deletedProperties);
                             tenant.Context.ExecuteQueryRetry();
-                            ret = deletedProperties.Status.Equals(status, StringComparison.OrdinalIgnoreCase);
+                            ret = deletedProperties.EnsureProperty(p => p.Status).Equals(status, StringComparison.OrdinalIgnoreCase);
                         }
                         catch
                         {
