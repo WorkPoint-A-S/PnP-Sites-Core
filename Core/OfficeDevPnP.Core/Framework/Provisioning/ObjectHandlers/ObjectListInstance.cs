@@ -1025,9 +1025,35 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             element.SetAttributeValue("AllowDeletion", "TRUE");
 
             var calculatedField = field as FieldCalculated;
+
             if (calculatedField != null)
             {
-                if (element.Element("Formula") != null)
+                var lcid = element.Attribute("LCID");
+                var listOfFieldInternalNames = new List<string>();
+
+                //If the LCID on the calculated field is different from the web, do translation of the internalfieldnames in the formular instead of taking the
+                //translated formular, due to the translated formular wont work, but displaynames are still required for the fields in the formular.
+                if (lcid != null && lcid.Value.ToInt32() != (int)web.Language)
+                {
+                    foreach (var fref in element.Element("FieldRefs").Nodes())
+                    {
+                        var nameAttribute = ((XElement)fref).Attribute("Name");
+                        if (nameAttribute != null && !listOfFieldInternalNames.Contains(nameAttribute.Value))
+                            listOfFieldInternalNames.Add(nameAttribute.Value);
+                    }
+
+                    var formular = element.Element("Formula").Value;
+                    var ctx = ((ClientContext)field.Context);
+                    ctx.Load(((ClientContext)field.Context).Site.RootWeb.Fields, fc => fc.Include(f => f.InternalName, f => f.Title));
+                    ((ClientContext)field.Context).ExecuteQueryRetry();
+                    foreach (var internalName in listOfFieldInternalNames.OrderByDescending(x => x))
+                    {
+                        var foundField = ctx.Site.RootWeb.Fields.GetFieldByInternalName(internalName);
+                        formular = formular.Replace(foundField.InternalName, $"[{foundField.Title}]");
+                        element.Element("Formula").Value = formular;
+                    }
+                }
+                else if (element.Element("Formula") != null)
                 {
                     element.Element("Formula").Value = calculatedField.Formula;
                 }
@@ -1043,7 +1069,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
             var createdField = listInfo.SiteList.Fields.Add(field);
 
-            createdField.Context.Load(createdField, cf => cf.Id, cf => cf.Title, cf => cf.Hidden, cf => cf.Required);
+            createdField.Context.Load(createdField, cf => cf.Id, cf => cf.Title, cf => cf.Hidden, cf => cf.Required, cf => cf.FieldTypeKind, cf => cf.SchemaXml);
             createdField.Context.ExecuteQueryRetry();
 
             var isDirty = false;
