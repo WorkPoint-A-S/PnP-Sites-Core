@@ -11,6 +11,7 @@ using OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Utilities;
 using OfficeDevPnP.Core.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -1017,76 +1018,88 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
         private static Field CreateFieldRef(ListInfo listInfo, Field field, FieldRef fieldRef, TokenParser parser, Web web)
         {
-            field.EnsureProperty(f => f.SchemaXmlWithResourceTokens);
-            string fieldXml = field.SchemaXmlWithResourceTokens;
-            fieldXml = FieldUtilities.FixLookupField(fieldXml, web);
-            XElement element = XElement.Parse(fieldXml);
-
-            element.SetAttributeValue("AllowDeletion", "TRUE");
-
-            var calculatedField = field as FieldCalculated;
-
-            if (calculatedField != null)
+            try
             {
-                var lcid = element.Attribute("LCID");
-                var listOfFieldInternalNames = new List<string>();
+                field.EnsureProperty(f => f.SchemaXmlWithResourceTokens);
+                string fieldXml = field.SchemaXmlWithResourceTokens;
+                fieldXml = FieldUtilities.FixLookupField(fieldXml, web);
+                XElement element = XElement.Parse(fieldXml);
 
-                //If the LCID on the calculated field is different from the web, do translation of the internalfieldnames in the formular instead of taking the
-                //translated formular, due to the translated formular wont work, but displaynames are still required for the fields in the formular.
-                if (lcid != null && lcid.Value.ToInt32() != (int)web.Language)
+                element.SetAttributeValue("AllowDeletion", "TRUE");
+
+                var calculatedField = field as FieldCalculated;
+
+                if (calculatedField != null)
                 {
-                    foreach (var fref in element.Element("FieldRefs").Nodes())
-                    {
-                        var nameAttribute = ((XElement)fref).Attribute("Name");
-                        if (nameAttribute != null && !listOfFieldInternalNames.Contains(nameAttribute.Value))
-                            listOfFieldInternalNames.Add(nameAttribute.Value);
-                    }
-
-                    var formular = element.Element("Formula").Value;
+                    var lcid = element.Attribute("LCID");
+                    var listOfFieldInternalNames = new List<string>();
                     var ctx = ((ClientContext)field.Context);
-                    ctx.Load(((ClientContext)field.Context).Site.RootWeb.Fields, fc => fc.Include(f => f.InternalName, f => f.Title));
-                    ((ClientContext)field.Context).ExecuteQueryRetry();
-                    foreach (var internalName in listOfFieldInternalNames.OrderByDescending(x => x))
+
+                    //If the LCID on the calculated field is different from the web, do translation of the internalfieldnames in the formular instead of taking the
+                    //translated formular, due to the translated formular wont work, but displaynames are still required for the fields in the formular.
+                    if (lcid != null && lcid.Value.ToInt32() != (int)web.Language)
                     {
-                        var foundField = ctx.Site.RootWeb.Fields.GetFieldByInternalName(internalName);
-                        formular = formular.Replace(foundField.InternalName, $"[{foundField.Title}]");
-                        element.Element("Formula").Value = formular;
+                        foreach (var fref in element.Element("FieldRefs").Nodes())
+                        {
+                            var nameAttribute = ((XElement)fref).Attribute("Name");
+                            if (nameAttribute != null && !listOfFieldInternalNames.Contains(nameAttribute.Value))
+                                listOfFieldInternalNames.Add(nameAttribute.Value);
+                        }
+
+                        var formular = element.Element("Formula").Value;
+                      
+                        ctx.Load(ctx.Site.RootWeb.Fields, fc => fc.Include(f => f.InternalName, f => f.Title));
+                        ctx.ExecuteQueryRetry();
+                        foreach (var internalName in listOfFieldInternalNames.OrderByDescending(x => x))
+                        {
+                            var foundField = ctx.Site.RootWeb.Fields.GetFieldByInternalName(internalName);
+                            formular = formular.Replace(foundField.InternalName, $"[{foundField.Title}]");
+                            element.Element("Formula").Value = formular;
+                        }
+                    }
+                    else if (element.Element("Formula") != null)
+                    {
+                        element.Element("Formula").Value = calculatedField.Formula;
+                    }
+
+                    var webLocale = ctx.Site.RootWeb.RegionalSettings.EnsureProperty(x => x.LocaleId);
+                    if (lcid != null && lcid.Value.ToInt32() != (int)webLocale)
+                    {
+                        CultureInfo ciOfWeb = new CultureInfo((int)webLocale);
+                        CultureInfo ciOfField = new CultureInfo(lcid.Value.ToInt32());
+
+                        element.Element("Formula").Value = element.Element("Formula").Value.Replace(ciOfWeb.TextInfo.ListSeparator, ciOfField.TextInfo.ListSeparator);
                     }
                 }
-                else if (element.Element("Formula") != null)
+
+                field.SchemaXml = element.ToString();
+
+                //Field has column Validation
+                if (element.Elements("Validation").FirstOrDefault() != null)
                 {
-                    element.Element("Formula").Value = calculatedField.Formula;
+                    field.SchemaXml = ObjectField.TokenizeFieldValidationFormula(field, field.SchemaXml);
                 }
-            }
 
-            field.SchemaXml = element.ToString();
+                var createdField = listInfo.SiteList.Fields.Add(field);
 
-            //Field has column Validation
-            if (element.Elements("Validation").FirstOrDefault() != null)
-            {
-                field.SchemaXml = ObjectField.TokenizeFieldValidationFormula(field, field.SchemaXml);
-            }
+                createdField.Context.Load(createdField, cf => cf.Id, cf => cf.Title, cf => cf.Hidden, cf => cf.Required, cf => cf.FieldTypeKind, cf => cf.SchemaXml);
+                createdField.Context.ExecuteQueryRetry();
 
-            var createdField = listInfo.SiteList.Fields.Add(field);
-
-            createdField.Context.Load(createdField, cf => cf.Id, cf => cf.Title, cf => cf.Hidden, cf => cf.Required, cf => cf.FieldTypeKind, cf => cf.SchemaXml);
-            createdField.Context.ExecuteQueryRetry();
-
-            var isDirty = false;
+                var isDirty = false;
 
 #if !SP2013
-            if (!string.IsNullOrEmpty(fieldRef.DisplayName) && (createdField.Title != fieldRef.DisplayName || fieldRef.DisplayName.ContainsResourceToken()))
-            {
-                if (fieldRef.DisplayName.ContainsResourceToken())
+                if (!string.IsNullOrEmpty(fieldRef.DisplayName) && (createdField.Title != fieldRef.DisplayName || fieldRef.DisplayName.ContainsResourceToken()))
                 {
-                    createdField.TitleResource.SetUserResourceValue(fieldRef.DisplayName, parser);
+                    if (fieldRef.DisplayName.ContainsResourceToken())
+                    {
+                        createdField.TitleResource.SetUserResourceValue(fieldRef.DisplayName, parser);
+                    }
+                    else
+                    {
+                        createdField.Title = fieldRef.DisplayName;
+                    }
+                    isDirty = true;
                 }
-                else
-                {
-                    createdField.Title = fieldRef.DisplayName;
-                }
-                isDirty = true;
-            }
 #else
             if (!string.IsNullOrEmpty(fieldRef.DisplayName) && createdField.Title != fieldRef.DisplayName)
             {
@@ -1095,23 +1108,28 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             }
 #endif
 
-            if (createdField.Hidden != fieldRef.Hidden)
-            {
-                createdField.Hidden = fieldRef.Hidden;
-                isDirty = true;
-            }
-            if (createdField.Required != fieldRef.Required)
-            {
-                createdField.Required = fieldRef.Required;
-                isDirty = true;
-            }
-            if (isDirty)
-            {
-                createdField.Update();
-                createdField.Context.ExecuteQueryRetry();
-            }
+                if (createdField.Hidden != fieldRef.Hidden)
+                {
+                    createdField.Hidden = fieldRef.Hidden;
+                    isDirty = true;
+                }
+                if (createdField.Required != fieldRef.Required)
+                {
+                    createdField.Required = fieldRef.Required;
+                    isDirty = true;
+                }
+                if (isDirty)
+                {
+                    createdField.Update();
+                    createdField.Context.ExecuteQueryRetry();
+                }
 
-            return createdField;
+                return createdField;
+            }
+            catch(Exception exp)
+            {
+                throw exp;
+            }
         }
 
         private static Field CreateField(XElement fieldElement, ListInfo listInfo, TokenParser parser, string originalFieldXml, ClientContext context, PnPMonitoredScope scope)
