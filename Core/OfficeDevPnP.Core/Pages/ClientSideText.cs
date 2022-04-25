@@ -121,7 +121,15 @@ namespace OfficeDevPnP.Core.Pages
                 {
                     ZoneEmphasis = this.Column.VerticalSectionEmphasis.HasValue ? this.Column.VerticalSectionEmphasis.Value : this.Section.ZoneEmphasis,
                 },
-                EditorType = "CKEditor"
+                EditorType = "CKEditor",
+                ZoneGroupMetadata = new ZoneGroupMetadata()
+                {
+                    DisplayName = this.Section.DisplayName,
+                    IconAlignment = this.section.IconAlignment.HasValue ? (this.section.IconAlignment == Framework.Provisioning.Model.IconAlignment.Left ? "left" : "right") : "",
+                    IsExpanded = this.section.IsExpanded,
+                    ShowDividerLine = this.section.ShowDividerLine,
+                    Type = this.section.SectionType
+                }
             };
 
 

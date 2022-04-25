@@ -182,6 +182,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Utilities
                         {
                             Order = section.Order,
                             BackgroundEmphasis = (Emphasis)section.ZoneEmphasis,
+                            Collapsible = section.Collapsible,
+                            DisplayName = section.DisplayName,
+                            IsExpanded = section.IsExpanded,
+                            IconAlignment = section.IconAlignment,
+                            ShowDividerLine = section.ShowDividerLine,
+                            ZoneEmphasis = section.ZoneEmphasis
                         };
                         if (section.VerticalSectionColumn != null)
                         {

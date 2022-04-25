@@ -724,7 +724,7 @@ namespace OfficeDevPnP.Core.Pages
                 StringBuilder html = new StringBuilder();
 
                 float order = 1;
-                foreach(var headerControl in headerControls)
+                foreach (var headerControl in headerControls)
                 {
                     html.Append(headerControl.ToHtml(order));
                 }
@@ -992,7 +992,7 @@ namespace OfficeDevPnP.Core.Pages
                 && this.LayoutType != ClientSidePageLayoutType.Topic
 #endif
                 )
-            {               
+            {
                 // this triggers resolving of the header image which has to be done early as otherwise there will be version conflicts
                 // (see here: https://github.com/SharePoint/PnP-Sites-Core/issues/2203)
                 pageHeaderHtml = this.pageHeader.ToHtml(this.PageTitle);
@@ -1696,7 +1696,7 @@ namespace OfficeDevPnP.Core.Pages
             {
                 this.InitializeSecurity();
             }
-            
+
             Task<string> result = Task.Run(() => GenerateTranslationsImplementationAsync(this.accessToken, this.Context, this.PageId, null).GetAwaiter().GetResult());
 
             if (!string.IsNullOrEmpty(result.Result))
@@ -1913,9 +1913,9 @@ namespace OfficeDevPnP.Core.Pages
 
         }
 
-#endregion
+        #endregion
 
-                #region Internal and private methods
+        #region Internal and private methods
         private void EnableCommentsImplementation(bool enable)
         {
             // ensure we do have the page list item loaded
@@ -2368,6 +2368,38 @@ namespace OfficeDevPnP.Core.Pages
                 control.section = currentSection;
                 control.column = currentColumn;
             }
+            var controlType = control.GetType();
+            var spControlDataProp = controlType.GetProperty("SpControlData");
+            if (spControlDataProp != null)
+            {
+                var spControlDataValue = spControlDataProp.GetValue(control);
+                if (spControlDataValue != null)
+                {
+                    var zgmProp = spControlDataValue.GetType().GetProperty("ZoneGroupMetadata");
+                    if (zgmProp != null)
+                    {
+                        var zgmValue = zgmProp.GetValue(spControlDataValue);
+                        if (zgmValue != null && zgmValue is ZoneGroupMetadata zgm)
+                        {
+                            control.section.Collapsible = zgm.IsExpanded.HasValue;
+                            control.section.IsExpanded = zgm.IsExpanded.HasValue && zgm.IsExpanded.Value;
+                            if (!string.IsNullOrEmpty(zgm.IconAlignment))
+                            {
+                                if (zgm.IconAlignment == "right")
+                                {
+                                    control.section.IconAlignment = Framework.Provisioning.Model.IconAlignment.Right;
+                                }
+                                else if (zgm.IconAlignment == "left")
+                                {
+                                    control.section.IconAlignment = Framework.Provisioning.Model.IconAlignment.Left;
+                                }
+                            }
+                            control.section.DisplayName = zgm.DisplayName;
+                            control.section.ShowDividerLine = zgm.ShowDividerLine;
+                        }
+                    }
+                }
+            }
         }
 
         private async Task<string> GetTranslationsImplementationAsync(string accessToken, ClientContext context, int? pageID)
@@ -2590,7 +2622,7 @@ namespace OfficeDevPnP.Core.Pages
                 this.accessToken = e.WebRequestExecutor.RequestHeaders.Get("Authorization").Replace("Bearer ", "");
             }
         }
-#endregion
+        #endregion
     }
 #endif
-        }
+}

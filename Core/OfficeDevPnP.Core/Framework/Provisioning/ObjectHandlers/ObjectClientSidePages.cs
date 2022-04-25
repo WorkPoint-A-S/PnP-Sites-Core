@@ -473,6 +473,17 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             break;
                     }
 
+                    var addedSection = page.Sections.LastOrDefault();
+                    if (addedSection != null)
+                    {
+                        addedSection.Collapsible = section.Collapsible;
+                        addedSection.DisplayName = section.DisplayName;
+                        addedSection.IconAlignment = section.IconAlignment;
+                        addedSection.IsExpanded = section.IsExpanded;
+                        addedSection.ShowDividerLine = section.ShowDividerLine;
+                        addedSection.ZoneEmphasis = section.ZoneEmphasis;
+                    }
+
                     // Add controls to the section
                     if (section.Controls.Any())
                     {
@@ -795,6 +806,20 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 }
             }
 #endif
+            try
+            {
+                foreach (var section in page.Sections)
+                {
+                    if (section.Collapsible)
+                    {
+                        section.SectionType = 1;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
 
             // Persist the page
             if (clientSidePage.Layout == "Article" && clientSidePage.PromoteAsTemplate)

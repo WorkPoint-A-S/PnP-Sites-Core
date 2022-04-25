@@ -26,6 +26,22 @@ namespace OfficeDevPnP.Core.Pages
 
         [JsonProperty(PropertyName = "emphasis", NullValueHandling = NullValueHandling.Ignore)]
         public ClientSideSectionEmphasis Emphasis { get; set; }
+        [JsonProperty(PropertyName = "zoneGroupMetadata", NullValueHandling = NullValueHandling.Ignore)]
+        public ZoneGroupMetadata ZoneGroupMetadata {  get; set; }
+    }
+
+    public class ZoneGroupMetadata
+    {
+        [JsonProperty(PropertyName = "type", NullValueHandling = NullValueHandling.Ignore)]
+        public int Type { get; set; }
+        [JsonProperty(PropertyName = "displayName", NullValueHandling = NullValueHandling.Ignore)]
+        public string DisplayName { get; set; }
+        [JsonProperty(PropertyName = "isExpanded", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? IsExpanded { get; set; }
+        [JsonProperty(PropertyName = "iconAlignment", NullValueHandling = NullValueHandling.Ignore)]
+        public string IconAlignment { get; set; }
+        [JsonProperty(PropertyName = "showDividerLine", NullValueHandling = NullValueHandling.Ignore)]
+        public bool ShowDividerLine { get; set; }
     }
 #endif
 }

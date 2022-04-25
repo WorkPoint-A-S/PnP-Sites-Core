@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OfficeDevPnP.Core.Framework.Provisioning.Model;
+using System;
 using System.Linq;
 using System.Text;
 #if !NETSTANDARD2_0
@@ -183,7 +184,7 @@ namespace OfficeDevPnP.Core.Pages
         {
             get
             {
-                return this.columns.Where(p => p.LayoutIndex == 2).FirstOrDefault();                
+                return this.columns.Where(p => p.LayoutIndex == 2).FirstOrDefault();
             }
         }
 
@@ -206,6 +207,36 @@ namespace OfficeDevPnP.Core.Pages
                 this.zoneEmphasis = value;
             }
         }
+
+        /// <summary>
+        /// Is this section collapsible?
+        /// </summary>
+        public bool Collapsible { get; set; }
+
+        /// <summary>
+        /// Is the collapsible section expanded?
+        /// </summary>
+        public bool IsExpanded { get; set; }
+
+        /// <summary>
+        /// DisplayName of the collapsible section
+        /// </summary>
+        public string DisplayName { get; set; }
+
+        /// <summary>
+        /// Sets the alignment of the collaps icon, left/right or not configured
+        /// </summary>
+        public IconAlignment? IconAlignment { get; set; }
+
+        /// <summary>
+        /// Show a devided line for this collapsible section?
+        /// </summary>
+        public bool ShowDividerLine { get; set; }
+
+        /// <summary>
+        /// Type of this section, not configurable by SDK users
+        /// </summary>
+        public int SectionType { get; set; }
 
         #endregion
 
@@ -262,10 +293,11 @@ namespace OfficeDevPnP.Core.Pages
             column.MoveTo(this);
             column.Order = order;
 
-            this.AddColumn(column);            
+            this.AddColumn(column);
         }
 
         #endregion
     }
 #endif
-            }
+}
+
