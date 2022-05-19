@@ -379,6 +379,14 @@ namespace OfficeDevPnP.Core.Pages
                 {
                     ZoneEmphasis = this.Column.VerticalSectionEmphasis.HasValue ? this.Column.VerticalSectionEmphasis.Value : this.Section.ZoneEmphasis,
                 };
+                controlData.ZoneGroupMetadata = new ZoneGroupMetadata()
+                {
+                    DisplayName = this.Section.DisplayName,
+                    IconAlignment = this.section.IconAlignment.HasValue ? (this.section.IconAlignment == Framework.Provisioning.Model.IconAlignment.Left ? "left" : "right") : "",
+                    IsExpanded = this.section.IsExpanded,
+                    ShowDividerLine = this.section.ShowDividerLine,
+                    Type = this.section.SectionType
+                };
 
                 // Set the control's data version to the latest version...default was 1.0, but some controls use a higher version
                 var webPartType = ClientSidePage.NameToClientSideWebPartEnum(controlData.WebPartId);
