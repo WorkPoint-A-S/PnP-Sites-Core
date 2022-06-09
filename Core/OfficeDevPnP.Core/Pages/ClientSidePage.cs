@@ -2381,7 +2381,7 @@ namespace OfficeDevPnP.Core.Pages
                         var zgmValue = zgmProp.GetValue(spControlDataValue);
                         if (zgmValue != null && zgmValue is ZoneGroupMetadata zgm)
                         {
-                            control.section.Collapsible = zgm.IsExpanded.HasValue;
+                            control.section.Collapsible = control.section.Collapsible;
                             control.section.IsExpanded = zgm.IsExpanded.HasValue && zgm.IsExpanded.Value;
                             if (!string.IsNullOrEmpty(zgm.IconAlignment))
                             {

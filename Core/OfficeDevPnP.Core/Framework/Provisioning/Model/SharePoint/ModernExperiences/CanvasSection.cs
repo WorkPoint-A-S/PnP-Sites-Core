@@ -57,12 +57,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         /// <summary>
         /// Is this section collapsible?
         /// </summary>
-        public bool Collapsible { get; set; }
+        public bool Collapsible { get; set; } = false;
 
         /// <summary>
         /// Is the collapsible section expanded?
         /// </summary>
-        public bool IsExpanded { get; set; }
+        public bool IsExpanded { get; set; } = true;
 
         /// <summary>
         /// DisplayName of the collapsible section
