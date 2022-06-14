@@ -2381,8 +2381,9 @@ namespace OfficeDevPnP.Core.Pages
                         var zgmValue = zgmProp.GetValue(spControlDataValue);
                         if (zgmValue != null && zgmValue is ZoneGroupMetadata zgm)
                         {
-                            control.section.Collapsible = control.section.Collapsible;
                             control.section.IsExpanded = zgm.IsExpanded.HasValue && zgm.IsExpanded.Value;
+                            // MMI: ZoneControlMetadata type 1 SHOULD be a section that is collapsible, but I haven't been able to find any documentation on what exactly this Type refers to.
+                            control.section.Collapsible = zgm.Type == 1;
                             if (!string.IsNullOrEmpty(zgm.IconAlignment))
                             {
                                 if (zgm.IconAlignment == "right")
