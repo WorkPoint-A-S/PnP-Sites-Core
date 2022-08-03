@@ -21,7 +21,6 @@ using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using OfficeDevPnP.Core.Utilities.Context;
 using System.Web;
-using System.Windows.Threading;
 
 namespace OfficeDevPnP.Core
 {

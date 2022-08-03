@@ -125,7 +125,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return parser;
         }
 
-        private void UpdateField(Web web, string fieldId, XElement templateFieldElement, PnPMonitoredScope scope, TokenParser parser, string originalFieldXml, bool updateFieldIfTypeChanged)
+        private void UpdateField(Web web, string fieldId, XElement templateFieldElement, PnPMonitoredScope scope, TokenParser parser, string originalFieldXml, bool updateFieldIfTypeChanged, string fieldIdentifier = "")
         {
             var existingField = web.Fields.GetById(Guid.Parse(fieldId));
             web.Context.Load(existingField, f => f.SchemaXml);
@@ -246,6 +246,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     {
                         // The field Xml was found invalid
                         var tokenString = parser.GetLeftOverTokens(originalFieldXml).Aggregate(String.Empty, (acc, i) => acc + " " + i);
+                        if (!string.IsNullOrEmpty(fieldIdentifier))
+                        {
+                            tokenString = fieldIdentifier;
+                        }
                         scope.LogError("The field was found invalid: {0}", tokenString);
                         throw new Exception($"The field was found invalid: {tokenString}");
                     }
@@ -326,7 +330,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return schemaXml;
         }
 
-        private static void CreateField(Web web, XElement templateFieldElement, PnPMonitoredScope scope, TokenParser parser, string originalFieldXml)
+        private static void CreateField(Web web, XElement templateFieldElement, PnPMonitoredScope scope, TokenParser parser, string originalFieldXml, string fieldIdentifier = "")
         {
             var fieldXml = parser.ParseXmlString(templateFieldElement.ToString());
 
@@ -380,6 +384,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 // The field Xml was found invalid
                 var tokenString = parser.GetLeftOverTokens(fieldXml).Aggregate(String.Empty, (acc, i) => acc + " " + i);
+                if (!string.IsNullOrEmpty(fieldIdentifier))
+                {
+                    tokenString = fieldIdentifier;
+                }
                 scope.LogError("The field was found invalid: {0}", tokenString);
                 throw new Exception($"The field was found invalid: {tokenString}");
             }
