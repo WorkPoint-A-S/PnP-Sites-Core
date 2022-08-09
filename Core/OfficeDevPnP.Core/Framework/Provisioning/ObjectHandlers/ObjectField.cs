@@ -246,12 +246,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     {
                         // The field Xml was found invalid
                         var tokenString = parser.GetLeftOverTokens(originalFieldXml).Aggregate(String.Empty, (acc, i) => acc + " " + i);
-                        if (!string.IsNullOrEmpty(fieldIdentifier))
-                        {
-                            tokenString = fieldIdentifier;
-                        }
-                        scope.LogError("The field was found invalid: {0}", tokenString);
-                        throw new Exception($"The field was found invalid: {tokenString}");
+                        scope.LogError($"The field {fieldIdentifier} was found invalid: {tokenString}");
+                        throw new Exception($"The field {fieldIdentifier} was found invalid: {tokenString}");
                     }
                 }
                 else
@@ -384,12 +380,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 // The field Xml was found invalid
                 var tokenString = parser.GetLeftOverTokens(fieldXml).Aggregate(String.Empty, (acc, i) => acc + " " + i);
-                if (!string.IsNullOrEmpty(fieldIdentifier))
-                {
-                    tokenString = fieldIdentifier;
-                }
-                scope.LogError("The field was found invalid: {0}", tokenString);
-                throw new Exception($"The field was found invalid: {tokenString}");
+                scope.LogError($"The field {fieldIdentifier} was found invalid: {tokenString}");
+                throw new Exception($"The field {fieldIdentifier} was found invalid: {tokenString}");
             }
         }
 
