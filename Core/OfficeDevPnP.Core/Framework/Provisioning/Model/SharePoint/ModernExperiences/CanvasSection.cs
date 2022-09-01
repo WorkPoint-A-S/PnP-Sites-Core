@@ -54,35 +54,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         /// </summary>
         public int ZoneEmphasis { get; set; }
 
-        /// <summary>
-        /// Is this section collapsible?
-        /// </summary>
-        public bool Collapsible { get; set; }
-
-        /// <summary>
-        /// Is the collapsible section expanded?
-        /// </summary>
-        public bool IsExpanded { get; set; }
-
-        /// <summary>
-        /// DisplayName of the collapsible section
-        /// </summary>
-        public string DisplayName { get; set; }
-
-        /// <summary>
-        /// Sets the alignment of the collaps icon, left/right or not configured
-        /// </summary>
-        public IconAlignment? IconAlignment { get; set; }
-
-        /// <summary>
-        /// Show a devided line for this collapsible section?
-        /// </summary>
-        public bool ShowDividerLine { get; set; }
-
-        /// <summary>
-        /// Type of this section, not configurable by SDK users
-        /// </summary>
-        public int SectionType { get; set; }
+        public List<ColumnCollapsibilitySetting> ColumnCollapsibilitySettings { get; set; } = new List<ColumnCollapsibilitySetting>();
 
         #endregion
 
@@ -213,5 +185,43 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.Model
         /// Two columns, left one is 1/3, right one 2/3, and a vertical section
         /// </summary>
         TwoColumnRightVerticalSection,
+    }
+
+    public class ColumnCollapsibilitySetting
+    {
+        /// <summary>
+        /// Which column should these settings apply to
+        /// </summary>
+        public int ColumnLayoutIndex { get; set; }
+
+        /// <summary>
+        /// Is this section collapsible?
+        /// </summary>
+        public bool Collapsible { get; set; }
+
+        /// <summary>
+        /// Is the collapsible section expanded?
+        /// </summary>
+        public bool IsExpanded { get; set; }
+
+        /// <summary>
+        /// DisplayName of the collapsible section
+        /// </summary>
+        public string DisplayName { get; set; }
+
+        /// <summary>
+        /// Sets the alignment of the collaps icon, left/right or not configured
+        /// </summary>
+        public IconAlignment? IconAlignment { get; set; }
+
+        /// <summary>
+        /// Show a devided line for this collapsible section?
+        /// </summary>
+        public bool ShowDividerLine { get; set; }
+
+        /// <summary>
+        /// Type of this section, not configurable by SDK users
+        /// </summary>
+        public int SectionType { get; set; }
     }
 }

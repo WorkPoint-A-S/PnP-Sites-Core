@@ -350,6 +350,8 @@ namespace OfficeDevPnP.Core.Pages
                     controlData = new ClientSideWebPartControlData();
                 }
 
+                var columnCollapsibilitySettings = this.section.ColumnCollapsibilitySettings.FirstOrDefault(x => x.ColumnLayoutIndex == this.column.Order);
+
                 // Obtain the json data
                 controlData.ControlType = this.ControlType;
                 controlData.Id = this.InstanceId.ToString("D");
@@ -379,14 +381,17 @@ namespace OfficeDevPnP.Core.Pages
                 {
                     ZoneEmphasis = this.Column.VerticalSectionEmphasis.HasValue ? this.Column.VerticalSectionEmphasis.Value : this.Section.ZoneEmphasis,
                 };
-                controlData.ZoneGroupMetadata = new ZoneGroupMetadata()
+                if (columnCollapsibilitySettings != null)
                 {
-                    DisplayName = this.Section.DisplayName,
-                    IconAlignment = this.section.IconAlignment.HasValue ? (this.section.IconAlignment == Framework.Provisioning.Model.IconAlignment.Left ? "left" : "right") : "",
-                    IsExpanded = this.section.IsExpanded,
-                    ShowDividerLine = this.section.ShowDividerLine,
-                    Type = this.section.SectionType
-                };
+                    controlData.ZoneGroupMetadata = new ZoneGroupMetadata()
+                    {
+                        DisplayName = columnCollapsibilitySettings.DisplayName,
+                        IconAlignment = columnCollapsibilitySettings.IconAlignment.HasValue ? (columnCollapsibilitySettings.IconAlignment == Framework.Provisioning.Model.IconAlignment.Left ? "left" : "right") : "",
+                        IsExpanded = columnCollapsibilitySettings.IsExpanded,
+                        ShowDividerLine = columnCollapsibilitySettings.ShowDividerLine,
+                        Type = columnCollapsibilitySettings.SectionType
+                    };
+                }
 
                 // Set the control's data version to the latest version...default was 1.0, but some controls use a higher version
                 var webPartType = ClientSidePage.NameToClientSideWebPartEnum(controlData.WebPartId);
@@ -651,9 +656,9 @@ namespace OfficeDevPnP.Core.Pages
             }
         }
 #endif
-#endregion
+        #endregion
 
-            #region Internal and private methods
+        #region Internal and private methods
         internal override void FromHtml(IElement element)
         {
             base.FromHtml(element);
@@ -880,7 +885,7 @@ namespace OfficeDevPnP.Core.Pages
                 this.dynamicDataValues = (JObject)parsedJson["dynamicDataValues"];
             }
         }
-            #endregion
+        #endregion
     }
 #endif
-        }
+}

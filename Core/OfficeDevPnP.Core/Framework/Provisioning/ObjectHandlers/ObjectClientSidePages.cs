@@ -476,11 +476,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     var addedSection = page.Sections.LastOrDefault();
                     if (addedSection != null)
                     {
-                        addedSection.Collapsible = section.Collapsible;
-                        addedSection.DisplayName = section.DisplayName;
-                        addedSection.IconAlignment = section.IconAlignment;
-                        addedSection.IsExpanded = section.IsExpanded;
-                        addedSection.ShowDividerLine = section.ShowDividerLine;
+                        addedSection.ColumnCollapsibilitySettings = section.ColumnCollapsibilitySettings;
                         addedSection.ZoneEmphasis = section.ZoneEmphasis;
                     }
 
@@ -806,20 +802,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 }
             }
 #endif
-            try
-            {
-                foreach (var section in page.Sections)
-                {
-                    if (section.Collapsible)
-                    {
-                        section.SectionType = 1;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-
-            }
 
             // Persist the page
             if (clientSidePage.Layout == "Article" && clientSidePage.PromoteAsTemplate)

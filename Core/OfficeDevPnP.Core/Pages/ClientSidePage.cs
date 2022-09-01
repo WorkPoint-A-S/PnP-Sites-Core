@@ -2370,6 +2370,7 @@ namespace OfficeDevPnP.Core.Pages
             }
             var controlType = control.GetType();
             var spControlDataProp = controlType.GetProperty("SpControlData");
+           
             if (spControlDataProp != null)
             {
                 var spControlDataValue = spControlDataProp.GetValue(control);
@@ -2381,22 +2382,29 @@ namespace OfficeDevPnP.Core.Pages
                         var zgmValue = zgmProp.GetValue(spControlDataValue);
                         if (zgmValue != null && zgmValue is ZoneGroupMetadata zgm)
                         {
-                            control.section.IsExpanded = zgm.IsExpanded.HasValue && zgm.IsExpanded.Value;
+                            var settings = new OfficeDevPnP.Core.Framework.Provisioning.Model.ColumnCollapsibilitySetting
+                            {
+                                ColumnLayoutIndex = control.column.LayoutIndex
+                            };
+                            settings.IsExpanded = zgm.IsExpanded.HasValue && zgm.IsExpanded.Value;
                             // MMI: ZoneControlMetadata type 1 SHOULD be a section that is collapsible, but I haven't been able to find any documentation on what exactly this Type refers to.
-                            control.section.Collapsible = zgm.Type == 1;
+                            settings.Collapsible = zgm.Type == 1;
                             if (!string.IsNullOrEmpty(zgm.IconAlignment))
                             {
                                 if (zgm.IconAlignment == "right")
                                 {
-                                    control.section.IconAlignment = Framework.Provisioning.Model.IconAlignment.Right;
+                                    settings.IconAlignment = Framework.Provisioning.Model.IconAlignment.Right;
                                 }
                                 else if (zgm.IconAlignment == "left")
                                 {
-                                    control.section.IconAlignment = Framework.Provisioning.Model.IconAlignment.Left;
+                                    settings.IconAlignment = Framework.Provisioning.Model.IconAlignment.Left;
                                 }
                             }
-                            control.section.DisplayName = zgm.DisplayName;
-                            control.section.ShowDividerLine = zgm.ShowDividerLine;
+                            settings.DisplayName = zgm.DisplayName;
+                            settings.ShowDividerLine = zgm.ShowDividerLine;
+                            settings.SectionType = settings.Collapsible ? 1 : 0;
+
+                            control.section.ColumnCollapsibilitySettings.Add(settings);
                         }
                     }
                 }

@@ -102,6 +102,8 @@ namespace OfficeDevPnP.Core.Pages
                 throw new Exception("You cannot host text controls inside a one column full width section, only an image web part or hero web part are allowed");
             }
 
+            var columnCollapsibilitySettings = this.section.ColumnCollapsibilitySettings.FirstOrDefault(x => x.ColumnLayoutIndex == this.column.LayoutIndex);
+
             // Obtain the json data
             ClientSideTextControlData controlData = new ClientSideTextControlData()
             {
@@ -121,16 +123,19 @@ namespace OfficeDevPnP.Core.Pages
                 {
                     ZoneEmphasis = this.Column.VerticalSectionEmphasis.HasValue ? this.Column.VerticalSectionEmphasis.Value : this.Section.ZoneEmphasis,
                 },
-                EditorType = "CKEditor",
-                ZoneGroupMetadata = new ZoneGroupMetadata()
-                {
-                    DisplayName = this.Section.DisplayName,
-                    IconAlignment = this.section.IconAlignment.HasValue ? (this.section.IconAlignment == Framework.Provisioning.Model.IconAlignment.Left ? "left" : "right") : "",
-                    IsExpanded = this.section.IsExpanded,
-                    ShowDividerLine = this.section.ShowDividerLine,
-                    Type = this.section.SectionType
-                }
+                EditorType = "CKEditor"
             };
+            if (columnCollapsibilitySettings != null)
+            {
+                controlData.ZoneGroupMetadata = new ZoneGroupMetadata()
+                {
+                    DisplayName = columnCollapsibilitySettings.DisplayName,
+                    IconAlignment = columnCollapsibilitySettings.IconAlignment.HasValue ? (columnCollapsibilitySettings.IconAlignment == Framework.Provisioning.Model.IconAlignment.Left ? "left" : "right") : "",
+                    IsExpanded = columnCollapsibilitySettings.IsExpanded,
+                    ShowDividerLine = columnCollapsibilitySettings.ShowDividerLine,
+                    Type = columnCollapsibilitySettings.SectionType
+                };
+            }
 
 
 #if !SP2019
