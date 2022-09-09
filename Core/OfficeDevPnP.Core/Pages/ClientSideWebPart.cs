@@ -381,7 +381,7 @@ namespace OfficeDevPnP.Core.Pages
                 {
                     ZoneEmphasis = this.Column.VerticalSectionEmphasis.HasValue ? this.Column.VerticalSectionEmphasis.Value : this.Section.ZoneEmphasis,
                 };
-                if (columnCollapsibilitySettings != null)
+                if (columnCollapsibilitySettings != null && !this.Column.IsVerticalSectionColumn)
                 {
                     controlData.ZoneGroupMetadata = new ZoneGroupMetadata()
                     {

@@ -125,7 +125,7 @@ namespace OfficeDevPnP.Core.Pages
                 },
                 EditorType = "CKEditor"
             };
-            if (columnCollapsibilitySettings != null)
+            if (columnCollapsibilitySettings != null && !this.Column.IsVerticalSectionColumn)
             {
                 controlData.ZoneGroupMetadata = new ZoneGroupMetadata()
                 {
