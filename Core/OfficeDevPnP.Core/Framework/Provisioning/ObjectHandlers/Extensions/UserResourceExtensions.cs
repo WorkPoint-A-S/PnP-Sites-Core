@@ -92,9 +92,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers.Extensions
 
         public static bool PersistResourceValue(UserResource userResource, string token, ProvisioningTemplate template, ProvisioningTemplateCreationInformation creationInfo)
         {
-            bool returnValue = false;
+			(userResource.Context as ClientContext).Web.EnsureProperty(w => w.Language);
+
+			bool returnValue = false;
             foreach (var language in template.SupportedUILanguages)
             {
+				if (language.LCID == (userResource.Context as ClientContext).Web.Language) //Ignore default language
+					continue;
+
                 var culture = new CultureInfo(language.LCID);
 
                 var value = userResource.GetValueForUICulture(culture.Name);
