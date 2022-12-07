@@ -1,6 +1,6 @@
 ﻿namespace OfficeDevPnP.Core.Utilities.Context
 {
-    internal enum ClientContextType
+    public enum ClientContextType
     {
         SharePointACSAppOnly = 0,
         AzureADCredentials = 1,
