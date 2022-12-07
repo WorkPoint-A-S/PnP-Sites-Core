@@ -184,7 +184,7 @@ namespace Microsoft.SharePoint.Client
                     // Check is request failed due to server unavailable - http status code 503
                     // Check if we are unable to connect to the remote server - Only one usage of each socket address (protocol/network address/port)
                     if ((response != null && (response.StatusCode == (HttpStatusCode)400 || response.StatusCode == (HttpStatusCode)429 || response.StatusCode == (HttpStatusCode)503))
-                        || (wex.InnerException is SocketException sockex && sockex.SocketErrorCode == SocketError.AddressAlreadyInUse))
+                        || (wex.InnerException is SocketException sockex && sockex.SocketErrorCode == SocketError.AddressAlreadyInUse) || wex.Status == WebExceptionStatus.Timeout)
                     {
                         if (wex.Message.Equals(internalServerErrMsg, StringComparison.OrdinalIgnoreCase))
                             Log.Warning(Constants.LOGGING_SOURCE, wex.Message);
@@ -196,20 +196,29 @@ namespace Microsoft.SharePoint.Client
                         retry = true;
 
                         // Determine the retry after value - use the retry-after header when available
-                        // Retry-After seems to default to a fixed 120 seconds in most cases, let's revert to our
-                        // previous logic
-                        //string retryAfterHeader = response.GetResponseHeader("Retry-After");
-                        //if (!string.IsNullOrEmpty(retryAfterHeader))
-                        //{
-                        //    if (!Int32.TryParse(retryAfterHeader, out retryAfterInterval))
-                        //    {
-                        //        retryAfterInterval = backoffInterval;
-                        //    }
-                        //}
-                        //else
-                        //{
-                        retryAfterInterval = backoffInterval;
-                        //}
+
+                        string retryAfterHeader = response.GetResponseHeader("Retry-After");
+                        if (!string.IsNullOrEmpty(retryAfterHeader))
+                        {
+                            if (Int32.TryParse(retryAfterHeader, out int retryAfterHeaderValue))
+                            {
+                                retryAfterInterval = retryAfterHeaderValue * 1000;
+                            }
+                        }
+                        else
+                        {
+                            retryAfterInterval = backoffInterval;
+                            backoffInterval *= 2;
+                        }
+
+                        if (wex.Status == WebExceptionStatus.Timeout)
+                        {
+                            Log.Warning(Constants.LOGGING_SOURCE, $"CSOM request timeout. Retry attempt {retryAttempts + 1}. Sleeping for {retryAfterInterval} milliseconds before retrying.");
+                        }
+                        else
+                        {
+                            Log.Warning(Constants.LOGGING_SOURCE, $"CSOM request frequency exceeded usage limits. Retry attempt {retryAttempts + 1}. Sleeping for {retryAfterInterval} milliseconds before retrying.");
+                        }
 
                         //Add delay for retry, retry-after header is specified in seconds
                         await Task.Delay(retryAfterInterval);
@@ -219,7 +228,6 @@ namespace Microsoft.SharePoint.Client
 
                         //Add to retry count and increase delay.
                         retryAttempts++;
-                        backoffInterval = backoffInterval * 2;
                     }
                     else
                     {
