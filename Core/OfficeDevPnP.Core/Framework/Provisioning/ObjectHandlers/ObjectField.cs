@@ -323,6 +323,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             schemaXml = Regex.Replace(schemaXml, web.Id.ToString("B"), "{{siteid}}", RegexOptions.IgnoreCase);
             schemaXml = Regex.Replace(schemaXml, web.Id.ToString("D"), "{siteid}", RegexOptions.IgnoreCase);
 
+            schemaXml = Regex.Replace(schemaXml, "SourceID=\"{{siteid}}\"", $"SourceID=\"{web.Id.ToString("B")}\"", RegexOptions.IgnoreCase);
+            schemaXml = Regex.Replace(schemaXml, "SourceID=\"{siteid}\"", $"SourceID=\"{web.Id.ToString("D")}\"", RegexOptions.IgnoreCase);
+
             return schemaXml;
         }
 
