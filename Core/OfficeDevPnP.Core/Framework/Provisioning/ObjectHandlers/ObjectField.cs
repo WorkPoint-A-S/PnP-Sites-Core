@@ -606,12 +606,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             {
                                 var fieldElement = XElement.Parse(fieldXml);
                                 var escapedFieldTitle = field.Title.Replace(" ", "_");
-                                if (UserResourceExtensions.PersistResourceValue(field.TitleResource, $"Field_{escapedFieldTitle}_DisplayName", template, creationInfo))
+                                if (UserResourceExtensions.PersistResourceValue(field.TitleResource, $"Field_{escapedFieldTitle}_DisplayName", template, creationInfo, false))
                                 {
                                     var fieldTitle = $"{{res:Field_{escapedFieldTitle}_DisplayName}}";
                                     fieldElement.SetAttributeValue("DisplayName", fieldTitle);
                                 }
-                                if (UserResourceExtensions.PersistResourceValue(field.DescriptionResource, $"Field_{escapedFieldTitle}_Description", template, creationInfo))
+                                if (UserResourceExtensions.PersistResourceValue(field.DescriptionResource, $"Field_{escapedFieldTitle}_Description", template, creationInfo, false))
                                 {
                                     var fieldDescription = $"{{res:Field_{escapedFieldTitle}_Description}}";
                                     fieldElement.SetAttributeValue("Description", fieldDescription);

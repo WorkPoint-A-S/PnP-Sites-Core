@@ -22,7 +22,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         private const string ContentTypeIdField = "ContentTypeId";
         private const string FileRefField = "FileRef";
         private const string SPSitePageFlagsField = "_SPSitePageFlags";
-        private static readonly Guid MultilingualPagesFeature = new Guid("24611c05-ee19-45da-955f-6602264abaf8");
+        internal static readonly Guid MultilingualPagesFeature = new Guid("24611c05-ee19-45da-955f-6602264abaf8");
         private static readonly Guid MixedRealityFeature = new Guid("2ac9c540-6db4-4155-892c-3273957f1926");
 
         public override string Name

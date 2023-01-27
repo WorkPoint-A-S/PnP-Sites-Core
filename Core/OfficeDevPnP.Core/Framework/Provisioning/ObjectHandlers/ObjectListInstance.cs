@@ -2368,7 +2368,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 // Check if this is not a noscript site as we're not allowed to update some properties
                 bool isNoScriptSite = web.IsNoScriptSite();
 
-                web.EnsureProperties(w => w.ServerRelativeUrl, w => w.Url);
+                web.EnsureProperties(w => w.ServerRelativeUrl, w => w.Url, w => w.Features);
 
                 var serverRelativeUrl = web.ServerRelativeUrl;
 
@@ -2545,11 +2545,11 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     {
 #if !SP2013
                         var escapedListTitle = siteList.Title.Replace(" ", "_");
-                        if (UserResourceExtensions.PersistResourceValue(siteList.TitleResource, $"List_{escapedListTitle}_Title", template, creationInfo))
+                        if (UserResourceExtensions.PersistResourceValue(siteList.TitleResource, $"List_{escapedListTitle}_Title", template, creationInfo, false))
                         {
                             list.Title = $"{{res:List_{escapedListTitle}_Title}}";
                         }
-                        if (UserResourceExtensions.PersistResourceValue(siteList.DescriptionResource, $"List_{escapedListTitle}_Description", template, creationInfo))
+                        if (UserResourceExtensions.PersistResourceValue(siteList.DescriptionResource, $"List_{escapedListTitle}_Description", template, creationInfo, false))
                         {
                             list.Description = $"{{res:List_{escapedListTitle}_Description}}";
                         }
@@ -2900,12 +2900,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     {
 #if !SP2013
                         var escapedFieldTitle = field.Title.Replace(" ", "_");
-                        if (UserResourceExtensions.PersistResourceValue(field.TitleResource, $"Field_{escapedFieldTitle}_DisplayName", template, creationInfo))
+                        if (UserResourceExtensions.PersistResourceValue(field.TitleResource, $"Field_{escapedFieldTitle}_DisplayName", template, creationInfo, false))
                         {
                             var fieldTitle = $"{{res:Field_{escapedFieldTitle}_DisplayName}}";
                             fieldElement.SetAttributeValue("DisplayName", fieldTitle);
                         }
-                        if (UserResourceExtensions.PersistResourceValue(field.DescriptionResource, $"Field_{escapedFieldTitle}_Description", template, creationInfo))
+                        if (UserResourceExtensions.PersistResourceValue(field.DescriptionResource, $"Field_{escapedFieldTitle}_Description", template, creationInfo, false))
                         {
                             var fieldDescription = $"{{res:Field_{escapedFieldTitle}_Description}}";
                             fieldElement.SetAttributeValue("Description", fieldDescription);
@@ -3029,12 +3029,14 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     var listKey = siteList.Title.Replace(" ", "_");
                     var resourceKey = userCustomAction.Name.Replace(" ", "_");
 
-                    if (UserResourceExtensions.PersistResourceValue(userCustomAction.TitleResource, $"List_{listKey}_CustomAction_{resourceKey}_Title", template, creationInfo))
+                    var skipWebLanguage = web.Features.Any(f => f.DefinitionId.Equals(ObjectClientSidePages.MultilingualPagesFeature));
+
+                    if (UserResourceExtensions.PersistResourceValue(userCustomAction.TitleResource, $"List_{listKey}_CustomAction_{resourceKey}_Title", template, creationInfo, skipWebLanguage))
                     {
                         var customActionTitle = $"{{res:List_{listKey}_CustomAction_{resourceKey}_Title}}";
                         customAction.Title = customActionTitle;
                     }
-                    if (UserResourceExtensions.PersistResourceValue(userCustomAction.DescriptionResource, $"List_{listKey}_CustomAction_{resourceKey}_Description", template, creationInfo))
+                    if (UserResourceExtensions.PersistResourceValue(userCustomAction.DescriptionResource, $"List_{listKey}_CustomAction_{resourceKey}_Description", template, creationInfo, skipWebLanguage))
                     {
                         var customActionDescription = $"{{res:List_{listKey}_CustomAction_{resourceKey}_Description}}";
                         customAction.Description = customActionDescription;

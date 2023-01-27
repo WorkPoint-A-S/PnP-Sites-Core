@@ -352,15 +352,18 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             using (var scope = new PnPMonitoredScope(this.Name))
             {
                 var context = (ClientContext)web.Context;
+                context.Load(web, w => w.Features.IncludeWithDefaultProperties());
                 bool isSubSite = web.IsSubSite();
                 var webCustomActions = web.GetCustomActions();
-                var siteCustomActions = context.Site.GetCustomActions();
+                var siteCustomActions = context.Site.GetCustomActions();                
+
+                var skipWebLanguage = web.Features.Any(f => f.DefinitionId.Equals(ObjectClientSidePages.MultilingualPagesFeature));
 
                 var customActions = new CustomActions();
                 foreach (var customAction in webCustomActions)
                 {
                     scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_CustomActions_Adding_web_scoped_custom_action___0___to_template, customAction.Name);
-                    customActions.WebCustomActions.Add(CopyUserCustomAction(customAction, creationInfo,template));
+                    customActions.WebCustomActions.Add(CopyUserCustomAction(customAction, creationInfo, template, skipWebLanguage));
                 }
 
                 // if this is a sub site then we're not creating entities for site collection scoped custom actions
@@ -369,7 +372,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     foreach (var customAction in siteCustomActions)
                     {
                         scope.LogDebug(CoreResources.Provisioning_ObjectHandlers_CustomActions_Adding_site_scoped_custom_action___0___to_template, customAction.Name);
-                        customActions.SiteCustomActions.Add(CopyUserCustomAction(customAction, creationInfo,template));
+                        customActions.SiteCustomActions.Add(CopyUserCustomAction(customAction, creationInfo, template, skipWebLanguage));
                     }
                 }
 
@@ -414,7 +417,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             return template;
         }
 
-        private CustomAction CopyUserCustomAction(UserCustomAction userCustomAction, ProvisioningTemplateCreationInformation creationInfo, ProvisioningTemplate template)
+        private CustomAction CopyUserCustomAction(UserCustomAction userCustomAction, ProvisioningTemplateCreationInformation creationInfo, ProvisioningTemplate template, bool skipWebLanguage)
         {
             var customAction = new CustomAction();
             customAction.Description = userCustomAction.Description;
@@ -446,13 +449,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 var resourceKey = userCustomAction.Name.Replace(" ", "_");
 
-                if (UserResourceExtensions.PersistResourceValue(userCustomAction.TitleResource, $"CustomAction_{resourceKey}_Title", template, creationInfo))
+                if (UserResourceExtensions.PersistResourceValue(userCustomAction.TitleResource, $"CustomAction_{resourceKey}_Title", template, creationInfo, skipWebLanguage))
                 {
                     var customActionTitle = $"{{res:CustomAction_{resourceKey}_Title}}";
                     customAction.Title = customActionTitle;
 
                 }
-                if (UserResourceExtensions.PersistResourceValue(userCustomAction.DescriptionResource, $"CustomAction_{resourceKey}_Description", template, creationInfo))
+                if (UserResourceExtensions.PersistResourceValue(userCustomAction.DescriptionResource, $"CustomAction_{resourceKey}_Description", template, creationInfo, skipWebLanguage))
                 {
                     var customActionDescription = $"{{res:CustomAction_{resourceKey}_Description}}";
                     customAction.Description = customActionDescription;
