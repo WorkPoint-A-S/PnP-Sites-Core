@@ -350,6 +350,7 @@ namespace Microsoft.SharePoint.Client
 #if !SP2013
             clonedClientContext.DisableReturnValueCache = clientContext.DisableReturnValueCache;
 #endif
+            clonedClientContext.WebRequestExecutorFactory = clientContext.WebRequestExecutorFactory;
 
             // In case of using networkcredentials in on premises or SharePointOnlineCredentials in Office 365
             if (clientContext.Credentials != null)
