@@ -65,7 +65,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 webSettings.SearchScope = (SearchScopes)Enum.Parse(typeof(SearchScopes), web.SearchScope.ToString(), true);
                 webSettings.SearchBoxInNavBar = (SearchBoxInNavBar)Enum.Parse(typeof(SearchBoxInNavBar), web.SearchBoxInNavBar.ToString(), true);
                 webSettings.SearchCenterUrl = web.GetWebSearchCenterUrl(true);
-    #endif
+#endif
 #endif
                 // We're not extracting Title and Description
                 //webSettings.Title = Tokenize(web.Title, web.Url);
@@ -181,14 +181,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         //TODO: Candidate for cleanup
         private Model.File GetTemplateFile(Web web, string serverRelativeUrl)
         {
-
             var webServerUrl = web.EnsureProperty(w => w.Url);
             var serverUri = new Uri(webServerUrl);
             var serverUrl = $"{serverUri.Scheme}://{serverUri.Authority}";
             var fullUri = new Uri(UrlUtility.Combine(serverUrl, serverRelativeUrl));
 
             var folderPath = HttpUtility.UrlDecode(fullUri.Segments.Take(fullUri.Segments.Count() - 1).ToArray().Aggregate((i, x) => i + x).TrimEnd('/'));
-            var fileName = fullUri.Segments[fullUri.Segments.Count() - 1];
+            var fileName = HttpUtility.UrlDecode(fullUri.Segments[fullUri.Segments.Count() - 1]);
 
             // store as site relative path
             folderPath = folderPath.Replace(web.ServerRelativeUrl, "").Trim('/');
@@ -217,7 +216,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                     try
                     {
-                        var file = web.GetFileByServerRelativeUrl(serverRelativeUrl);
+                        var file = web.GetFileByServerRelativePath(ResourcePath.FromDecodedUrl(serverRelativeUrl));
                         string fileName = string.Empty;
                         if (serverRelativeUrl.IndexOf("/") > -1)
                         {
@@ -263,7 +262,6 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         // If we are referring a file from a location outside of the current web or at a location where we cannot retrieve the file an exception is thrown. We swallow this exception.
                         if (ex1.ServerErrorCode != -2147024809)
                         {
-                            throw;
                         }
                         else
                         {
