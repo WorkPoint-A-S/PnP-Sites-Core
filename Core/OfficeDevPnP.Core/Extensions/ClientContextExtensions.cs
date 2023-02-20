@@ -434,6 +434,7 @@ namespace Microsoft.SharePoint.Client
 #if !SP2013
                             newClientContext.DisableReturnValueCache = clientContext.DisableReturnValueCache;
 #endif
+                            newClientContext.WebRequestExecutorFactory = clientContext.WebRequestExecutorFactory;
                             return newClientContext;
                         }
                         else
