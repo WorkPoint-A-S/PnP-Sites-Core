@@ -345,6 +345,7 @@ namespace Microsoft.SharePoint.Client
             ClientContext clonedClientContext = targetContext;
 #if !NETSTANDARD2_0
             clonedClientContext.AuthenticationMode = clientContext.AuthenticationMode;
+            clonedClientContext.FormDigestHandlingEnabled = (clientContext as ClientContext).FormDigestHandlingEnabled;
 #endif
             clonedClientContext.ClientTag = clientContext.ClientTag;
 #if !SP2013
