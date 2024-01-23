@@ -839,7 +839,7 @@ namespace OfficeDevPnP.Core.Pages
             page.sitePagesServerRelativeUrl = pagesLibrary.RootFolder.ServerRelativeUrl;
 
             var file = page.Context.Web.GetFileByServerRelativePath(ResourcePath.FromDecodedUrl($"{page.sitePagesServerRelativeUrl}/{page.pageName}"));
-            page.Context.Web.Context.Load(file, f => f.ListItemAllFields, f => f.Exists);
+            page.Context.Web.Context.Load(file, f => f.ListItemAllFields, f => f.Exists, f => f.Level);
             page.Context.Web.Context.ExecuteQueryRetry();
 
             if (!file.Exists)
@@ -847,35 +847,51 @@ namespace OfficeDevPnP.Core.Pages
                 throw new ArgumentException($"Page {pageName} does not exist in current web");
             }
 
-            var item = file.ListItemAllFields;
+			var listItem = file.ListItemAllFields;
 
-            // Check if this is a client side page
-            if (item.FieldValues.ContainsKey(ClientSidePage.ClientSideApplicationId) && item[ClientSideApplicationId] != null && item[ClientSideApplicationId].ToString().Equals(ClientSidePage.SitePagesFeatureId, StringComparison.InvariantCultureIgnoreCase))
+			Dictionary<string, object> fieldValues = new Dictionary<string, object>(listItem.FieldValues);
+
+			if (file.Level != FileLevel.Published)
+			{
+				ListItemVersionCollection listItemVersionCollection = listItem.Versions;
+
+				page.Context.Web.Context.Load(listItemVersionCollection);
+
+				page.Context.Web.Context.ExecuteQueryRetry();
+
+				List<ListItemVersion> listItemVersions = listItemVersionCollection.Where(x => x.FieldValues.ContainsKey("_Level") && (int?)x["_Level"] == 1).OrderByDescending(x => x.VersionId).ToList(); //1 = Published, 2 = Draft, 3 = Checkout
+
+				if (listItemVersions.Count > 0)
+					fieldValues = new Dictionary<string, object>(listItemVersions[0].FieldValues);
+			}
+
+			// Check if this is a client side page
+			if (fieldValues.ContainsKey(ClientSidePage.ClientSideApplicationId) && fieldValues[ClientSideApplicationId] != null && fieldValues[ClientSideApplicationId].ToString().Equals(ClientSidePage.SitePagesFeatureId, StringComparison.InvariantCultureIgnoreCase))
             {
-                page.pageListItem = item;
-                page.pageTitle = Convert.ToString(item[ClientSidePage.Title]);
+                page.pageListItem = listItem;
+                page.pageTitle = Convert.ToString(fieldValues[ClientSidePage.Title]);
 
-                if (int.TryParse(item[ClientSidePage.IdField].ToString(), out int pageIdValue))
+                if (int.TryParse(fieldValues[ClientSidePage.IdField].ToString(), out int pageIdValue))
                 {
                     page.pageId = pageIdValue;
                 }
 
                 // set layout type
-                if (item.FieldValues.ContainsKey(ClientSidePage.PageLayoutType) && item[ClientSidePage.PageLayoutType] != null && !string.IsNullOrEmpty(item[ClientSidePage.PageLayoutType].ToString()))
+                if (fieldValues.ContainsKey(ClientSidePage.PageLayoutType) && fieldValues[ClientSidePage.PageLayoutType] != null && !string.IsNullOrEmpty(fieldValues[ClientSidePage.PageLayoutType].ToString()))
                 {
 #if !SP2019
-                    if (item[ClientSidePage.PageLayoutType].ToString().Equals(SpacesLayoutType, StringComparison.InvariantCultureIgnoreCase))
+                    if (fieldValues[ClientSidePage.PageLayoutType].ToString().Equals(SpacesLayoutType, StringComparison.InvariantCultureIgnoreCase))
                     {
                         page.LayoutType = ClientSidePageLayoutType.Spaces;
                     }
-                    else if (item[ClientSidePage.PageLayoutType].ToString().Equals(TopicLayoutType, StringComparison.InvariantCultureIgnoreCase))
+                    else if (fieldValues[ClientSidePage.PageLayoutType].ToString().Equals(TopicLayoutType, StringComparison.InvariantCultureIgnoreCase))
                     {
                         page.LayoutType = ClientSidePageLayoutType.Topic;
                     }
                     else
                     {
 #endif
-                        page.LayoutType = (ClientSidePageLayoutType)Enum.Parse(typeof(ClientSidePageLayoutType), item[ClientSidePage.PageLayoutType].ToString());
+                        page.LayoutType = (ClientSidePageLayoutType)Enum.Parse(typeof(ClientSidePageLayoutType), fieldValues[ClientSidePage.PageLayoutType].ToString());
 #if !SP2019
                     }
 #endif
@@ -888,27 +904,27 @@ namespace OfficeDevPnP.Core.Pages
 #if !SP2019
                 if (page.LayoutType == ClientSidePageLayoutType.Spaces)
                 {
-                    if (item.FieldValues.ContainsKey(ClientSidePage.SpaceContentField) && item[ClientSidePage.SpaceContentField] != null && !string.IsNullOrEmpty(item[ClientSidePage.SpaceContentField].ToString()))
+                    if (fieldValues.ContainsKey(ClientSidePage.SpaceContentField) && fieldValues[ClientSidePage.SpaceContentField] != null && !string.IsNullOrEmpty(fieldValues[ClientSidePage.SpaceContentField].ToString()))
                     {
-                        page.SpaceContent = item[ClientSidePage.SpaceContentField].ToString();
+                        page.SpaceContent = fieldValues[ClientSidePage.SpaceContentField].ToString();
                     }
                 }
 
                 if (page.LayoutType == ClientSidePageLayoutType.Topic)
                 {
-                    if (item.FieldValues.ContainsKey(ClientSidePage.TopicEntityId) && item[ClientSidePage.TopicEntityId] != null && !string.IsNullOrEmpty(item[ClientSidePage.TopicEntityId].ToString()))
+                    if (fieldValues.ContainsKey(ClientSidePage.TopicEntityId) && fieldValues[ClientSidePage.TopicEntityId] != null && !string.IsNullOrEmpty(fieldValues[ClientSidePage.TopicEntityId].ToString()))
                     {
-                        page.EntityId = item[ClientSidePage.TopicEntityId].ToString();
+                        page.EntityId = fieldValues[ClientSidePage.TopicEntityId].ToString();
                     }
 
-                    if (item.FieldValues.ContainsKey(ClientSidePage.TopicEntityRelations) && item[ClientSidePage.TopicEntityRelations] != null && !string.IsNullOrEmpty(item[ClientSidePage.TopicEntityRelations].ToString()))
+                    if (fieldValues.ContainsKey(ClientSidePage.TopicEntityRelations) && fieldValues[ClientSidePage.TopicEntityRelations] != null && !string.IsNullOrEmpty(fieldValues[ClientSidePage.TopicEntityRelations].ToString()))
                     {
-                        page.EntityRelations = item[ClientSidePage.TopicEntityRelations].ToString();
+                        page.EntityRelations = fieldValues[ClientSidePage.TopicEntityRelations].ToString();
                     }
 
-                    if (item.FieldValues.ContainsKey(ClientSidePage.TopicEntityType) && item[ClientSidePage.TopicEntityType] != null && !string.IsNullOrEmpty(item[ClientSidePage.TopicEntityType].ToString()))
+                    if (fieldValues.ContainsKey(ClientSidePage.TopicEntityType) && fieldValues[ClientSidePage.TopicEntityType] != null && !string.IsNullOrEmpty(fieldValues[ClientSidePage.TopicEntityType].ToString()))
                     {
-                        page.EntityType = item[ClientSidePage.TopicEntityType].ToString();
+                        page.EntityType = fieldValues[ClientSidePage.TopicEntityType].ToString();
                     }
                 }
 #endif
@@ -916,11 +932,11 @@ namespace OfficeDevPnP.Core.Pages
                 // default canvas content for an empty page (this field contains the page's web part properties)
                 var canvasContent1Html = @"<div><div data-sp-canvascontrol="""" data-sp-canvasdataversion=""1.0"" data-sp-controldata=""&#123;&quot;controlType&quot;&#58;0,&quot;pageSettingsSlice&quot;&#58;&#123;&quot;isDefaultDescription&quot;&#58;true,&quot;isDefaultThumbnail&quot;&#58;true&#125;&#125;""></div></div>";
                 // If the canvasfield1 field is present and filled then let's parse it
-                if (item.FieldValues.ContainsKey(ClientSidePage.CanvasField) && !(item[ClientSidePage.CanvasField] == null || string.IsNullOrEmpty(item[ClientSidePage.CanvasField].ToString())))
+                if (fieldValues.ContainsKey(ClientSidePage.CanvasField) && !(fieldValues[ClientSidePage.CanvasField] == null || string.IsNullOrEmpty(fieldValues[ClientSidePage.CanvasField].ToString())))
                 {
-                    canvasContent1Html = item[ClientSidePage.CanvasField].ToString();
+                    canvasContent1Html = fieldValues[ClientSidePage.CanvasField].ToString();
                 }
-                var pageHeaderHtml = item[ClientSidePage.PageLayoutContentField] != null ? item[ClientSidePage.PageLayoutContentField].ToString() : "";
+                var pageHeaderHtml = fieldValues[ClientSidePage.PageLayoutContentField] != null ? fieldValues[ClientSidePage.PageLayoutContentField].ToString() : "";
                 page.LoadFromHtml(canvasContent1Html, pageHeaderHtml);
             }
             else

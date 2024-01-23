@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26228.64
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34408.163
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OfficeDevPnP.Core", "OfficeDevPnP.Core\OfficeDevPnP.Core.csproj", "{F2077977-8EBF-409D-BBF4-8EFB328928A8}"
 EndProject
@@ -46,7 +46,6 @@ Global
 		{F2077977-8EBF-409D-BBF4-8EFB328928A8}.Release19|Any CPU.ActiveCfg = Release19|Any CPU
 		{F2077977-8EBF-409D-BBF4-8EFB328928A8}.Release19|Any CPU.Build.0 = Release19|Any CPU
 		{251C9DE3-A549-4530-8CAD-2EF3FF79A4CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{251C9DE3-A549-4530-8CAD-2EF3FF79A4CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{251C9DE3-A549-4530-8CAD-2EF3FF79A4CD}.Debug15|Any CPU.ActiveCfg = Debug15|Any CPU
 		{251C9DE3-A549-4530-8CAD-2EF3FF79A4CD}.Debug15|Any CPU.Build.0 = Debug15|Any CPU
 		{251C9DE3-A549-4530-8CAD-2EF3FF79A4CD}.Debug16|Any CPU.ActiveCfg = Debug16|Any CPU
